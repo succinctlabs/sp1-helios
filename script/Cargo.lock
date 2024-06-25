@@ -4730,11 +4730,13 @@ version = "0.1.0"
 dependencies = [
  "ethers 2.0.14",
  "eyre",
+ "helios",
  "hex",
  "serde",
  "serde_json",
  "serde_with",
  "ssz_rs",
+ "tokio",
 ]
 
 [[package]]

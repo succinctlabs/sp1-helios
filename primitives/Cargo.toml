@@ -12,3 +12,5 @@ serde_json = "1.0.118"
 serde = { version = "1.0.203", features = ["derive"] }
 ssz_rs = { version = "0.9.0", features = ["serde"] }
 hex = "0.4.3"
+helios = { git = "https://github.com/xavierdmello/helios" }
+tokio = "1.38.0"
