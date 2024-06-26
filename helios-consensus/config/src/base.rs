@@ -3,7 +3,7 @@ use std::default::Default;
 use std::net::{IpAddr, Ipv4Addr};
 use std::path::PathBuf;
 
-use crate::types::{ChainConfig, ForkData};
+use crate::types::{ChainConfig, Forks};
 use crate::utils::bytes_serialize;
 
 /// The base configuration for a network.

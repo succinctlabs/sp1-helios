@@ -1023,9 +1023,8 @@ checksum = "4b82cf0babdbd58558212896d1a4272303a57bdb245c2bf1147185fb45640e70"
 [[package]]
 name = "client"
 version = "0.5.5"
-source = "git+https://github.com/xavierdmello/helios#3772539dff2601fd2788b9c10871b21341070703"
 dependencies = [
- "common 0.5.5 (git+https://github.com/xavierdmello/helios)",
+ "common",
  "config",
  "consensus",
  "ethers 2.0.13",
@@ -1107,19 +1106,6 @@ checksum = "0b6a852b24ab71dffc585bcb46eaf7959d175cb865a7152e35b348d1b2960422"
 name = "common"
 version = "0.5.5"
 dependencies = [
- "ethers 2.0.14",
- "eyre",
- "hex",
- "serde",
- "ssz_rs",
- "thiserror",
-]
-
-[[package]]
-name = "common"
-version = "0.5.5"
-source = "git+https://github.com/xavierdmello/helios#3772539dff2601fd2788b9c10871b21341070703"
-dependencies = [
  "ethers 2.0.13",
  "eyre",
  "hex",
@@ -1131,9 +1117,8 @@ dependencies = [
 [[package]]
 name = "config"
 version = "0.5.5"
-source = "git+https://github.com/xavierdmello/helios#3772539dff2601fd2788b9c10871b21341070703"
 dependencies = [
- "common 0.5.5 (git+https://github.com/xavierdmello/helios)",
+ "common",
  "dirs",
  "ethers 2.0.13",
  "eyre",
@@ -1153,12 +1138,11 @@ dependencies = [
 [[package]]
 name = "consensus"
 version = "0.5.5"
-source = "git+https://github.com/xavierdmello/helios#3772539dff2601fd2788b9c10871b21341070703"
 dependencies = [
  "async-trait",
  "bytes",
  "chrono",
- "common 0.5.5 (git+https://github.com/xavierdmello/helios)",
+ "common",
  "config",
  "ethers 2.0.13",
  "eyre",
@@ -1173,7 +1157,7 @@ dependencies = [
  "serde_json",
  "snowbridge-milagro-bls",
  "ssz_rs",
- "superstruct 0.7.0",
+ "superstruct",
  "thiserror",
  "tokio",
  "tracing",
@@ -2277,11 +2261,10 @@ checksum = "0206175f82b8d6bf6652ff7d71a1e27fd2e4efde587fd368662814d6ec1d9ce0"
 [[package]]
 name = "execution"
 version = "0.5.5"
-source = "git+https://github.com/xavierdmello/helios#3772539dff2601fd2788b9c10871b21341070703"
 dependencies = [
  "async-trait",
  "bytes",
- "common 0.5.5 (git+https://github.com/xavierdmello/helios)",
+ "common",
  "consensus",
  "ethers 2.0.13",
  "eyre",
@@ -2867,10 +2850,9 @@ checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 [[package]]
 name = "helios"
 version = "0.5.5"
-source = "git+https://github.com/xavierdmello/helios#3772539dff2601fd2788b9c10871b21341070703"
 dependencies = [
  "client",
- "common 0.5.5 (git+https://github.com/xavierdmello/helios)",
+ "common",
  "config",
  "consensus",
  "execution",
@@ -2884,7 +2866,6 @@ dependencies = [
  "ethers 2.0.14",
  "eyre",
  "helios",
- "primitives",
  "serde",
  "sp1-helper",
  "sp1-sdk",
@@ -4740,25 +4721,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "primitives"
-version = "0.1.0"
-dependencies = [
- "common 0.5.5",
- "ethers 2.0.14",
- "eyre",
- "helios",
- "hex",
- "serde",
- "serde_json",
- "serde_with",
- "snowbridge-milagro-bls",
- "ssz_rs",
- "superstruct 0.8.0",
- "thiserror",
- "tokio",
-]
-
-[[package]]
 name = "proc-macro-crate"
 version = "1.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6546,20 +6508,6 @@ name = "superstruct"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6f4e1f478a7728f8855d7e620e9a152cf8932c6614f86564c886f9b8141f3201"
-dependencies = [
- "darling 0.13.4",
- "itertools 0.10.5",
- "proc-macro2",
- "quote",
- "smallvec",
- "syn 1.0.109",
-]
-
-[[package]]
-name = "superstruct"
-version = "0.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bf0f31f730ad9e579364950e10d6172b4a9bd04b447edf5988b066a860cc340e"
 dependencies = [
  "darling 0.13.4",
  "itertools 0.10.5",

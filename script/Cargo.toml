@@ -18,8 +18,8 @@ ethers = "2.0.14"
 eyre = "0.6.12"
 sp1-sdk = { git = "https://github.com/succinctlabs/sp1.git", branch = "main" }
 tokio = "1.38.0"
-helios = { git = "https://github.com/xavierdmello/helios" }
-primitives = { path = "../primitives" }
+helios = { path = "../../helios" }
+
 serde = "1.0.203"
 ssz_rs = "0.9.0"
 thiserror = "1.0.61"
