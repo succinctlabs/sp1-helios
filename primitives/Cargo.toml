@@ -14,3 +14,4 @@ ssz_rs = { version = "0.9.0", features = ["serde"] }
 hex = "0.4.3"
 helios = { git = "https://github.com/xavierdmello/helios" }
 tokio = "1.38.0"
+superstruct = "0.8.0"

@@ -85,10 +85,9 @@ pub async fn get_update(client: &Inner<NimbusRpc>) -> Update {
         .await
         .unwrap();
 
-    /*let update = updates[0].clone();*/
-    //client.verify_update(&update).unwrap();
-    //update
-    updates[0].clone()
+    let update = updates[0].clone();
+    client.verify_update(&update).unwrap();
+    update
 }
 
 pub fn to_header(h: consensus::types::Header) -> Header {

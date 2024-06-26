@@ -700,7 +700,7 @@ dependencies = [
  "serde_json",
  "snowbridge-milagro-bls",
  "ssz_rs",
- "superstruct",
+ "superstruct 0.7.0",
  "thiserror",
  "tokio",
  "tracing",
@@ -2907,7 +2907,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e310b3a6b5907f99202fcdb4960ff45b93735d7c7d96b760fcff8db2dc0e103d"
 dependencies = [
  "cfg-if",
- "windows-targets 0.48.5",
+ "windows-targets 0.52.5",
 ]
 
 [[package]]
@@ -3585,6 +3585,7 @@ dependencies = [
  "serde_json",
  "serde_with",
  "ssz_rs",
+ "superstruct 0.8.0",
  "tokio",
 ]
 
@@ -4755,6 +4756,20 @@ name = "superstruct"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6f4e1f478a7728f8855d7e620e9a152cf8932c6614f86564c886f9b8141f3201"
+dependencies = [
+ "darling 0.13.4",
+ "itertools 0.10.5",
+ "proc-macro2",
+ "quote",
+ "smallvec",
+ "syn 1.0.109",
+]
+
+[[package]]
+name = "superstruct"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bf0f31f730ad9e579364950e10d6172b4a9bd04b447edf5988b066a860cc340e"
 dependencies = [
  "darling 0.13.4",
  "itertools 0.10.5",

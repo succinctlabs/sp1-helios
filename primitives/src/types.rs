@@ -1,8 +1,9 @@
+use common::utils::hex_str_to_bytes;
 use std::ops::Deref;
 
 use ssz_rs::prelude::*;
 
-pub use ssz_rs::prelude::{Vector, Bitvector};
+pub use ssz_rs::prelude::{Bitvector, Vector};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ByteVector<const N: usize> {
@@ -299,4 +300,61 @@ pub struct SyncAggregate {
 pub struct SigningData {
     pub object_root: Bytes32,
     pub domain: Bytes32,
+}
+
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
+pub struct ChainConfig {
+    pub chain_id: u64,
+    pub genesis_time: u64,
+    #[serde(
+        deserialize_with = "bytes_deserialize",
+        serialize_with = "bytes_serialize"
+    )]
+    pub genesis_root: Vec<u8>,
+}
+
+impl From<&Update> for GenericUpdate {
+    fn from(update: &Update) -> Self {
+        Self {
+            attested_header: update.attested_header.clone(),
+            sync_aggregate: update.sync_aggregate.clone(),
+            signature_slot: update.signature_slot.into(),
+            next_sync_committee: Some(update.next_sync_committee.clone()),
+            next_sync_committee_branch: Some(update.next_sync_committee_branch.clone()),
+            finalized_header: Some(update.finalized_header.clone()),
+            finality_branch: Some(update.finality_branch.clone()),
+        }
+    }
+}
+pub struct GenericUpdate {
+    pub attested_header: Header,
+    pub sync_aggregate: SyncAggregate,
+    pub signature_slot: u64,
+    pub next_sync_committee: Option<SyncCommittee>,
+    pub next_sync_committee_branch: Option<Vec<Bytes32>>,
+    pub finalized_header: Option<Header>,
+    pub finality_branch: Option<Vec<Bytes32>>,
+}
+
+#[derive(Debug, Default)]
+pub struct LightClientStore {
+    pub finalized_header: Header,
+    pub current_sync_committee: SyncCommittee,
+    pub next_sync_committee: Option<SyncCommittee>,
+    pub optimistic_header: Header,
+    pub previous_max_active_participants: u64,
+    pub current_max_active_participants: u64,
+}
+
+#[derive(serde::Deserialize, Debug, Clone)]
+pub struct Update {
+    #[serde(deserialize_with = "header_deserialize")]
+    pub attested_header: Header,
+    pub next_sync_committee: SyncCommittee,
+    pub next_sync_committee_branch: Vec<Bytes32>,
+    #[serde(deserialize_with = "header_deserialize")]
+    pub finalized_header: Header,
+    pub finality_branch: Vec<Bytes32>,
+    pub sync_aggregate: SyncAggregate,
+    pub signature_slot: U64,
 }
