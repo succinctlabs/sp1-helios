@@ -4,19 +4,12 @@ version = "0.1.0"
 name = "helios-2-script"
 edition = "2021"
 
-[[bin]]
-name = "f"
-path = "./bin/main.rs"
-
-[[bin]]
-name = "helios"
-path = "./bin/helios.rs"
-
 [dependencies]
 dotenv = "0.15.0"
 ethers = "2.0.14"
 eyre = "0.6.12"
 sp1-sdk = { git = "https://github.com/succinctlabs/sp1.git", branch = "main" }
+helios-prover-primitives = { path = "../primitives" }
 tokio = "1.38.0"
 helios = { path = "../../helios" }
 

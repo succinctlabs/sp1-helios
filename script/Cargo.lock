@@ -2866,12 +2866,25 @@ dependencies = [
  "ethers 2.0.14",
  "eyre",
  "helios",
+ "helios-prover-primitives",
  "serde",
  "sp1-helper",
  "sp1-sdk",
  "ssz_rs",
  "thiserror",
  "tokio",
+]
+
+[[package]]
+name = "helios-prover-primitives"
+version = "0.1.0"
+dependencies = [
+ "eyre",
+ "hex",
+ "serde",
+ "serde_json",
+ "serde_with",
+ "ssz_rs",
 ]
 
 [[package]]

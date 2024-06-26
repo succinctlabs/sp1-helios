@@ -1,0 +1,13 @@
+[workspace]
+[package]
+version = "0.1.0"
+name = "helios-prover-primitives"
+edition = "2021"
+
+[dependencies]
+eyre = "0.6.8"
+ssz_rs = { version = "0.9.0", features = ["serde"] }
+hex = "0.4.3"
+serde_with = { version = "3.4.0", features = ["hex"] }
+serde = { version = "1.0.195", features = ["derive"] }
+serde_json = "1.0.111"

@@ -2,6 +2,8 @@ use std::ops::Deref;
 
 use ssz_rs::prelude::*;
 
+pub use ssz_rs::prelude::{Vector, Bitvector};
+
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ByteVector<const N: usize> {
     inner: Vector<u8, N>,
@@ -86,6 +88,17 @@ impl<'de, const N: usize> serde::Deserialize<'de> for ByteVector<N> {
         Ok(Self {
             inner: bytes.to_vec().try_into().unwrap(),
         })
+    }
+}
+
+impl<const N: usize> serde::Serialize for ByteVector<N> {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let value = hex::encode(self.inner.to_vec());
+        let output = format!("0x{}", value);
+        serializer.collect_str(&output)
     }
 }
 
@@ -244,4 +257,46 @@ impl<'de> serde::Deserialize<'de> for U64 {
             inner: val.parse().unwrap(),
         })
     }
+}
+
+impl serde::Serialize for U64 {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let output = format!("{}", self.inner);
+        serializer.collect_str(&output)
+    }
+}
+
+pub type Bytes32 = ByteVector<32>;
+pub type BLSPubKey = ByteVector<48>;
+pub type BLSPubKeyUncompressed = ByteVector<96>;
+pub type SignatureBytes = ByteVector<96>;
+
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Default, SimpleSerialize)]
+pub struct Header {
+    pub slot: U64,
+    pub proposer_index: U64,
+    pub parent_root: Bytes32,
+    pub state_root: Bytes32,
+    pub body_root: Bytes32,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Default, SimpleSerialize)]
+pub struct SyncCommittee {
+    pub pubkeys: Vector<BLSPubKey, 512>,
+    pub aggregate_pubkey: BLSPubKey,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Default, SimpleSerialize)]
+pub struct SyncAggregate {
+    pub sync_committee_bits: Bitvector<512>,
+    pub sync_committee_signature: SignatureBytes,
+}
+
+#[derive(SimpleSerialize, Default, Debug)]
+pub struct SigningData {
+    pub object_root: Bytes32,
+    pub domain: Bytes32,
 }

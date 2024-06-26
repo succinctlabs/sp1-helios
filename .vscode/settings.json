@@ -18,7 +18,7 @@
   "rust-analyzer.linkedProjects": [
     "program/Cargo.toml",
     "script/Cargo.toml",
-    "helios-consensus/Cargo.toml"
+    "primitives/Cargo.toml"
   ],
   "rust-analyzer.showUnlinkedFileNotification": false
 }
