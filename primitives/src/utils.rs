@@ -1,4 +1,5 @@
 use common::utils::hex_str_to_bytes;
+use common::types::{Header, LightClientHeader};
 
 pub fn bytes_deserialize<'de, D>(deserializer: D) -> Result<Vec<u8>, D::Error>
 where
@@ -26,4 +27,16 @@ where
     } else {
         Ok(None)
     }
+}
+
+pub fn header_deserialize<'de, D>(deserializer: D) -> Result<Header, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let header: LightClientHeader = serde::Deserialize::deserialize(deserializer)?;
+
+    Ok(match header {
+        LightClientHeader::Unwrapped(header) => header,
+        LightClientHeader::Wrapped(header) => header.beacon,
+    })
 }

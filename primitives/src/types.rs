@@ -4,6 +4,7 @@ use std::ops::Deref;
 use ssz_rs::prelude::*;
 
 pub use ssz_rs::prelude::{Bitvector, Vector};
+use crate::utils::header_deserialize;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ByteVector<const N: usize> {

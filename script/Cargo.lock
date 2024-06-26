@@ -1025,7 +1025,7 @@ name = "client"
 version = "0.5.5"
 source = "git+https://github.com/xavierdmello/helios#3772539dff2601fd2788b9c10871b21341070703"
 dependencies = [
- "common",
+ "common 0.5.5 (git+https://github.com/xavierdmello/helios)",
  "config",
  "consensus",
  "ethers 2.0.13",
@@ -1106,6 +1106,18 @@ checksum = "0b6a852b24ab71dffc585bcb46eaf7959d175cb865a7152e35b348d1b2960422"
 [[package]]
 name = "common"
 version = "0.5.5"
+dependencies = [
+ "ethers 2.0.14",
+ "eyre",
+ "hex",
+ "serde",
+ "ssz_rs",
+ "thiserror",
+]
+
+[[package]]
+name = "common"
+version = "0.5.5"
 source = "git+https://github.com/xavierdmello/helios#3772539dff2601fd2788b9c10871b21341070703"
 dependencies = [
  "ethers 2.0.13",
@@ -1121,7 +1133,7 @@ name = "config"
 version = "0.5.5"
 source = "git+https://github.com/xavierdmello/helios#3772539dff2601fd2788b9c10871b21341070703"
 dependencies = [
- "common",
+ "common 0.5.5 (git+https://github.com/xavierdmello/helios)",
  "dirs",
  "ethers 2.0.13",
  "eyre",
@@ -1146,7 +1158,7 @@ dependencies = [
  "async-trait",
  "bytes",
  "chrono",
- "common",
+ "common 0.5.5 (git+https://github.com/xavierdmello/helios)",
  "config",
  "ethers 2.0.13",
  "eyre",
@@ -2269,7 +2281,7 @@ source = "git+https://github.com/xavierdmello/helios#3772539dff2601fd2788b9c1087
 dependencies = [
  "async-trait",
  "bytes",
- "common",
+ "common 0.5.5 (git+https://github.com/xavierdmello/helios)",
  "consensus",
  "ethers 2.0.13",
  "eyre",
@@ -2858,7 +2870,7 @@ version = "0.5.5"
 source = "git+https://github.com/xavierdmello/helios#3772539dff2601fd2788b9c10871b21341070703"
 dependencies = [
  "client",
- "common",
+ "common 0.5.5 (git+https://github.com/xavierdmello/helios)",
  "config",
  "consensus",
  "execution",
@@ -4731,6 +4743,7 @@ dependencies = [
 name = "primitives"
 version = "0.1.0"
 dependencies = [
+ "common 0.5.5",
  "ethers 2.0.14",
  "eyre",
  "helios",
