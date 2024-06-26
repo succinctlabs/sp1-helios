@@ -27,3 +27,4 @@ pub enum ConsensusError {
     #[error("consensus rpc is for the incorrect network")]
     IncorrectRpcNetwork,
 }
+

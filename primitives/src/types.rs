@@ -358,3 +358,8 @@ pub struct Update {
     pub sync_aggregate: SyncAggregate,
     pub signature_slot: U64,
 }
+#[derive(SimpleSerialize, Default, Debug)]
+pub struct ForkData {
+    pub current_version: Vector<u8, 4>,
+    pub genesis_validator_root: Bytes32,
+}

@@ -2877,6 +2877,7 @@ dependencies = [
  "sp1-helper",
  "sp1-sdk",
  "ssz_rs",
+ "thiserror",
  "tokio",
 ]
 
@@ -4737,8 +4738,10 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_with",
+ "snowbridge-milagro-bls",
  "ssz_rs",
  "superstruct 0.8.0",
+ "thiserror",
  "tokio",
 ]
 

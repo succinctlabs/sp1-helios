@@ -22,6 +22,7 @@ helios = { git = "https://github.com/xavierdmello/helios" }
 primitives = { path = "../primitives" }
 serde = "1.0.203"
 ssz_rs = "0.9.0"
+thiserror = "1.0.61"
 
 [build-dependencies]
 sp1-helper = { git = "https://github.com/succinctlabs/sp1.git", branch = "main" }

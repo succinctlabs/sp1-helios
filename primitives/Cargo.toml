@@ -5,6 +5,7 @@ name = "primitives"
 edition = "2021"
 
 [dependencies]
+milagro_bls = { package = "snowbridge-milagro-bls", git = "https://github.com/Snowfork/milagro_bls", rev = "6a95c9e33c6a41d9137761e593d53742ebb964de" }
 eyre = "0.6.12"
 ethers = "2.0.14"
 serde_with = "3.8.1"
@@ -15,3 +16,5 @@ hex = "0.4.3"
 helios = { git = "https://github.com/xavierdmello/helios" }
 tokio = "1.38.0"
 superstruct = "0.8.0"
+thiserror = "1.0.61"
+common = { path = "../common" }

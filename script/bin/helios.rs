@@ -4,6 +4,7 @@ use dotenv;
 use ethers::types::H256;
 use eyre::Result;
 use helios::{
+    client,
     consensus::{
         self, constants,
         rpc::{nimbus_rpc::NimbusRpc, ConsensusRpc},
@@ -40,8 +41,9 @@ async fn main() {
     let update = get_update(&helios_client).await;
     verify_update(
         &update,
-        LightClientStore::default(),
-        Arc::new(Config::default()),
+        helios_client.store,
+        helios_client.config,
+        SystemTime::now(),
     );
 
     // stdin.write(&buf);
