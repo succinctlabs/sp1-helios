@@ -2,7 +2,7 @@ use std::ops::Deref;
 
 use ssz_rs::prelude::*;
 
-pub use ssz_rs::prelude::{Vector, Bitvector};
+pub use ssz_rs::prelude::{Bitvector, Vector};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ByteVector<const N: usize> {
@@ -40,6 +40,16 @@ impl<const N: usize> TryFrom<&[u8]> for ByteVector<N> {
         Ok(Self {
             inner: Vector::try_from(value.to_vec()).map_err(|(_, err)| err)?,
         })
+    }
+}
+
+impl<const N: usize> serde::Serialize for ByteVector<N> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let hex_string = format!("0x{}", hex::encode(self.as_slice()));
+        serializer.serialize_str(&hex_string)
     }
 }
 
@@ -88,17 +98,6 @@ impl<'de, const N: usize> serde::Deserialize<'de> for ByteVector<N> {
         Ok(Self {
             inner: bytes.to_vec().try_into().unwrap(),
         })
-    }
-}
-
-impl<const N: usize> serde::Serialize for ByteVector<N> {
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        let value = hex::encode(self.inner.to_vec());
-        let output = format!("0x{}", value);
-        serializer.collect_str(&output)
     }
 }
 

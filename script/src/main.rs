@@ -13,10 +13,6 @@ use helios::{
     },
     prelude::*,
 };
-// use primitives::fetcher::{
-//     get_bootstrap, get_client, get_latest_checkpoint, get_update, to_branch, to_committee,
-//     to_header, to_sync_agg,
-// };
 
 use helios_prover_primitives::types::{
     BLSPubKey, Bytes32, Header, SignatureBytes, SyncAggregate, SyncCommittee, Vector, U64,
@@ -160,15 +156,7 @@ async fn main() {
     let checkpoint = get_latest_checkpoint().await;
     let helios_client = get_client(checkpoint.as_bytes().to_vec()).await;
     let bootstrap = get_bootstrap(&helios_client, checkpoint.as_bytes()).await;
-
     // let update = get_update(&helios_client).await;
-
-    // verify_update(
-    //     &update,
-    //     helios_client.store,
-    //     helios_client.config,
-    //     SystemTime::now(),
-    // );
 
     stdin.write(&checkpoint);
     stdin.write(&bootstrap);
