@@ -1,7 +1,7 @@
 //! A simple script to generate and verify the proof of a given program.
 
 use dotenv;
-use ethers::types::H256;
+use ethers_core::types::H256;
 use eyre::Result;
 use helios::{
     client,
@@ -23,7 +23,7 @@ use ssz_rs::Serialize;
 use std::sync::Arc;
 use tokio::sync::{mpsc::channel, watch};
 const ELF: &[u8] = include_bytes!("../../program/elf/riscv32im-succinct-zkvm-elf");
-// use primitives::consensus::verify_update;
+use helios::primitives::consensus::verify_generic_update;
 
 async fn get_latest_checkpoint() -> H256 {
     let cf = checkpoints::CheckpointFallback::new()
@@ -98,11 +98,8 @@ async fn get_update(client: &Inner<NimbusRpc>) -> Update {
         .unwrap();
 
     let update = updates[0].clone();
-    for update in updates {
-        println!("{:?}", update.finalized_header.slot);
-    }
+
     update
-    // updates[0].clone()
 }
 
 fn to_header(h: consensus::types::Header) -> Header {
@@ -156,7 +153,9 @@ async fn main() {
     let checkpoint = get_latest_checkpoint().await;
     let helios_client = get_client(checkpoint.as_bytes().to_vec()).await;
     let bootstrap = get_bootstrap(&helios_client, checkpoint.as_bytes()).await;
-    // let update = get_update(&helios_client).await;
+    let update = get_update(&helios_client).await;
+
+    verify_update(&update, &bootstrap).unwrap();
 
     stdin.write(&checkpoint);
     stdin.write(&bootstrap);
