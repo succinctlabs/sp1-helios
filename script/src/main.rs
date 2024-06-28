@@ -153,20 +153,22 @@ async fn main() {
     // Based on contract data, get next update and generate proof
     let checkpoint = get_latest_checkpoint().await;
     let helios_client = get_client(checkpoint.as_bytes().to_vec()).await;
-    let bootstrap = get_bootstrap(&helios_client, checkpoint.as_bytes()).await;
     let update = get_update(&helios_client).await;
     let now = SystemTime::now();
-    let result = verify_update(
-        &update,
-        now,
-        helios_client.config.chain.genesis_time,
-        helios_client.store,
-        helios_client.config.chain.genesis_root.clone(),
-        &helios_client.config.forks,
-    );
-    println!("result: {:?}", result);
-    // stdin.write(&checkpoint);
-    // stdin.write(&bootstrap);
+    // let result = verify_update(
+    //     &update,
+    //     now,
+    //     helios_client.config.chain.genesis_time,
+    //     helios_client.store.clone(),
+    //     helios_client.config.chain.genesis_root.clone(),
+    //     &helios_client.config.forks,
+    // );
+    stdin.write(&update);
+    stdin.write(&now);
+    stdin.write(&helios_client.config.chain.genesis_time);
+    stdin.write(&helios_client.store);
+    stdin.write(&helios_client.config.chain.genesis_root);
+    stdin.write(&helios_client.config.forks);
 
     let client = ProverClient::new();
     let (pk, vk) = client.setup(ELF);
