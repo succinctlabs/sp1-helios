@@ -164,11 +164,11 @@ async fn main() {
     //     &helios_client.config.forks,
     // );
     stdin.write(&update);
-    stdin.write(&now);
-    stdin.write(&helios_client.config.chain.genesis_time);
-    stdin.write(&helios_client.store);
-    stdin.write(&helios_client.config.chain.genesis_root);
-    stdin.write(&helios_client.config.forks);
+    // stdin.write(&now);
+    // stdin.write(&helios_client.config.chain.genesis_time);
+    // stdin.write(&helios_client.store);
+    // stdin.write(&helios_client.config.chain.genesis_root);
+    // stdin.write(&helios_client.config.forks);
 
     let client = ProverClient::new();
     let (pk, vk) = client.setup(ELF);

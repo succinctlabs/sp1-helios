@@ -6,3 +6,5 @@ edition = "2021"
 
 [dependencies]
 sp1-zkvm = { git = "https://github.com/succinctlabs/sp1.git", branch = "main" }
+primitives = { path = "../../helios/primitives" }
+common = { path = "../../helios/common" }
