@@ -4,14 +4,14 @@ use dotenv;
 use ethers_core::types::H256;
 use eyre::Result;
 use helios::{
-    client,
     consensus::{
         self, constants,
         rpc::{nimbus_rpc::NimbusRpc, ConsensusRpc},
-        types::{Bootstrap, Update},
-        utils, Inner,
+        Inner,
     },
     prelude::*,
+    primitives::types::{Bootstrap, Update},
+    primitives::utils,
 };
 
 use helios_prover_primitives::types::{
@@ -102,7 +102,7 @@ async fn get_update(client: &Inner<NimbusRpc>) -> Update {
     update
 }
 
-fn to_header(h: consensus::types::Header) -> Header {
+fn to_header(h: helios::primitives::types::Header) -> Header {
     Header {
         slot: U64::from(h.slot.as_u64()),
         proposer_index: U64::from(h.proposer_index.as_u64()),
@@ -112,7 +112,7 @@ fn to_header(h: consensus::types::Header) -> Header {
     }
 }
 
-fn to_committee(c: consensus::types::SyncCommittee) -> SyncCommittee {
+fn to_committee(c: helios::primitives::types::SyncCommittee) -> SyncCommittee {
     let pubkeys: Vec<BLSPubKey> = c
         .pubkeys
         .to_vec()
@@ -127,13 +127,13 @@ fn to_committee(c: consensus::types::SyncCommittee) -> SyncCommittee {
     }
 }
 
-fn to_branch(v: Vec<consensus::types::Bytes32>) -> Vec<Bytes32> {
+fn to_branch(v: Vec<helios::primitives::types::Bytes32>) -> Vec<Bytes32> {
     v.iter()
         .map(|v| Bytes32::try_from(v.as_slice()).unwrap())
         .collect()
 }
 
-fn to_sync_agg(sa: consensus::types::SyncAggregate) -> SyncAggregate {
+fn to_sync_agg(sa: helios::primitives::types::SyncAggregate) -> SyncAggregate {
     SyncAggregate {
         sync_committee_bits: sa.sync_committee_bits,
         sync_committee_signature: SignatureBytes::try_from(sa.sync_committee_signature.as_slice())
