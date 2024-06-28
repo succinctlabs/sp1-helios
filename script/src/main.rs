@@ -13,6 +13,7 @@ use helios::{
     primitives::types::{Bootstrap, Update},
     primitives::utils,
 };
+use zduny_wasm_timer::SystemTime;
 
 use helios_prover_primitives::types::{
     BLSPubKey, Bytes32, Header, SignatureBytes, SyncAggregate, SyncCommittee, Vector, U64,
@@ -23,7 +24,7 @@ use ssz_rs::Serialize;
 use std::sync::Arc;
 use tokio::sync::{mpsc::channel, watch};
 const ELF: &[u8] = include_bytes!("../../program/elf/riscv32im-succinct-zkvm-elf");
-use helios::primitives::consensus::verify_generic_update;
+use helios::primitives::consensus::verify_update;
 
 async fn get_latest_checkpoint() -> H256 {
     let cf = checkpoints::CheckpointFallback::new()
@@ -154,11 +155,19 @@ async fn main() {
     let helios_client = get_client(checkpoint.as_bytes().to_vec()).await;
     let bootstrap = get_bootstrap(&helios_client, checkpoint.as_bytes()).await;
     let update = get_update(&helios_client).await;
+    let now = SystemTime::now();
+    verify_update(
+        &update,
+        now,
+        helios_client.config.chain.genesis_time,
+        helios_client.store,
+        helios_client.config.chain.genesis_root,
+        &helios_client.config.forks,
+    )
+    .unwrap();
 
-    verify_update(&update, &bootstrap).unwrap();
-
-    stdin.write(&checkpoint);
-    stdin.write(&bootstrap);
+    // stdin.write(&checkpoint);
+    // stdin.write(&bootstrap);
 
     let client = ProverClient::new();
     let (pk, vk) = client.setup(ELF);
