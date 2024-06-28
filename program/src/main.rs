@@ -6,9 +6,9 @@ sp1_zkvm::entrypoint!(main);
 //     BLSPubKey, Bytes32, Header, SignatureBytes, SyncAggregate, SyncCommittee, Vector, U64,
 // };
 
-use eyre::Result;
+// use eyre::Result;
 
-use std::sync::Arc;
+// use std::sync::Arc;
 
 pub fn main() {
     // let checkpoint: H256 = sp1_zkvm::io::read::<H256>();

@@ -156,16 +156,15 @@ async fn main() {
     let bootstrap = get_bootstrap(&helios_client, checkpoint.as_bytes()).await;
     let update = get_update(&helios_client).await;
     let now = SystemTime::now();
-    verify_update(
+    let result = verify_update(
         &update,
         now,
         helios_client.config.chain.genesis_time,
         helios_client.store,
-        helios_client.config.chain.genesis_root,
+        helios_client.config.chain.genesis_root.clone(),
         &helios_client.config.forks,
-    )
-    .unwrap();
-
+    );
+    println!("result: {:?}", result);
     // stdin.write(&checkpoint);
     // stdin.write(&bootstrap);
 

@@ -6,7 +6,3 @@ edition = "2021"
 
 [dependencies]
 sp1-zkvm = { git = "https://github.com/succinctlabs/sp1.git", branch = "main" }
-
-eyre = "0.6.12"
-ethers-core = "2.0.14"
-tokio = "1.38.0"
