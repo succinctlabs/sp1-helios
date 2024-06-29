@@ -12,7 +12,7 @@ use helios::{
     primitives::types::Update,
     primitives::utils,
 };
-use helios_prover_primitives::types::ProofInputs;
+use sp1_helios_primitives::types::ProofInputs;
 use sp1_sdk::{utils::setup_logger, ProverClient, SP1Stdin};
 use std::sync::Arc;
 use tokio::sync::{mpsc::channel, watch};

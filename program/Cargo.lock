@@ -699,24 +699,10 @@ name = "helios-2-program"
 version = "0.1.0"
 dependencies = [
  "common",
- "helios-prover-primitives",
  "primitives",
  "serde_cbor",
+ "sp1-helios-primitives",
  "sp1-zkvm",
-]
-
-[[package]]
-name = "helios-prover-primitives"
-version = "0.1.0"
-dependencies = [
- "common",
- "eyre",
- "hex",
- "primitives",
- "serde",
- "serde_json",
- "serde_with",
- "ssz_rs",
 ]
 
 [[package]]
@@ -1561,6 +1547,20 @@ dependencies = [
  "scale-info",
  "snowbridge-amcl",
  "zeroize",
+]
+
+[[package]]
+name = "sp1-helios-primitives"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "eyre",
+ "hex",
+ "primitives",
+ "serde",
+ "serde_json",
+ "serde_with",
+ "ssz_rs",
 ]
 
 [[package]]

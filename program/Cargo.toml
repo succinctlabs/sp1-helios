@@ -9,4 +9,4 @@ sp1-zkvm = { git = "https://github.com/succinctlabs/sp1.git", branch = "main" }
 primitives = { path = "../../helios/primitives" }
 common = { path = "../../helios/common" }
 serde_cbor = "0.11.2"
-helios-prover-primitives = { path = "../primitives" }
+sp1-helios-primitives = { path = "../primitives" }

@@ -2161,29 +2161,15 @@ dependencies = [
  "ethers-core",
  "eyre",
  "helios",
- "helios-prover-primitives",
  "serde",
  "serde_cbor",
+ "sp1-helios-primitives",
  "sp1-helper",
  "sp1-sdk",
  "ssz_rs",
  "thiserror",
  "tokio",
  "zduny-wasm-timer",
-]
-
-[[package]]
-name = "helios-prover-primitives"
-version = "0.1.0"
-dependencies = [
- "common",
- "eyre",
- "hex",
- "primitives",
- "serde",
- "serde_json",
- "serde_with",
- "ssz_rs",
 ]
 
 [[package]]
@@ -4803,6 +4789,20 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "sp1-helios-primitives"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "eyre",
+ "hex",
+ "primitives",
+ "serde",
+ "serde_json",
+ "serde_with",
+ "ssz_rs",
 ]
 
 [[package]]
