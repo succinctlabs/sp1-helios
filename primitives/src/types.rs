@@ -1,7 +1,9 @@
-use std::ops::Deref;
+use std::{ops::Deref, time::SystemTime};
 
 use ssz_rs::prelude::*;
 
+use primitives::forktypes::Forks;
+use primitives::types::{LightClientStore, Update};
 pub use ssz_rs::prelude::{Bitvector, Vector};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -298,4 +300,14 @@ pub struct SyncAggregate {
 pub struct SigningData {
     pub object_root: Bytes32,
     pub domain: Bytes32,
+}
+
+#[derive(serde::Serialize, serde::Deserialize,Debug)]
+pub struct ProofInputs {
+    pub update: Update,
+    pub now: SystemTime,
+    pub genesis_time: u64,
+    pub store: LightClientStore,
+    pub genesis_root: Vec<u8>,
+    pub forks: Forks,
 }

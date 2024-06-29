@@ -7,7 +7,7 @@ sp1_zkvm::entrypoint!(main);
 // };
 
 use std::time::SystemTime;
-
+use helios_prover_primitives::types::ProofInputs;
 use primitives::forktypes::Forks;
 use primitives::types::{Bootstrap, Bytes32, Header, LightClientStore, SyncCommittee, Update, U64};
 use primitives::utils;
@@ -16,7 +16,11 @@ use primitives::utils;
 // use std::sync::Arc;
 
 pub fn main() {
-    let sync_committee: Update = sp1_zkvm::io::read::<Update>();
+    let encoded_inputs = sp1_zkvm::io::read_vec();
+    let inputs: ProofInputs = serde_cbor::from_slice(&encoded_inputs).unwrap();
+
+    println!("{:?}", inputs);
+    // let sync_committee: Update = sp1_zkvm::io::read::<Update>();
     // let update: Update = sp1_zkvm::io::read::<Update>();
     // let now: SystemTime = sp1_zkvm::io::read::<SystemTime>();
     // let genesis_time: u64 = sp1_zkvm::io::read::<u64>();

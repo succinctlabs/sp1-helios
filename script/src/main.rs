@@ -16,7 +16,8 @@ use helios::{
 use zduny_wasm_timer::SystemTime;
 
 use helios_prover_primitives::types::{
-    BLSPubKey, Bytes32, Header, SignatureBytes, SyncAggregate, SyncCommittee, Vector, U64,
+    BLSPubKey, Bytes32, Header, ProofInputs, SignatureBytes, SyncAggregate, SyncCommittee, Vector,
+    U64,
 };
 
 use sp1_sdk::{ProverClient, SP1Stdin};
@@ -155,20 +156,17 @@ async fn main() {
     let helios_client = get_client(checkpoint.as_bytes().to_vec()).await;
     let update = get_update(&helios_client).await;
     let now = SystemTime::now();
-    // let result = verify_update(
-    //     &update,
-    //     now,
-    //     helios_client.config.chain.genesis_time,
-    //     helios_client.store.clone(),
-    //     helios_client.config.chain.genesis_root.clone(),
-    //     &helios_client.config.forks,
-    // );
-    stdin.write(&update);
-    // stdin.write(&now);
-    // stdin.write(&helios_client.config.chain.genesis_time);
-    // stdin.write(&helios_client.store);
-    // stdin.write(&helios_client.config.chain.genesis_root);
-    // stdin.write(&helios_client.config.forks);
+
+    let inputs = ProofInputs {
+        update,
+        now,
+        genesis_time: helios_client.config.chain.genesis_time,
+        store: helios_client.store,
+        genesis_root: helios_client.config.chain.genesis_root.clone(),
+        forks: helios_client.config.forks.clone(),
+    };
+    let encoded_inputs = serde_cbor::to_vec(&inputs).unwrap();
+    stdin.write_slice(&encoded_inputs);
 
     let client = ProverClient::new();
     let (pk, vk) = client.setup(ELF);
