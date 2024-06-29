@@ -1068,13 +1068,13 @@ dependencies = [
 name = "primitives"
 version = "0.1.0"
 dependencies = [
+ "bytes",
  "common",
  "ethers-core",
  "eyre",
  "hex",
  "serde",
  "serde_json",
- "serde_with",
  "snowbridge-milagro-bls",
  "ssz_rs",
  "superstruct",
@@ -1551,9 +1551,9 @@ checksum = "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
 
 [[package]]
 name = "superstruct"
-version = "0.8.0"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bf0f31f730ad9e579364950e10d6172b4a9bd04b447edf5988b066a860cc340e"
+checksum = "6f4e1f478a7728f8855d7e620e9a152cf8932c6614f86564c886f9b8141f3201"
 dependencies = [
  "darling 0.13.4",
  "itertools",

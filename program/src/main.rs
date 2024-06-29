@@ -26,5 +26,5 @@ pub fn main() {
 
     assert!(is_valid);
 
-    sp1_zkvm::io::commit(&is_valid);
+    sp1_zkvm::io::commit(&is_valid);       
 }
