@@ -173,8 +173,8 @@ async fn main() {
     let mut proof = client.prove(&pk, stdin).expect("proving failed");
 
     // // Read output.
-    // let valid = proof.public_values.read::<bool>();
-    // println!("valid: {}", valid);
+    let valid = proof.public_values.read::<bool>();
+    println!("Is valid: {}", valid);
 
     // Verify proof.
     client.verify(&proof, &vk).expect("verification failed");
