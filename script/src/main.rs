@@ -2,30 +2,23 @@
 
 use dotenv;
 use ethers_core::types::H256;
-use eyre::Result;
 use helios::{
     consensus::{
-        self, constants,
+        constants,
         rpc::{nimbus_rpc::NimbusRpc, ConsensusRpc},
         Inner,
     },
     prelude::*,
-    primitives::types::{Bootstrap, Update},
+    primitives::types::Update,
     primitives::utils,
 };
-use zduny_wasm_timer::SystemTime;
-
-use helios_prover_primitives::types::{
-    BLSPubKey, Bytes32, Header, ProofInputs, SignatureBytes, SyncAggregate, SyncCommittee, Vector,
-    U64,
-};
-
+use helios_prover_primitives::types::ProofInputs;
 use sp1_sdk::{utils::setup_logger, ProverClient, SP1Stdin};
-use ssz_rs::Serialize;
 use std::sync::Arc;
 use tokio::sync::{mpsc::channel, watch};
+use zduny_wasm_timer::SystemTime;
+
 const ELF: &[u8] = include_bytes!("../../program/elf/riscv32im-succinct-zkvm-elf");
-use helios::primitives::consensus::verify_update;
 
 async fn get_latest_checkpoint() -> H256 {
     let cf = checkpoints::CheckpointFallback::new()
@@ -52,8 +45,6 @@ async fn get_client(checkpoint: Vec<u8>) -> Inner<NimbusRpc> {
     let base_config = networks::mainnet();
     let config = Config {
         consensus_rpc: consensus_rpc.to_string(),
-        //consensus_rpc: String::new(),
-        //execution_rpc: untrusted_rpc_url.to_string(),
         execution_rpc: String::new(),
         chain: base_config.chain,
         forks: base_config.forks,
@@ -61,17 +52,11 @@ async fn get_client(checkpoint: Vec<u8>) -> Inner<NimbusRpc> {
         ..Default::default()
     };
 
-    //let check = get_latest_checkpoint().await;
-    //let checkpoint = check.as_bytes().to_vec();
-    //let checkpoint =
-    //hex::decode("60b0473910c8236cdd467f5115ea612f65dd71e052533a60f3864eee0702aaf0").unwrap();
-
     let (block_send, _) = channel(256);
     let (finalized_block_send, _) = watch::channel(None);
     let (channel_send, _) = watch::channel(None);
 
     let mut client = Inner::<NimbusRpc>::new(
-        //"testdata/",
         consensus_rpc,
         block_send,
         finalized_block_send,
@@ -79,14 +64,8 @@ async fn get_client(checkpoint: Vec<u8>) -> Inner<NimbusRpc> {
         Arc::new(config),
     );
 
-    //only sync when verifying finallity
-    //client.sync(&checkpoint).await.unwrap();
     client.bootstrap(&checkpoint).await.unwrap();
     client
-}
-
-async fn get_bootstrap(client: &Inner<NimbusRpc>, checkpoint: &[u8]) -> Bootstrap {
-    client.rpc.get_bootstrap(checkpoint).await.unwrap()
 }
 
 async fn get_update(client: &Inner<NimbusRpc>) -> Update {
@@ -102,45 +81,6 @@ async fn get_update(client: &Inner<NimbusRpc>) -> Update {
     let update = updates[0].clone();
 
     update
-}
-
-fn to_header(h: helios::primitives::types::Header) -> Header {
-    Header {
-        slot: U64::from(h.slot.as_u64()),
-        proposer_index: U64::from(h.proposer_index.as_u64()),
-        parent_root: Bytes32::try_from(h.parent_root.as_slice()).unwrap(),
-        state_root: Bytes32::try_from(h.state_root.as_slice()).unwrap(),
-        body_root: Bytes32::try_from(h.body_root.as_slice()).unwrap(),
-    }
-}
-
-fn to_committee(c: helios::primitives::types::SyncCommittee) -> SyncCommittee {
-    let pubkeys: Vec<BLSPubKey> = c
-        .pubkeys
-        .to_vec()
-        .iter()
-        .map(|k| BLSPubKey::try_from(k.as_slice()).unwrap())
-        .collect();
-
-    let aggregate_pubkey: BLSPubKey = BLSPubKey::try_from(c.aggregate_pubkey.as_slice()).unwrap();
-    SyncCommittee {
-        pubkeys: Vector::try_from(pubkeys).unwrap(),
-        aggregate_pubkey,
-    }
-}
-
-fn to_branch(v: Vec<helios::primitives::types::Bytes32>) -> Vec<Bytes32> {
-    v.iter()
-        .map(|v| Bytes32::try_from(v.as_slice()).unwrap())
-        .collect()
-}
-
-fn to_sync_agg(sa: helios::primitives::types::SyncAggregate) -> SyncAggregate {
-    SyncAggregate {
-        sync_committee_bits: sa.sync_committee_bits,
-        sync_committee_signature: SignatureBytes::try_from(sa.sync_committee_signature.as_slice())
-            .unwrap(),
-    }
 }
 
 #[tokio::main]
