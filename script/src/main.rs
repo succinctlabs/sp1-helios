@@ -20,7 +20,7 @@ use helios_prover_primitives::types::{
     U64,
 };
 
-use sp1_sdk::{ProverClient, SP1Stdin};
+use sp1_sdk::{utils::setup_logger, ProverClient, SP1Stdin};
 use ssz_rs::Serialize;
 use std::sync::Arc;
 use tokio::sync::{mpsc::channel, watch};
@@ -146,6 +146,7 @@ fn to_sync_agg(sa: helios::primitives::types::SyncAggregate) -> SyncAggregate {
 #[tokio::main]
 async fn main() {
     dotenv::dotenv().ok();
+    setup_logger();
 
     // Generate proof.
     let mut stdin = SP1Stdin::new();
