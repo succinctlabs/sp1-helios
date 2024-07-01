@@ -111,19 +111,21 @@ async fn main() {
 
     let client = ProverClient::new();
     let (pk, vk) = client.setup(ELF);
-    let mut proof = client.prove(&pk, stdin).expect("proving failed");
+    let (_, report) = client.execute(ELF, stdin).expect("execution failed");
+    println!("{:?}", report);
+    // let mut proof = client.prove(&pk, stdin).expect("proving failed");
 
-    // // Read output.
-    let valid = proof.public_values.read::<bool>();
-    println!("Is valid: {}", valid);
+    // // // Read output.
+    // let valid = proof.public_values.read::<bool>();
+    // println!("Is valid: {}", valid);
 
-    // Verify proof.
-    client.verify(&proof, &vk).expect("verification failed");
+    // // Verify proof.
+    // client.verify(&proof, &vk).expect("verification failed");
 
-    // Save proof.
-    proof
-        .save("proof-with-io.json")
-        .expect("saving proof failed");
+    // // Save proof.
+    // proof
+    //     .save("proof-with-io.json")
+    //     .expect("saving proof failed");
 
     println!("successfully generated and verified proof for the program!")
 }

@@ -5676,6 +5676,7 @@ dependencies = [
 [[package]]
 name = "snowbridge-milagro-bls"
 version = "1.5.2"
+source = "git+https://github.com/xavierdmello/milagro_bls?rev=e1a5ec735f2796e23947791807b28b2528719d0b#e1a5ec735f2796e23947791807b28b2528719d0b"
 dependencies = [
  "hex",
  "lazy_static",
