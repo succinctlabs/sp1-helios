@@ -472,9 +472,8 @@ dependencies = [
 
 [[package]]
 name = "ethers-core"
-version = "2.0.14"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "82d80cc6ad30b14a48ab786523af33b37f28a8623fc06afd55324816ef18fb1f"
+version = "2.0.13"
+source = "git+https://github.com/gakonst/ethers-rs?rev=3bf1a9e0d698e9fdfc91d0353878901af5a5c5ef#3bf1a9e0d698e9fdfc91d0353878901af5a5c5ef"
 dependencies = [
  "arrayvec",
  "bytes",
