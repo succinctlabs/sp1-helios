@@ -1529,6 +1529,7 @@ dependencies = [
  "rand_core 0.6.4",
  "sec1",
  "subtle",
+ "tap",
  "zeroize",
 ]
 
@@ -5675,7 +5676,6 @@ dependencies = [
 [[package]]
 name = "snowbridge-milagro-bls"
 version = "1.5.2"
-source = "git+https://github.com/Snowfork/milagro_bls?rev=6a95c9e33c6a41d9137761e593d53742ebb964de#6a95c9e33c6a41d9137761e593d53742ebb964de"
 dependencies = [
  "hex",
  "lazy_static",
@@ -5683,6 +5683,7 @@ dependencies = [
  "rand 0.8.5",
  "scale-info",
  "snowbridge-amcl",
+ "sp1-precompiles",
  "zeroize",
 ]
 
@@ -5801,6 +5802,23 @@ source = "git+https://github.com/succinctlabs/sp1.git?branch=main#14eb569d41d247
 dependencies = [
  "cargo_metadata",
  "chrono",
+]
+
+[[package]]
+name = "sp1-precompiles"
+version = "0.1.0"
+source = "git+https://github.com/succinctlabs/sp1.git#14eb569d41d24721ffbd407d6060e202482d659c"
+dependencies = [
+ "anyhow",
+ "bincode",
+ "cfg-if",
+ "getrandom 0.2.15",
+ "hex",
+ "k256",
+ "num",
+ "rand 0.8.5",
+ "serde",
+ "snowbridge-amcl",
 ]
 
 [[package]]
