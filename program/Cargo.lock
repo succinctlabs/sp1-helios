@@ -1468,8 +1468,7 @@ dependencies = [
 [[package]]
 name = "sha2"
 version = "0.9.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4d58a1e1bf39749807d89cf2d98ac2dfa0ff1cb3faa38fbb64dd88ac8013d800"
+source = "git+https://github.com/sp1-patches/RustCrypto-hashes?branch=patch-sha2-v0.9.9#db82a4848f8d033eab544255e1efa036cc06f054"
 dependencies = [
  "block-buffer 0.9.0",
  "cfg-if",
@@ -1481,8 +1480,7 @@ dependencies = [
 [[package]]
 name = "sha2"
 version = "0.10.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "793db75ad2bcafc3ffa7c68b215fee268f537982cd901d132f89c6343f3a3dc8"
+source = "git+https://github.com/sp1-patches/RustCrypto-hashes?branch=patch-sha2-v0.10.8#1f224388fdede7cef649bce0d63876d1a9e3f515"
 dependencies = [
  "cfg-if",
  "cpufeatures",
@@ -1786,9 +1784,9 @@ dependencies = [
 [[package]]
 name = "tiny-keccak"
 version = "2.0.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2c9d3793400a45f954c52e73d068316d76b6f4e36977e3fcebb13a2721e80237"
+source = "git+https://github.com/sp1-patches/tiny-keccak?branch=patch-v2.0.2#bf0b28f63510a90c7b6c21ac6ff461c93ecd2331"
 dependencies = [
+ "cfg-if",
  "crunchy",
 ]
 

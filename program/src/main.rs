@@ -3,8 +3,29 @@
 #![no_main]
 sp1_zkvm::entrypoint!(main);
 
-use sp1_helios_primitives::types::ProofInputs;
 use primitives::consensus::verify_update;
+use sp1_helios_primitives::types::ProofInputs;
+
+// Cycle Tracker:
+// deserialize
+// └╴4,341,638 cycles
+// verify_update
+// ┌╴parse-generic-update
+// │ └╴80,193 cycles
+// │ ┌╴verify-timestamp
+// │ └╴405 cycles
+// │ ┌╴verify-period
+// │ └╴397 cycles
+// │ ┌╴verify-finality-proof
+// │ └╴31,548 cycles
+// │ ┌╴verify-next-committee-proof
+// │ └╴3,130,323 cycles
+// │ ┌╴get-sync-committee
+// │ └╴388 cycles
+// │ ┌╴get-participating-keys
+// └╴  1,492,919,675 cycles    -- vro.
+// ┌╴verify-sync-comittee-signature
+// └╴387,799,352 cycles
 
 pub fn main() {
     let encoded_inputs = sp1_zkvm::io::read_vec();
@@ -26,5 +47,5 @@ pub fn main() {
 
     assert!(is_valid);
 
-    sp1_zkvm::io::commit(&is_valid);       
+    sp1_zkvm::io::commit(&is_valid);
 }
