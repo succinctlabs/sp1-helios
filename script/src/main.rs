@@ -17,7 +17,7 @@ use sp1_sdk::{utils::setup_logger, ProverClient, SP1Stdin};
 use std::sync::Arc;
 use tokio::sync::{mpsc::channel, watch};
 use zduny_wasm_timer::SystemTime;
-
+use hex;
 const ELF: &[u8] = include_bytes!("../../program/elf/riscv32im-succinct-zkvm-elf");
 
 async fn get_latest_checkpoint() -> H256 {
