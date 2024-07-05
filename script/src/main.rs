@@ -1,6 +1,5 @@
 //! A simple script to generate and verify the proof of a given program.
 
-use dotenv;
 use ethers_core::types::H256;
 use helios::{
     consensus::{
