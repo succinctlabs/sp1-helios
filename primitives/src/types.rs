@@ -1,8 +1,8 @@
-use std::{ops::Deref, time::SystemTime};
+use std::time::SystemTime;
 
 use ssz_rs::prelude::*;
 
-use primitives::forktypes::Forks;
+use primitives::config::types::Forks;
 use primitives::types::{LightClientStore, Update};
 pub use ssz_rs::prelude::{Bitvector, Vector};
 

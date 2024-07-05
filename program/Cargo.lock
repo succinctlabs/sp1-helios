@@ -185,18 +185,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "common"
-version = "0.5.5"
-dependencies = [
- "ethers-core",
- "eyre",
- "hex",
- "serde",
- "ssz_rs",
- "thiserror",
-]
-
-[[package]]
 name = "const-hex"
 version = "1.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -711,7 +699,6 @@ checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 name = "helios-2-program"
 version = "0.1.0"
 dependencies = [
- "common",
  "primitives",
  "serde_cbor",
  "sp1-helios-primitives",
@@ -1171,7 +1158,6 @@ version = "0.1.0"
 dependencies = [
  "bls12_381",
  "bytes",
- "common",
  "ethers-core",
  "eyre",
  "hex",
@@ -1558,7 +1544,6 @@ dependencies = [
 name = "sp1-helios-primitives"
 version = "0.1.0"
 dependencies = [
- "common",
  "eyre",
  "hex",
  "primitives",

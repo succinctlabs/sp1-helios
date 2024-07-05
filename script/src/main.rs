@@ -9,8 +9,8 @@ use helios::{
         Inner,
     },
     prelude::*,
+    primitives::consensus::utils,
     primitives::types::Update,
-    primitives::utils,
 };
 use sp1_helios_primitives::types::ProofInputs;
 use sp1_sdk::{utils::setup_logger, ProverClient, SP1Stdin};
