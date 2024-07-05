@@ -2,14 +2,14 @@
 
 use ethers_core::types::H256;
 use helios::{
+    common::consensus::types::Update,
+    common::consensus::utils,
     consensus::{
         constants,
         rpc::{nimbus_rpc::NimbusRpc, ConsensusRpc},
         Inner,
     },
     prelude::*,
-    primitives::consensus::utils,
-    primitives::types::Update,
 };
 use sp1_helios_primitives::types::ProofInputs;
 use sp1_sdk::{utils::setup_logger, ProverClient, SP1Stdin};

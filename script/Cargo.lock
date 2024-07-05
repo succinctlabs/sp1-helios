@@ -1066,17 +1066,36 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0b6a852b24ab71dffc585bcb46eaf7959d175cb865a7152e35b348d1b2960422"
 
 [[package]]
+name = "common"
+version = "0.1.0"
+source = "git+https://github.com/succinctlabs/helios.git#6a5fd5ace4c3ed5d373ba1ce714abadc48cd592e"
+dependencies = [
+ "bls12_381 0.8.0",
+ "bytes",
+ "ethers-core 2.0.13",
+ "eyre",
+ "hex",
+ "serde",
+ "serde_json",
+ "snowbridge-milagro-bls",
+ "ssz_rs",
+ "superstruct",
+ "thiserror",
+ "zduny-wasm-timer",
+]
+
+[[package]]
 name = "config"
 version = "0.5.5"
-source = "git+https://github.com/succinctlabs/helios.git#408994a36bcf4f93776f1533b33625703e6ea451"
+source = "git+https://github.com/succinctlabs/helios.git#6a5fd5ace4c3ed5d373ba1ce714abadc48cd592e"
 dependencies = [
+ "common",
  "dirs",
  "ethers-core 2.0.13",
  "eyre",
  "figment",
  "futures",
  "hex",
- "primitives",
  "reqwest 0.12.5",
  "retri",
  "serde",
@@ -1090,11 +1109,12 @@ dependencies = [
 [[package]]
 name = "consensus"
 version = "0.5.5"
-source = "git+https://github.com/succinctlabs/helios.git#408994a36bcf4f93776f1533b33625703e6ea451"
+source = "git+https://github.com/succinctlabs/helios.git#6a5fd5ace4c3ed5d373ba1ce714abadc48cd592e"
 dependencies = [
  "async-trait",
  "bytes",
  "chrono",
+ "common",
  "config",
  "ethers-core 2.0.13",
  "eyre",
@@ -1102,7 +1122,6 @@ dependencies = [
  "getrandom 0.2.15",
  "hex",
  "parking_lot",
- "primitives",
  "reqwest 0.12.5",
  "retri",
  "serde",
@@ -2154,10 +2173,11 @@ dependencies = [
 [[package]]
 name = "execution"
 version = "0.5.5"
-source = "git+https://github.com/succinctlabs/helios.git#408994a36bcf4f93776f1533b33625703e6ea451"
+source = "git+https://github.com/succinctlabs/helios.git#6a5fd5ace4c3ed5d373ba1ce714abadc48cd592e"
 dependencies = [
  "async-trait",
  "bytes",
+ "common",
  "consensus",
  "ethers 2.0.13",
  "eyre",
@@ -2165,7 +2185,6 @@ dependencies = [
  "hex",
  "hyper 1.4.0",
  "openssl",
- "primitives",
  "reqwest 0.12.5",
  "revm",
  "serde",
@@ -2688,12 +2707,12 @@ checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 [[package]]
 name = "helios"
 version = "0.5.5"
-source = "git+https://github.com/succinctlabs/helios.git#408994a36bcf4f93776f1533b33625703e6ea451"
+source = "git+https://github.com/succinctlabs/helios.git#6a5fd5ace4c3ed5d373ba1ce714abadc48cd592e"
 dependencies = [
+ "common",
  "config",
  "consensus",
  "execution",
- "primitives",
 ]
 
 [[package]]
@@ -3328,7 +3347,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e310b3a6b5907f99202fcdb4960ff45b93735d7c7d96b760fcff8db2dc0e103d"
 dependencies = [
  "cfg-if",
- "windows-targets 0.52.6",
+ "windows-targets 0.48.5",
 ]
 
 [[package]]
@@ -3636,7 +3655,7 @@ version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "681030a937600a36906c185595136d26abfebb4aa9c65701cefcaf8578bb982b"
 dependencies = [
- "proc-macro-crate 3.1.0",
+ "proc-macro-crate 1.3.1",
  "proc-macro2",
  "quote",
  "syn 2.0.68",
@@ -4411,24 +4430,6 @@ dependencies = [
  "impl-serde 0.4.0",
  "scale-info",
  "uint 0.9.5",
-]
-
-[[package]]
-name = "primitives"
-version = "0.1.0"
-source = "git+https://github.com/succinctlabs/helios.git#408994a36bcf4f93776f1533b33625703e6ea451"
-dependencies = [
- "bls12_381 0.8.0",
- "bytes",
- "ethers-core 2.0.13",
- "eyre",
- "hex",
- "serde",
- "serde_json",
- "ssz_rs",
- "superstruct",
- "thiserror",
- "zduny-wasm-timer",
 ]
 
 [[package]]
@@ -5799,9 +5800,9 @@ dependencies = [
 name = "sp1-helios-primitives"
 version = "0.1.0"
 dependencies = [
+ "common",
  "eyre",
  "hex",
- "primitives",
  "serde",
  "serde_json",
  "serde_with",
@@ -7474,9 +7475,9 @@ dependencies = [
 
 [[package]]
 name = "zstd-sys"
-version = "2.0.11+zstd.1.5.6"
+version = "2.0.12+zstd.1.5.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "75652c55c0b6f3e6f12eb786fe1bc960396bf05a1eb3bf1f3691c3610ac2e6d4"
+checksum = "0a4e40c320c3cb459d9a9ff6de98cff88f4751ee9275d140e2be94a2b74e4c13"
 dependencies = [
  "cc",
  "pkg-config",

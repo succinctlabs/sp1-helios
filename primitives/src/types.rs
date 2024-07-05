@@ -2,8 +2,8 @@ use std::time::SystemTime;
 
 use ssz_rs::prelude::*;
 
-use primitives::config::types::Forks;
-use primitives::types::{LightClientStore, Update};
+use common::config::types::Forks;
+use common::consensus::types::{LightClientStore, Update};
 pub use ssz_rs::prelude::{Bitvector, Vector};
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]

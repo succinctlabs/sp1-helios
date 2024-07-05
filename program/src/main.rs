@@ -3,7 +3,7 @@
 #![no_main]
 sp1_zkvm::entrypoint!(main);
 
-use primitives::consensus::verify_update;
+use common::consensus::verify_update;
 use sp1_helios_primitives::types::ProofInputs;
 
 pub fn main() {

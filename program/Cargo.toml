@@ -6,7 +6,7 @@ edition = "2021"
 
 [dependencies]
 sp1-zkvm = { git = "https://github.com/succinctlabs/sp1.git", branch = "main" }
-primitives = { git="https://github.com/succinctlabs/helios", package="primitives" }
+common = { git = "https://github.com/succinctlabs/helios.git" }
 serde_cbor = "0.11.2"
 sp1-helios-primitives = { path = "../primitives" }
 

@@ -186,6 +186,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "common"
+version = "0.1.0"
+source = "git+https://github.com/succinctlabs/helios.git#6a5fd5ace4c3ed5d373ba1ce714abadc48cd592e"
+dependencies = [
+ "bls12_381",
+ "bytes",
+ "ethers-core",
+ "eyre",
+ "hex",
+ "serde",
+ "serde_json",
+ "snowbridge-milagro-bls",
+ "ssz_rs",
+ "superstruct",
+ "thiserror",
+ "zduny-wasm-timer",
+]
+
+[[package]]
 name = "const-hex"
 version = "1.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1138,24 +1157,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "primitives"
-version = "0.1.0"
-source = "git+https://github.com/succinctlabs/helios.git#408994a36bcf4f93776f1533b33625703e6ea451"
-dependencies = [
- "bls12_381",
- "bytes",
- "ethers-core",
- "eyre",
- "hex",
- "serde",
- "serde_json",
- "ssz_rs",
- "superstruct",
- "thiserror",
- "zduny-wasm-timer",
-]
-
-[[package]]
 name = "proc-macro-crate"
 version = "3.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1350,6 +1351,7 @@ version = "2.11.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eca070c12893629e2cc820a9761bedf6ce1dcddc9852984d1dc734b8bd9bd024"
 dependencies = [
+ "bitvec",
  "cfg-if",
  "derive_more",
  "parity-scale-codec",
@@ -1517,12 +1519,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "snowbridge-milagro-bls"
+version = "1.5.2"
+source = "git+https://github.com/succinctlabs/milagro_bls#665d09a7d27e7e3e4026c08ec7762a84a520e9bf"
+dependencies = [
+ "hex",
+ "lazy_static",
+ "parity-scale-codec",
+ "rand",
+ "scale-info",
+ "snowbridge-amcl",
+ "sp1-precompiles",
+ "zeroize",
+]
+
+[[package]]
 name = "sp1-helios-primitives"
 version = "0.1.0"
 dependencies = [
+ "common",
  "eyre",
  "hex",
- "primitives",
  "serde",
  "serde_json",
  "serde_with",
