@@ -121,6 +121,7 @@ dependencies = [
 [[package]]
 name = "bls12_381"
 version = "0.8.0"
+source = "git+https://github.com/succinctlabs/bls12_381#600e0384d2bb6a9eb3eee30a54b412b9b75fff6d"
 dependencies = [
  "digest 0.9.0",
  "ff",
@@ -699,7 +700,7 @@ checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 name = "helios-2-program"
 version = "0.1.0"
 dependencies = [
- "primitives",
+ "primitives 0.1.0",
  "serde_cbor",
  "sp1-helios-primitives",
  "sp1-zkvm",
@@ -1170,6 +1171,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "primitives"
+version = "0.1.0"
+source = "git+https://github.com/succinctlabs/helios.git#408994a36bcf4f93776f1533b33625703e6ea451"
+dependencies = [
+ "bls12_381",
+ "bytes",
+ "ethers-core",
+ "eyre",
+ "hex",
+ "serde",
+ "serde_json",
+ "ssz_rs",
+ "superstruct",
+ "thiserror",
+ "zduny-wasm-timer",
+]
+
+[[package]]
 name = "proc-macro-crate"
 version = "3.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1445,9 +1464,9 @@ dependencies = [
 
 [[package]]
 name = "serde_with"
-version = "3.8.2"
+version = "3.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "079f3a42cd87588d924ed95b533f8d30a483388c4e400ab736a7058e34f16169"
+checksum = "e73139bc5ec2d45e6c5fd85be5a46949c1c39a4c18e56915f5eb4c12f975e377"
 dependencies = [
  "base64",
  "chrono",
@@ -1463,9 +1482,9 @@ dependencies = [
 
 [[package]]
 name = "serde_with_macros"
-version = "3.8.2"
+version = "3.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc03aad67c1d26b7de277d51c86892e7d9a0110a2fe44bf6b26cc569fba302d6"
+checksum = "b80d3d6b56b64335c0180e5ffde23b3c5e08c14c585b51a15bd0e95393f46703"
 dependencies = [
  "darling 0.20.9",
  "proc-macro2",
@@ -1546,7 +1565,7 @@ version = "0.1.0"
 dependencies = [
  "eyre",
  "hex",
- "primitives",
+ "primitives 0.1.0 (git+https://github.com/succinctlabs/helios.git)",
  "serde",
  "serde_json",
  "serde_with",

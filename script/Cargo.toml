@@ -9,7 +9,7 @@ dotenv = "0.15.0"
 eyre = "0.6.12"
 sp1-sdk = { git = "https://github.com/succinctlabs/sp1.git", branch = "main" }
 tokio = "1.38.0"
-helios = { path = "../../helios" }
+helios = { git = "https://github.com/succinctlabs/helios.git" }
 sp1-helios-primitives = { path = "../primitives" }
 
 serde = "1.0.203"
