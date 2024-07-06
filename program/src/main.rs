@@ -11,17 +11,31 @@ pub fn main() {
 
     println!("cycle-tracker-start: deserialize");
     let ProofInputs {
-        update,
+        updates,
         now,
         genesis_time,
-        store,
+        mut store,
         genesis_root,
         forks,
     } = serde_cbor::from_slice(&encoded_inputs).unwrap();
     println!("cycle-tracker-end: deserialize");
 
     println!("cycle-tracker-start: verify_update");
-    let is_valid = verify_update(&update, now, genesis_time, store, genesis_root, &forks).is_ok();
+    let mut is_valid = true;
+    for update in updates {
+        is_valid = is_valid
+            && verify_update(
+                &update,
+                now,
+                genesis_time,
+                &store,
+                genesis_root.clone(),
+                &forks,
+            )
+            .is_ok();
+        // apply_update(bla)
+    }
+
     println!("cycle-tracker-end: verify_update");
 
     assert!(is_valid);

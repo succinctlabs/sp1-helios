@@ -8,7 +8,7 @@ pub use ssz_rs::prelude::{Bitvector, Vector};
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct ProofInputs {
-    pub update: Update,
+    pub updates: Vec<Update>,
     pub now: SystemTime,
     pub genesis_time: u64,
     pub store: LightClientStore,

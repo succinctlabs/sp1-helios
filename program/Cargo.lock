@@ -188,7 +188,6 @@ dependencies = [
 [[package]]
 name = "common"
 version = "0.1.0"
-source = "git+https://github.com/succinctlabs/helios.git#6a5fd5ace4c3ed5d373ba1ce714abadc48cd592e"
 dependencies = [
  "bls12_381",
  "bytes",

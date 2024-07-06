@@ -67,7 +67,7 @@ async fn get_client(checkpoint: Vec<u8>) -> Inner<NimbusRpc> {
     client
 }
 
-async fn get_update(client: &Inner<NimbusRpc>) -> Update {
+async fn get_updates(client: &Inner<NimbusRpc>) -> Vec<Update> {
     println!("finalized slot: {:?}", client.store.finalized_header.slot);
     let period = utils::calc_sync_period(client.store.finalized_header.slot.into());
     println!("period: {:?}", period);
@@ -77,7 +77,7 @@ async fn get_update(client: &Inner<NimbusRpc>) -> Update {
         .await
         .unwrap();
 
-    updates[0].clone()
+    updates.clone()
 }
 
 #[tokio::main]
@@ -92,11 +92,11 @@ async fn main() {
     // Based on contract data, get next update and generate proof
     let checkpoint = get_latest_checkpoint().await;
     let helios_client = get_client(checkpoint.as_bytes().to_vec()).await;
-    let update = get_update(&helios_client).await;
+    let updates = get_updates(&helios_client).await;
     let now = SystemTime::now();
 
     let inputs = ProofInputs {
-        update,
+        updates,
         now,
         genesis_time: helios_client.config.chain.genesis_time,
         store: helios_client.store,

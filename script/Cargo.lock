@@ -1068,7 +1068,6 @@ checksum = "0b6a852b24ab71dffc585bcb46eaf7959d175cb865a7152e35b348d1b2960422"
 [[package]]
 name = "common"
 version = "0.1.0"
-source = "git+https://github.com/succinctlabs/helios.git#6a5fd5ace4c3ed5d373ba1ce714abadc48cd592e"
 dependencies = [
  "bls12_381 0.8.0",
  "bytes",
@@ -1087,7 +1086,6 @@ dependencies = [
 [[package]]
 name = "config"
 version = "0.5.5"
-source = "git+https://github.com/succinctlabs/helios.git#6a5fd5ace4c3ed5d373ba1ce714abadc48cd592e"
 dependencies = [
  "common",
  "dirs",
@@ -1109,7 +1107,6 @@ dependencies = [
 [[package]]
 name = "consensus"
 version = "0.5.5"
-source = "git+https://github.com/succinctlabs/helios.git#6a5fd5ace4c3ed5d373ba1ce714abadc48cd592e"
 dependencies = [
  "async-trait",
  "bytes",
@@ -2173,7 +2170,6 @@ dependencies = [
 [[package]]
 name = "execution"
 version = "0.5.5"
-source = "git+https://github.com/succinctlabs/helios.git#6a5fd5ace4c3ed5d373ba1ce714abadc48cd592e"
 dependencies = [
  "async-trait",
  "bytes",
@@ -2707,7 +2703,6 @@ checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 [[package]]
 name = "helios"
 version = "0.5.5"
-source = "git+https://github.com/succinctlabs/helios.git#6a5fd5ace4c3ed5d373ba1ce714abadc48cd592e"
 dependencies = [
  "common",
  "config",
