@@ -26,8 +26,9 @@ pub fn main() {
     let mut is_valid = true;
     println!("Num updates: {}", updates.len());
     println!("cycle-tracker-start: verify_and_apply_update");
-    if let Some(update) = updates.first() {
-        println!("Store before: {:?}", store.finalized_header.slot);
+    for (index, update) in updates.iter().enumerate() {
+        println!("Processing update {} of {}", index + 1, updates.len());
+
         println!("cycle-tracker-start: verify_update");
         is_valid = is_valid
             && verify_update(
@@ -44,8 +45,6 @@ pub fn main() {
         println!("cycle-tracker-start: apply_update");
         apply_update(&mut store, update);
         println!("cycle-tracker-end: apply_update");
-
-        println!("Store after: {:?}", store.finalized_header.slot);
     }
 
     is_valid = is_valid

@@ -18,6 +18,7 @@ use tokio::sync::{mpsc::channel, watch};
 use tracing::{debug, error, info, warn};
 use zduny_wasm_timer::SystemTime;
 const ELF: &[u8] = include_bytes!("../../program/elf/riscv32im-succinct-zkvm-elf");
+use ssz_rs::prelude::*;
 
 async fn get_latest_checkpoint() -> H256 {
     let cf = checkpoints::CheckpointFallback::new()
@@ -80,6 +81,15 @@ async fn get_updates(client: &Inner<NimbusRpc>) -> Vec<Update> {
     updates.clone()
 }
 
+async fn get_checkpoint_for_epoch(epoch: u64) -> H256 {
+    let rpc = NimbusRpc::new("https://www.lightclientdata.org");
+    const SLOTS_PER_EPOCH: u64 = 32;
+
+    let first_slot = epoch * SLOTS_PER_EPOCH;
+    let mut block = rpc.get_block(first_slot).await.unwrap();
+    H256::from_slice(block.hash_tree_root().unwrap().as_ref())
+}
+
 #[tokio::main]
 async fn main() {
     dotenv::dotenv().ok();
@@ -90,8 +100,10 @@ async fn main() {
 
     // TODO: Read smart contract to get checkpoint / other info
     // Based on contract data, get next update and generate proof
-    let checkpoint = get_latest_checkpoint().await;
+
+    let checkpoint = get_checkpoint_for_epoch(295000).await;
     let helios_client = get_client(checkpoint.as_bytes().to_vec()).await;
+
     let updates = get_updates(&helios_client).await;
     let now = SystemTime::now();
     let finality_update = helios_client.rpc.get_finality_update().await.unwrap();
