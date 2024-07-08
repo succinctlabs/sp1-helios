@@ -1,86 +1,60 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.22;
 
-import {Script, console} from "forge-std/Script.sol";
-import "forge-std/StdJson.sol";
-import {LightClient} from "../src/LightClient.sol";
+import "forge-std/Script.sol";
+import {SP1LightClient} from "../src/SP1LightClient.sol";
+import {ERC1967Proxy} from "@openzeppelin/proxy/ERC1967/ERC1967Proxy.sol";
+import {SP1MockVerifier} from "@sp1-contracts/SP1MockVerifier.sol";
+import {ISP1Verifier} from "@sp1-contracts/ISP1Verifier.sol";
 
-contract DeployLightClient is Script {
-    using stdJson for string;
+// Required environment variables:
+// - SP1_PROVER
+// - SP1_BLOBSTREAM_PROGRAM_VKEY
+// - CREATE2_SALT
+// - SP1_VERIFIER_ADDRESS
 
+contract DeployScript is Script {
     function setUp() public {}
 
-    function run() public {
-        string memory rawJson;
-        {
-            string memory CONSENSUS_RPC = vm.envString("CONSENSUS_RPC");
-            string[] memory curlInputs = new string[](5);
-            curlInputs[0] = "curl";
-            curlInputs[1] = string(
-                abi.encodePacked(
-                    CONSENSUS_RPC,
-                    "/api/beacon/proof/lightclient/init/finalized"
-                )
-            );
-            curlInputs[2] = "-o";
-            curlInputs[3] = "init.json";
-            curlInputs[4] = "--silent";
+    function run() public returns (address) {
+        vm.startBroadcast();
 
-            vm.ffi(curlInputs);
-
-            rawJson = vm.readFile("init.json");
+        SP1LightClient lightClient;
+        ISP1Verifier verifier;
+        // Detect if the SP1_PROVER is set to mock, and pick the correct verifier.
+        string memory mockStr = "mock";
+        if (
+            keccak256(abi.encodePacked(vm.envString("SP1_PROVER")))
+                == keccak256(abi.encodePacked(mockStr))
+        ) {
+            verifier = ISP1Verifier(address(new SP1MockVerifier()));
+        } else {
+            verifier = ISP1Verifier(address(vm.envAddress("SP1_VERIFIER_ADDRESS")));
         }
 
-        bytes32 genesisValidatorsRoot = rawJson.readBytes32(
-            ".genesisValidatorsRoot"
-        );
-        uint256 genesisTime = rawJson.readUint(".genesisTime");
-        uint256 secondsPerSlot = rawJson.readUint(".secondsPerSlot");
-        uint256 slotsPerPeriod = rawJson.readUint(".slotsPerPeriod");
-        uint32 sourceChainId = uint32(rawJson.readUint(".sourceChainId"));
-        uint256 syncCommitteePeriod = rawJson.readUint(".syncCommitteePeriod");
-        bytes32 syncCommitteePoseidon = rawJson.readBytes32(
-            ".syncCommitteePoseidon"
+        // Deploy the SP1Telepathy contract.
+        SP1LightClient lightClientImpl =
+            new SP1LightClient{salt: bytes32(vm.envBytes("CREATE2_SALT"))}();
+        lightClient = SP1LightClient(
+            address(
+                new ERC1967Proxy{salt: bytes32(vm.envBytes("CREATE2_SALT"))}(
+                    address(lightClientImpl), ""
+                )
+            )
         );
 
-        console.log("genesisValidatorsRoot:");
-        console.logBytes32(bytes32(genesisValidatorsRoot));
-        console.log("genesisTime: %s", uint256(genesisTime));
-        console.log("secondsPerSlot: %s", uint256(secondsPerSlot));
-        console.log("slotsPerPeriod: %s", uint256(slotsPerPeriod));
-        console.log("syncCommitteePeriod: %s", uint256(syncCommitteePeriod));
-        console.log("syncCommitteePoseidon:");
-        console.logBytes32(bytes32(syncCommitteePoseidon));
-        console.log("sourceChainId: %s", uint32(sourceChainId));
+        // Initialize the Blobstream X light client.
+        lightClient.initialize(
+            vm.envBytes32("GENESIS_VALIDATORS_ROOT"),
+            vm.envUint("GENESIS_TIME"),
+            vm.envUint("SECONDS_PER_SLOT"),
+            vm.envUint("SLOTS_PER_PERIOD"),
+            vm.envUint("SOURCE_CHAIN_ID"),
+            vm.envUint("FINALITY_THRESHOLD"),
+            vm.envBytes32("SP1_TELEPATHY_PROGRAM_VKEY"),
+            address(verifier)
+        );
 
-        bytes32 STEP_FUNCTION_ID = vm.envBytes32("STEP_FUNCTION_ID");
-        bytes32 ROTATE_FUNCTION_ID = vm.envBytes32("ROTATE_FUNCTION_ID");
-        address FUNCTION_GATEWAY_ADDRESS = vm.envAddress("FUNCTION_GATEWAY");
-        uint16 FINALITY_THRESHOLD = uint16(vm.envUint("FINALITY_THRESHOLD"));
-        console.log("finalityThreshold: %s", uint16(FINALITY_THRESHOLD));
-        console.log("stepFunctionId:");
-        console.logBytes32(bytes32(STEP_FUNCTION_ID));
-        console.log("rotateFunctionId:");
-        console.logBytes32(bytes32(ROTATE_FUNCTION_ID));
-        console.log(
-            "functionGatewayAddress: %s",
-            address(FUNCTION_GATEWAY_ADDRESS)
-        );
-        vm.startBroadcast();
-        LightClient lightClient = new LightClient(
-            genesisValidatorsRoot,
-            genesisTime,
-            secondsPerSlot,
-            slotsPerPeriod,
-            syncCommitteePeriod,
-            syncCommitteePoseidon,
-            sourceChainId,
-            FINALITY_THRESHOLD,
-            STEP_FUNCTION_ID,
-            ROTATE_FUNCTION_ID,
-            FUNCTION_GATEWAY_ADDRESS
-        );
-        vm.stopBroadcast();
-        console.log("LightClient address: %s", address(lightClient));
+        return address(lightClient);
     }
 }

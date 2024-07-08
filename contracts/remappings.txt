@@ -5,3 +5,4 @@ openzeppelin-contracts-upgradeable/=lib/succinctx/contracts/lib/openzeppelin-con
 openzeppelin-contracts/=lib/succinctx/contracts/lib/openzeppelin-contracts/
 safe-contracts/=lib/succinctx/contracts/lib/safe-contracts/
 succinctx/=lib/succinctx/contracts/src/
+@sp1-contracts/=lib/sp1-contracts/contracts/src/

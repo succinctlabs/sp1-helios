@@ -2,8 +2,9 @@
 pragma solidity ^0.8.16;
 
 import {OutputReader} from "./OutputReader.sol";
+import {ISP1Verifier} from "@sp1-contracts/ISP1Verifier.sol";
 
-contract LightClient {
+contract SP1LightClient {
     bytes32 public immutable GENESIS_VALIDATORS_ROOT;
     uint256 public immutable GENESIS_TIME;
     uint256 public immutable SECONDS_PER_SLOT;
@@ -32,6 +33,12 @@ contract LightClient {
     /// @notice Maps from a period to the poseidon commitment for the sync committee.
     mapping(uint256 => bytes32) public syncCommitteePoseidons;
 
+    /// @notice The verification key for the SP1Telepathy program.
+    bytes32 public telepathyProgramVkey;
+
+    /// @notice The deployed SP1 verifier contract.
+    ISP1Verifier public verifier;
+
     event HeadUpdate(uint256 indexed slot, bytes32 indexed root);
     event SyncCommitteeUpdate(uint256 indexed period, bytes32 indexed root);
 
@@ -51,7 +58,9 @@ contract LightClient {
         uint256 syncCommitteePeriod,
         bytes32 syncCommitteePoseidon,
         uint32 sourceChainId,
-        uint16 finalityThreshold
+        uint16 finalityThreshold,
+        bytes32 telepathyProgramVkey,
+        address verifier
     ) {
         GENESIS_VALIDATORS_ROOT = genesisValidatorsRoot;
         GENESIS_TIME = genesisTime;
@@ -59,6 +68,8 @@ contract LightClient {
         SLOTS_PER_PERIOD = slotsPerPeriod;
         SOURCE_CHAIN_ID = sourceChainId;
         FINALITY_THRESHOLD = finalityThreshold;
+        telepathyProgramVkey = telepathyProgramVkey;
+        verifier = ISP1Verifier(verifier);
 
         setSyncCommitteePoseidon(syncCommitteePeriod, syncCommitteePoseidon);
     }
