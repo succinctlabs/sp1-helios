@@ -1,0 +1,10 @@
+{
+    "type": "req_elements",
+    "releaseId": "",
+    "data": {
+        "input": [
+            "10",
+            "15"
+        ]
+    }
+}

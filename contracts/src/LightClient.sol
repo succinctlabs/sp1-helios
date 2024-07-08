@@ -10,9 +10,12 @@ contract LightClient {
     uint256 public immutable SLOTS_PER_PERIOD;
     uint32 public immutable SOURCE_CHAIN_ID;
     uint16 public immutable FINALITY_THRESHOLD;
-    bytes32 public immutable STEP_FUNCTION_ID;
-    bytes32 public immutable ROTATE_FUNCTION_ID;
-    address public immutable FUNCTION_GATEWAY_ADDRESS;
+    /// @dev DEPECATED: Do not use. Compatibility for upgrades from TelepathyX.
+    bytes32 public immutable STEP_FUNCTION_ID_deprecated;
+    /// @dev DEPECATED: Do not use. Compatibility for upgrades from TelepathyX.
+    bytes32 public immutable ROTATE_FUNCTION_ID_deprecated;
+    /// @dev DEPECATED: Do not use. Compatibility for upgrades from TelepathyX.
+    address public immutable FUNCTION_GATEWAY_ADDRESS_deprecated;
 
     /// @notice The latest slot the light client has a finalized header for.
     uint256 public head = 0;
@@ -48,10 +51,7 @@ contract LightClient {
         uint256 syncCommitteePeriod,
         bytes32 syncCommitteePoseidon,
         uint32 sourceChainId,
-        uint16 finalityThreshold,
-        bytes32 stepFunctionId,
-        bytes32 rotateFunctionId,
-        address gatewayAddress
+        uint16 finalityThreshold
     ) {
         GENESIS_VALIDATORS_ROOT = genesisValidatorsRoot;
         GENESIS_TIME = genesisTime;
@@ -59,16 +59,9 @@ contract LightClient {
         SLOTS_PER_PERIOD = slotsPerPeriod;
         SOURCE_CHAIN_ID = sourceChainId;
         FINALITY_THRESHOLD = finalityThreshold;
-        STEP_FUNCTION_ID = stepFunctionId;
-        ROTATE_FUNCTION_ID = rotateFunctionId;
-        FUNCTION_GATEWAY_ADDRESS = gatewayAddress;
 
         setSyncCommitteePoseidon(syncCommitteePeriod, syncCommitteePoseidon);
     }
-
-
-
-
 
     /// @notice Process a step proof that has been verified in the FunctionGateway, then move the head forward and store the new roots.
     function step(uint256 attestedSlot) external {
