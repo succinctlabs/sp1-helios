@@ -11,7 +11,7 @@ sp1-sdk = { git = "https://github.com/succinctlabs/sp1.git", branch = "main" }
 tokio = "1.38.0"
 helios = { path = "../../helios" }
 sp1-helios-primitives = { path = "../primitives" }
-
+tracing = "0.1.37"
 serde = "1.0.203"
 ssz_rs = "0.9.0"
 thiserror = "1.0.61"

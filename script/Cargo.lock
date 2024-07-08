@@ -1080,6 +1080,7 @@ dependencies = [
  "ssz_rs",
  "superstruct",
  "thiserror",
+ "tracing",
  "zduny-wasm-timer",
 ]
 
@@ -2727,6 +2728,7 @@ dependencies = [
  "ssz_rs",
  "thiserror",
  "tokio",
+ "tracing",
  "zduny-wasm-timer",
 ]
 

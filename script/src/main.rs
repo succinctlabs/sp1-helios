@@ -15,8 +15,8 @@ use sp1_helios_primitives::types::ProofInputs;
 use sp1_sdk::{utils::setup_logger, ProverClient, SP1Stdin};
 use std::sync::Arc;
 use tokio::sync::{mpsc::channel, watch};
+use tracing::{debug, error, info, warn};
 use zduny_wasm_timer::SystemTime;
-
 const ELF: &[u8] = include_bytes!("../../program/elf/riscv32im-succinct-zkvm-elf");
 
 async fn get_latest_checkpoint() -> H256 {
@@ -94,9 +94,11 @@ async fn main() {
     let helios_client = get_client(checkpoint.as_bytes().to_vec()).await;
     let updates = get_updates(&helios_client).await;
     let now = SystemTime::now();
+    let finality_update = helios_client.rpc.get_finality_update().await.unwrap();
 
     let inputs = ProofInputs {
         updates,
+        finality_update,
         now,
         genesis_time: helios_client.config.chain.genesis_time,
         store: helios_client.store,
@@ -124,5 +126,11 @@ async fn main() {
         .save("proof-with-io.json")
         .expect("saving proof failed");
 
-    println!("successfully generated and verified proof for the program!")
+    println!("successfully generated and verified proof for the program!");
+
+    info!(
+    target: "helios::consensus",
+        "consensus client in sync with checkpoint: 0x{}",
+        hex::encode(checkpoint)
+    );
 }
