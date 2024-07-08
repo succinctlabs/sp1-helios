@@ -1,0 +1,7 @@
+ds-test/=lib/forge-std/lib/ds-test/src/
+erc4626-tests/=lib/succinctx/contracts/lib/openzeppelin-contracts-upgradeable/lib/erc4626-tests/
+forge-std/=lib/forge-std/src/
+openzeppelin-contracts-upgradeable/=lib/succinctx/contracts/lib/openzeppelin-contracts-upgradeable/
+openzeppelin-contracts/=lib/succinctx/contracts/lib/openzeppelin-contracts/
+safe-contracts/=lib/succinctx/contracts/lib/safe-contracts/
+succinctx/=lib/succinctx/contracts/src/
