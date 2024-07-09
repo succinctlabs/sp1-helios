@@ -7,16 +7,21 @@ import {SP1MockVerifier} from "@sp1-contracts/SP1MockVerifier.sol";
 import {ISP1Verifier} from "@sp1-contracts/ISP1Verifier.sol";
 
 // Required environment variables:
-// - SP1_PROVER
-// - SP1_BLOBSTREAM_PROGRAM_VKEY
-// - CREATE2_SALT
-// - SP1_VERIFIER_ADDRESS
-        // bytes32 genesisValidatorsRoot,
-        // uint256 genesisTime,
-        // uint256 secondsPerSlot,
-        // uint256 slotsPerPeriod,
-        // bytes32 syncCommitteeHash,
-        // bytes32 telepathyProgramVkey,
+// SP1_PROVER
+// SP1_TELEPATHY_PROGRAM_VKEY
+// SP1_VERIFIER_ADDRESS
+// CREATE2_SALT
+// GENESIS_VALIDATORS_ROOT
+// GENESIS_TIME
+// SECONDS_PER_SLOT
+// SLOTS_PER_PERIOD
+// SLOTS_PER_EPOCH
+// SYNC_COMMITTEE_HASH
+// FINALIZED_HEADER
+// HEAD
+// RPC_URL
+// PRIVATE_KEY
+// ETHERSCAN_API_KEY
 contract DeployScript is Script {
     function setUp() public {}
 
