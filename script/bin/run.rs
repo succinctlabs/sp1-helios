@@ -13,77 +13,14 @@ use helios::{
     },
     prelude::*,
 };
+use helios_2_script::get_updates;
 use sp1_helios_primitives::types::{ProofInputs, ProofOutputs};
 use sp1_sdk::{utils::setup_logger, ProverClient, SP1Stdin};
-use std::sync::Arc;
-use tokio::sync::{mpsc::channel, watch};
 use tracing::{debug, error, info, warn};
 use zduny_wasm_timer::SystemTime;
 const ELF: &[u8] = include_bytes!("../../program/elf/riscv32im-succinct-zkvm-elf");
+use helios_2_script::*;
 use ssz_rs::prelude::*;
-
-async fn get_latest_checkpoint() -> H256 {
-    let cf = checkpoints::CheckpointFallback::new()
-        .build()
-        .await
-        .unwrap();
-
-    // Fetch the latest mainnet checkpoint
-    cf.fetch_latest_checkpoint(&networks::Network::MAINNET)
-        .await
-        .unwrap()
-}
-
-async fn get_client(checkpoint: Vec<u8>) -> Inner<NimbusRpc> {
-    let consensus_rpc = "https://www.lightclientdata.org";
-
-    let base_config = networks::mainnet();
-    let config = Config {
-        consensus_rpc: consensus_rpc.to_string(),
-        execution_rpc: String::new(),
-        chain: base_config.chain,
-        forks: base_config.forks,
-        strict_checkpoint_age: false,
-        ..Default::default()
-    };
-
-    let (block_send, _) = channel(256);
-    let (finalized_block_send, _) = watch::channel(None);
-    let (channel_send, _) = watch::channel(None);
-
-    let mut client = Inner::<NimbusRpc>::new(
-        consensus_rpc,
-        block_send,
-        finalized_block_send,
-        channel_send,
-        Arc::new(config),
-    );
-
-    client.bootstrap(&checkpoint).await.unwrap();
-    client
-}
-
-async fn get_updates(client: &Inner<NimbusRpc>) -> Vec<Update> {
-    println!("finalized slot: {:?}", client.store.finalized_header.slot);
-    let period = utils::calc_sync_period(client.store.finalized_header.slot.into());
-    println!("period: {:?}", period);
-    let updates = client
-        .rpc
-        .get_updates(period, constants::MAX_REQUEST_LIGHT_CLIENT_UPDATES)
-        .await
-        .unwrap();
-
-    updates.clone()
-}
-
-async fn get_checkpoint_for_epoch(epoch: u64) -> H256 {
-    let rpc = NimbusRpc::new("https://www.lightclientdata.org");
-    const SLOTS_PER_EPOCH: u64 = 32;
-
-    let first_slot = epoch * SLOTS_PER_EPOCH;
-    let mut block = rpc.get_block(first_slot).await.unwrap();
-    H256::from_slice(block.hash_tree_root().unwrap().as_ref())
-}
 
 #[tokio::main]
 async fn main() {

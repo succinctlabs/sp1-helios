@@ -92,17 +92,6 @@ pub async fn main() {
     env::set_var("RUST_LOG", "info");
     dotenv::dotenv().ok();
     env_logger::init();
-    // SP1_PROVER=mock
-    // SP1_TELEPATHY_PROGRAM_VKEY=
-    // SP1_VERIFIER_ADDRESS=
-    // CREATE2_SALT=0xaa
-    // GENESIS_VALIDATORS_ROOT=
-    // GENESIS_TIME=
-    // SECONDS_PER_SLOT=
-    // SLOTS_PER_PERIOD=
-    // SYNC_COMMITTEE_HASH=
-    // FINALIZED_HEADER=
-    // HEAD=
 
     let args = GenesisArgs::parse();
 
@@ -142,7 +131,8 @@ pub async fn main() {
     let genesis_time = helios_client.config.chain.genesis_time;
     let genesis_root = B256::from_slice(&helios_client.config.chain.genesis_root);
     const SECONDS_PER_SLOT: u64 = 12;
-    const SLOTS_PER_PERIOD: u64 = 32 * 256;
+    const SLOTS_PER_EPOCH: u64 = 32;
+    const SLOTS_PER_PERIOD: u64 = SLOTS_PER_EPOCH * 256;
 
     info!(
         "\nSP1_PROVER={}\n\
@@ -153,6 +143,7 @@ pub async fn main() {
         GENESIS_TIME={}\n\
         SECONDS_PER_SLOT={}\n\
         SLOTS_PER_PERIOD={}\n\
+        SLOTS_PER_EPOCH={}\n\
         SYNC_COMMITTEE_HASH={}\n\
         FINALIZED_HEADER={}\n\
         HEAD={}",
@@ -164,6 +155,7 @@ pub async fn main() {
         genesis_time,
         SECONDS_PER_SLOT,
         SLOTS_PER_PERIOD,
+        SLOTS_PER_EPOCH,
         sync_committee_hash,
         finalized_header,
         head

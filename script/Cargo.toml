@@ -14,6 +14,10 @@ path = "./bin/genesis.rs"
 name = "run"
 path = "./bin/run.rs"
 
+[[bin]]
+name = "operator"
+path = "./bin/operator.rs"
+
 [dependencies]
 dotenv = "0.15.0"
 eyre = "0.6.12"
@@ -34,9 +38,11 @@ clap = "4.5.9"
 log = "0.4.22"
 env_logger = "0.11.3"
 alloy-primitives = "0.7.7"
+alloy = { version = "0.1.1", features = ["full"] }
+anyhow = "1.0.86"
 
 [build-dependencies]
-sp1-helper = { git = "https://github.com/succinctlabs/sp1.git", branch = "main" }
+sp1-helper = { git = "https://github.com/succinctlabs/sp1.git", branch = "ratan/add-ignore-rust-version-to-build-script" }
 
 [patch.crates-io]
 sha2-v0-9-9 = { git = "https://github.com/sp1-patches/RustCrypto-hashes", package = "sha2", branch = "patch-sha2-v0.9.9" }

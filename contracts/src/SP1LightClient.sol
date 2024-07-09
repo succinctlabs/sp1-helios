@@ -8,6 +8,7 @@ contract SP1LightClient {
     uint256 public immutable GENESIS_TIME;
     uint256 public immutable SECONDS_PER_SLOT;
     uint256 public immutable SLOTS_PER_PERIOD;
+    uint256 public immutable SLOTS_PER_EPOCH;
     uint32 public immutable SOURCE_CHAIN_ID;
 
     /// @notice The latest slot the light client has a finalized header for.
@@ -47,6 +48,7 @@ contract SP1LightClient {
         uint256 _genesisTime,
         uint256 _secondsPerSlot,
         uint256 _slotsPerPeriod,
+        uint256 _slotsPerEpoch,
         bytes32 _syncCommitteeHash,
         bytes32 _finalizedHeader,
         uint256 _head,
@@ -57,6 +59,7 @@ contract SP1LightClient {
         GENESIS_TIME = _genesisTime;
         SECONDS_PER_SLOT = _secondsPerSlot;
         SLOTS_PER_PERIOD = _slotsPerPeriod;
+        SLOTS_PER_EPOCH = _slotsPerEpoch;
         syncCommitteeHash = _syncCommitteeHash;
         telepathyProgramVkey = _telepathyProgramVkey;
         finalizedHeader = _finalizedHeader;
@@ -108,5 +111,10 @@ contract SP1LightClient {
     /// @notice Gets the current slot for the chain the light client is reflecting.
     function getCurrentSlot() internal view returns (uint256) {
         return (block.timestamp - GENESIS_TIME) / SECONDS_PER_SLOT;
+    }
+
+    /// @notice Gets the current epoch
+    function getCurrentEpoch() internal view returns (uint256) {
+        return head / SLOTS_PER_EPOCH;
     }
 }

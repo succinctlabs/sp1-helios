@@ -43,6 +43,7 @@ contract DeployScript is Script {
                 vm.envUint("GENESIS_TIME"),
                 vm.envUint("SECONDS_PER_SLOT"),
                 vm.envUint("SLOTS_PER_PERIOD"),
+                vm.envUint("SLOTS_PER_EPOCH"),
                 vm.envBytes32("SYNC_COMMITTEE_HASH"),
                 vm.envBytes32("FINALIZED_HEADER"),
                 vm.envUint("HEAD"),
