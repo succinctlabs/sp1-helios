@@ -108,13 +108,8 @@ contract SP1LightClient {
         return slot / SLOTS_PER_PERIOD;
     }
 
-    /// @notice Gets the current slot for the chain the light client is reflecting.
-    function getCurrentSlot() internal view returns (uint256) {
-        return (block.timestamp - GENESIS_TIME) / SECONDS_PER_SLOT;
-    }
-
     /// @notice Gets the current epoch
-    function getCurrentEpoch() internal view returns (uint256) {
+    function getCurrentEpoch() public view returns (uint256) {
         return head / SLOTS_PER_EPOCH;
     }
 }
