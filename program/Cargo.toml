@@ -9,6 +9,9 @@ sp1-zkvm = { git = "https://github.com/succinctlabs/sp1.git", branch = "main" }
 common = { path = "../../helios/common"}
 serde_cbor = "0.11.2"
 sp1-helios-primitives = { path = "../primitives" }
+alloy-sol-types = "0.7.7"
+ssz-rs = { package = "ssz_rs", version = "0.9.0" }
+alloy-primitives = "0.7.7"
 
 [patch.crates-io]
 sha2-v0-9-9 = { git = "https://github.com/sp1-patches/RustCrypto-hashes", package = "sha2", branch = "patch-sha2-v0.9.9" }

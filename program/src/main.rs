@@ -3,10 +3,13 @@
 #![no_main]
 sp1_zkvm::entrypoint!(main);
 
+use alloy_primitives::{B256, U256, U64};
+use alloy_sol_types::{sol, SolType};
 use common::consensus::{
     apply_finality_update, apply_update, verify_finality_update, verify_update,
 };
-use sp1_helios_primitives::types::ProofInputs;
+use sp1_helios_primitives::types::{ProofInputs, ProofOutputs};
+use ssz_rs::prelude::*;
 
 pub fn main() {
     let encoded_inputs = sp1_zkvm::io::read_vec();
@@ -24,7 +27,22 @@ pub fn main() {
     println!("cycle-tracker-end: deserialize");
 
     let mut is_valid = true;
-    println!("Num updates: {}", updates.len());
+    let prev_header: B256 = store
+        .finalized_header
+        .hash_tree_root()
+        .unwrap()
+        .as_ref()
+        .try_into()
+        .unwrap();
+    let prev_sync_committee_hash: B256 = store
+        .current_sync_committee
+        .hash_tree_root()
+        .unwrap()
+        .as_ref()
+        .try_into()
+        .unwrap();
+    let prev_head = store.finalized_header.slot;
+
     println!("cycle-tracker-start: verify_and_apply_update");
     for (index, update) in updates.iter().enumerate() {
         println!("Processing update {} of {}", index + 1, updates.len());
@@ -63,6 +81,17 @@ pub fn main() {
 
     assert!(is_valid);
 
-    sp1_zkvm::io::commit(&is_valid);
-    sp1_zkvm::io::commit(&store);
+    let header = store.finalized_header.hash_tree_root().unwrap();
+    let sync_committee_hash = store.current_sync_committee.hash_tree_root().unwrap();
+    let head = store.finalized_header.slot;
+
+    let proof_outputs = ProofOutputs::abi_encode(&(
+        prev_header,
+        B256::from(header.as_ref().into()),
+        prev_sync_committee_hash,
+        B256::from(sync_committee_hash.as_ref().into()),
+        U256::from(prev_head.as_u64()),
+        U256::from(head.as_u64()),
+    ));
+    sp1_zkvm::io::commit_slice(&proof_outputs);
 }
