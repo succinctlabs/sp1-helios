@@ -11,14 +11,18 @@ import {ISP1Verifier} from "@sp1-contracts/ISP1Verifier.sol";
 // - SP1_BLOBSTREAM_PROGRAM_VKEY
 // - CREATE2_SALT
 // - SP1_VERIFIER_ADDRESS
-
+        // bytes32 genesisValidatorsRoot,
+        // uint256 genesisTime,
+        // uint256 secondsPerSlot,
+        // uint256 slotsPerPeriod,
+        // bytes32 syncCommitteeHash,
+        // bytes32 telepathyProgramVkey,
 contract DeployScript is Script {
     function setUp() public {}
 
     function run() public returns (address) {
         vm.startBroadcast();
 
-        SP1LightClient lightClient;
         ISP1Verifier verifier;
         // Detect if the SP1_PROVER is set to mock, and pick the correct verifier.
         string memory mockStr = "mock";
@@ -31,6 +35,7 @@ contract DeployScript is Script {
             verifier = ISP1Verifier(address(vm.envAddress("SP1_VERIFIER_ADDRESS")));
         }
 
+
         // Deploy the SP1Telepathy contract.
         SP1LightClient lightClient =
             new SP1LightClient{salt: bytes32(vm.envBytes("CREATE2_SALT"))}(
@@ -38,8 +43,9 @@ contract DeployScript is Script {
                 vm.envUint("GENESIS_TIME"),
                 vm.envUint("SECONDS_PER_SLOT"),
                 vm.envUint("SLOTS_PER_PERIOD"),
-                vm.envUint("SOURCE_CHAIN_ID"),
-                vm.envUint("FINALITY_THRESHOLD"),
+                vm.envBytes32("SYNC_COMMITTEE_HASH"),
+                vm.envBytes32("FINALIZED_HEADER"),
+                vm.envUint("HEAD"),
                 vm.envBytes32("SP1_TELEPATHY_PROGRAM_VKEY"),
                 address(verifier)
             );

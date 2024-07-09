@@ -26,41 +26,42 @@ contract SP1LightClient {
     ISP1Verifier public verifier;
 
     struct ProofOutputs {
-        bytes32 finalizedHeader;
-        bytes32 syncCommitteeHash;
+        bytes32 prevHeader;
+        bytes32 newHeader;
+        bytes32 prevSyncCommitteeHash;
+        bytes32 newSyncCommitteeHash;
+        uint256 prevHead;
+        uint256 newHead;
     }
 
     event HeadUpdate(uint256 indexed slot, bytes32 indexed root);
     event SyncCommitteeUpdate(uint256 indexed period, bytes32 indexed root);
 
-    error SyncCommitteeNotSet(uint256 period);
-    error HeaderRootNotSet(uint256 slot);
-    error SlotBehindHead(uint64 slot);
-    error NotEnoughParticipation(uint16 participation);
-    error SyncCommitteeAlreadySet(uint256 period);
-    error HeaderRootAlreadySet(uint256 slot);
-    error StateRootAlreadySet(uint256 slot);
+    error HeaderRootNotConnected(bytes32 header);
+    error SlotBehindHead(uint256 slot);
+    error SlotNotConnected(uint256 slot);
+    error SyncCommitteeNotConnected(bytes32 committe);
 
     constructor(
-        bytes32 genesisValidatorsRoot,
-        uint256 genesisTime,
-        uint256 secondsPerSlot,
-        uint256 slotsPerPeriod,
-        bytes32 syncCommitteeHash,
-        uint32 sourceChainId,
-        uint16 finalityThreshold,
-        bytes32 telepathyProgramVkey,
-        address verifier
+        bytes32 _genesisValidatorsRoot,
+        uint256 _genesisTime,
+        uint256 _secondsPerSlot,
+        uint256 _slotsPerPeriod,
+        bytes32 _syncCommitteeHash,
+        bytes32 _finalizedHeader,
+        uint256 _head,
+        bytes32 _telepathyProgramVkey,
+        address _verifier
     ) {
-        GENESIS_VALIDATORS_ROOT = genesisValidatorsRoot;
-        GENESIS_TIME = genesisTime;
-        SECONDS_PER_SLOT = secondsPerSlot;
-        SLOTS_PER_PERIOD = slotsPerPeriod;
-        syncCommitteeHash = syncCommitteeHash;
-        SOURCE_CHAIN_ID = sourceChainId;
-        FINALITY_THRESHOLD = finalityThreshold;
-        telepathyProgramVkey = telepathyProgramVkey;
-        verifier = ISP1Verifier(verifier);
+        GENESIS_VALIDATORS_ROOT = _genesisValidatorsRoot;
+        GENESIS_TIME = _genesisTime;
+        SECONDS_PER_SLOT = _secondsPerSlot;
+        SLOTS_PER_PERIOD = _slotsPerPeriod;
+        syncCommitteeHash = _syncCommitteeHash;
+        telepathyProgramVkey = _telepathyProgramVkey;
+        finalizedHeader = _finalizedHeader;
+        head = _head;
+        verifier = ISP1Verifier(_verifier);
     }
 
    
@@ -70,9 +71,31 @@ contract SP1LightClient {
     function update(bytes calldata proof, bytes calldata publicValues) external {
         // Parse the outputs from the committed public values associated with the proof.
         ProofOutputs memory po = abi.decode(publicValues, (ProofOutputs));
+        if (po.newHead <= head) {
+            revert SlotBehindHead(po.newHead);
+        }
+
+        if (po.prevHead != head) {
+            revert SlotNotConnected(po.prevHead);
+        }
+
+        if (po.prevHeader != finalizedHeader) {
+            revert HeaderRootNotConnected(po.prevHeader);
+        }
+
+        if (po.prevSyncCommitteeHash != syncCommitteeHash) {
+            revert SyncCommitteeNotConnected(po.prevSyncCommitteeHash);
+        }
 
         // Verify the proof with the associated public values. This will revert if proof invalid.
         verifier.verifyProof(telepathyProgramVkey, publicValues, proof);
+
+        head = po.newHead;
+        finalizedHeader = po.newHeader;
+        syncCommitteeHash = po.newSyncCommitteeHash;
+
+        emit HeadUpdate(po.newHead, po.newHeader);
+        emit SyncCommitteeUpdate(getSyncCommitteePeriod(po.newHead), po.newSyncCommitteeHash);
     }
 
     /// @notice Gets the sync committee period from a slot.
