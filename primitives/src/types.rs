@@ -1,4 +1,4 @@
-use alloy_sol_types::{sol, SolStruct, SolValue};
+use alloy_sol_types::{sol, SolStruct, SolValue, SolType};
 use ssz_rs::prelude::*;
 use std::time::SystemTime;
 
@@ -21,8 +21,8 @@ pub struct ProofInputs {
 /// bytes32 newHeader;
 /// bytes32 prevSyncCommitteeHash;
 /// bytes32 newSyncCommitteeHash;
-/// uin64 prevHead;
-/// uin64 newHead;
+/// uint256 prevHead;
+/// uint256 newHead;
 pub type ProofOutputs = sol! {
     tuple(bytes32, bytes32, bytes32, bytes32, uint256, uint256)
 };

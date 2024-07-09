@@ -1,5 +1,7 @@
 //! A simple script to generate and verify the proof of a given program.
 
+use alloy_sol_types::{sol, SolStruct, SolType, SolValue};
+
 use ethers_core::types::H256;
 use helios::{
     common::consensus::types::Update,
@@ -11,7 +13,7 @@ use helios::{
     },
     prelude::*,
 };
-use sp1_helios_primitives::types::ProofInputs;
+use sp1_helios_primitives::types::{ProofInputs, ProofOutputs};
 use sp1_sdk::{utils::setup_logger, ProverClient, SP1Stdin};
 use std::sync::Arc;
 use tokio::sync::{mpsc::channel, watch};
@@ -124,14 +126,18 @@ async fn main() {
     let (pk, vk) = client.setup(ELF);
     // let (_, report) = client.execute(ELF, stdin).expect("execution failed");
     // println!("{:?}", report);
-    let mut proof = client.prove(&pk, stdin).expect("proving failed");
+    let mut proof = client.prove_plonk(&pk, stdin).expect("proving failed");
 
-    // // Read output.
-    let valid = proof.public_values.read::<bool>();
-    println!("Is valid: {}", valid);
+    // Read output.
+    let public_values = proof.public_values.as_ref();
+    let proof_outputs = ProofOutputs::abi_decode(public_values, true).unwrap();
+
+    println!("{:?}", proof_outputs);
 
     // Verify proof.
-    client.verify(&proof, &vk).expect("verification failed");
+    client
+        .verify_plonk(&proof, &vk)
+        .expect("verification failed");
 
     // Save proof.
     proof
@@ -143,6 +149,6 @@ async fn main() {
     info!(
     target: "helios::consensus",
         "consensus client in sync with checkpoint: 0x{}",
-        hex::encode(checkpoint)
+        hex::encode(proof_outputs.1)
     );
 }

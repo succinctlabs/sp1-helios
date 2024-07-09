@@ -3,7 +3,7 @@
 #![no_main]
 sp1_zkvm::entrypoint!(main);
 
-use alloy_primitives::{B256, U256, U64};
+use alloy_primitives::{B256, U256};
 use alloy_sol_types::{sol, SolType};
 use common::consensus::{
     apply_finality_update, apply_update, verify_finality_update, verify_update,
@@ -81,15 +81,27 @@ pub fn main() {
 
     assert!(is_valid);
 
-    let header = store.finalized_header.hash_tree_root().unwrap();
-    let sync_committee_hash = store.current_sync_committee.hash_tree_root().unwrap();
+    let header: B256 = store
+        .finalized_header
+        .hash_tree_root()
+        .unwrap()
+        .as_ref()
+        .try_into()
+        .unwrap();
+    let sync_committee_hash: B256 = store
+        .current_sync_committee
+        .hash_tree_root()
+        .unwrap()
+        .as_ref()
+        .try_into()
+        .unwrap();
     let head = store.finalized_header.slot;
 
     let proof_outputs = ProofOutputs::abi_encode(&(
         prev_header,
-        B256::from(header.as_ref().into()),
+        header,
         prev_sync_committee_hash,
-        B256::from(sync_committee_hash.as_ref().into()),
+        sync_committee_hash,
         U256::from(prev_head.as_u64()),
         U256::from(head.as_u64()),
     ));
