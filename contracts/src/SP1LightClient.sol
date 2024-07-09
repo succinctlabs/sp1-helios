@@ -95,10 +95,13 @@ contract SP1LightClient {
 
         head = po.newHead;
         finalizedHeader = po.newHeader;
-        syncCommitteeHash = po.newSyncCommitteeHash;
-
         emit HeadUpdate(po.newHead, po.newHeader);
-        emit SyncCommitteeUpdate(getSyncCommitteePeriod(po.newHead), po.newSyncCommitteeHash);
+
+        // Sync commitee isn't always updated for a new head
+        if (po.newSyncCommitteeHash != syncCommitteeHash) {
+            syncCommitteeHash = po.newSyncCommitteeHash;
+            emit SyncCommitteeUpdate(getSyncCommitteePeriod(po.newHead), po.newSyncCommitteeHash);
+        }
     }
 
     /// @notice Gets the sync committee period from a slot.
