@@ -1540,7 +1540,6 @@ dependencies = [
  "hex",
  "serde",
  "serde_json",
- "snowbridge-milagro-bls",
  "ssz_rs",
  "superstruct",
  "thiserror",

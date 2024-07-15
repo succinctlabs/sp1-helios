@@ -107,10 +107,8 @@ async fn main() -> Result<()> {
     let wallet_filler: Arc<EthereumFillProvider> = Arc::new(provider);
 
     let contract = SP1LightClient::new(contract_address, wallet_filler.clone());
-    println!("plooyp");
     // Get the current epoch from the contract
     let epoch = contract.getCurrentEpoch().call().await?._0;
-    println!("plooyp2");
 
     // Fetch the checkpoint at that epoch
     let checkpoint = get_checkpoint_for_epoch(epoch.try_into().unwrap()).await;

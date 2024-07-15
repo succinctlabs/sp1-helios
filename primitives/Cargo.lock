@@ -426,7 +426,6 @@ dependencies = [
  "hex",
  "serde",
  "serde_json",
- "snowbridge-milagro-bls",
  "ssz_rs",
  "superstruct",
  "thiserror",
@@ -1744,7 +1743,6 @@ version = "2.11.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eca070c12893629e2cc820a9761bedf6ce1dcddc9852984d1dc734b8bd9bd024"
 dependencies = [
- "bitvec",
  "cfg-if",
  "derive_more",
  "parity-scale-codec",
@@ -1943,21 +1941,6 @@ checksum = "460a9ed63cdf03c1b9847e8a12a5f5ba19c4efd5869e4a737e05be25d7c427e5"
 dependencies = [
  "parity-scale-codec",
  "scale-info",
-]
-
-[[package]]
-name = "snowbridge-milagro-bls"
-version = "1.5.2"
-source = "git+https://github.com/succinctlabs/milagro_bls#665d09a7d27e7e3e4026c08ec7762a84a520e9bf"
-dependencies = [
- "hex",
- "lazy_static",
- "parity-scale-codec",
- "rand",
- "scale-info",
- "snowbridge-amcl",
- "sp1-precompiles",
- "zeroize",
 ]
 
 [[package]]
