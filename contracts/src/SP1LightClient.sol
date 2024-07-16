@@ -14,11 +14,14 @@ contract SP1LightClient {
     /// @notice The latest slot the light client has a finalized header for.
     uint256 public head = 0;
 
-    /// @notice The latest finalized header.
-    bytes32 public finalizedHeader;
+    /// @notice Maps from a slot to a beacon block header root.
+    mapping(uint256 => bytes32) public headers;
 
-    /// @notice The hash of the current sync committee.
-    bytes32 public syncCommitteeHash;
+    /// @notice Maps from a slot to the current finalized ethereum1 execution state root.
+    mapping(uint256 => bytes32) public executionStateRoots;
+
+    /// @notice Maps from a period to the hash for the sync committee.
+    mapping(uint256 => bytes32) public syncCommittees;
 
     /// @notice The verification key for the SP1Telepathy program.
     bytes32 public telepathyProgramVkey;
@@ -60,9 +63,9 @@ contract SP1LightClient {
         SECONDS_PER_SLOT = _secondsPerSlot;
         SLOTS_PER_PERIOD = _slotsPerPeriod;
         SLOTS_PER_EPOCH = _slotsPerEpoch;
-        syncCommitteeHash = _syncCommitteeHash;
+        syncCommittees[getSyncCommitteePeriod(_head)] = _syncCommitteeHash;
         telepathyProgramVkey = _telepathyProgramVkey;
-        finalizedHeader = _finalizedHeader;
+        headers[_head] = _finalizedHeader;
         head = _head;
         verifier = ISP1Verifier(_verifier);
     }
@@ -82,11 +85,11 @@ contract SP1LightClient {
             revert SlotNotConnected(po.prevHead);
         }
 
-        if (po.prevHeader != finalizedHeader) {
+        if (po.prevHeader != headers[po.prevHead]) {
             revert HeaderRootNotConnected(po.prevHeader);
         }
 
-        if (po.prevSyncCommitteeHash != syncCommitteeHash) {
+        if (po.prevSyncCommitteeHash != syncCommittees[getSyncCommitteePeriod(po.prevHead)]) {
             revert SyncCommitteeNotConnected(po.prevSyncCommitteeHash);
         }
 
@@ -94,12 +97,12 @@ contract SP1LightClient {
         verifier.verifyProof(telepathyProgramVkey, publicValues, proof);
 
         head = po.newHead;
-        finalizedHeader = po.newHeader;
+        headers[po.newHead] = po.newHeader;
         emit HeadUpdate(po.newHead, po.newHeader);
 
         // Sync commitee isn't always updated for a new head
-        if (po.newSyncCommitteeHash != syncCommitteeHash) {
-            syncCommitteeHash = po.newSyncCommitteeHash;
+        if (po.newSyncCommitteeHash != syncCommittees[getSyncCommitteePeriod(po.prevHead)]) {
+            syncCommittees[getSyncCommitteePeriod(po.newHead)] = po.newSyncCommitteeHash;
             emit SyncCommitteeUpdate(getSyncCommitteePeriod(po.newHead), po.newSyncCommitteeHash);
         }
     }
