@@ -11,7 +11,7 @@ use helios::{
     },
     prelude::*,
 };
-use helios_2_script::get_updates;
+use helios_2_script::{get_execution_state_root_proof, get_updates};
 use sp1_helios_primitives::types::{ProofInputs, ProofOutputs};
 use sp1_sdk::{utils::setup_logger, ProverClient, SP1Stdin};
 use tracing::{debug, error, info, warn};
@@ -108,10 +108,21 @@ async fn main() -> Result<()> {
 
     let contract = SP1LightClient::new(contract_address, wallet_filler.clone());
     // Get the current epoch from the contract
-    let epoch = contract.getCurrentEpoch().call().await?._0;
+    let epoch: u64 = contract
+        .getCurrentEpoch()
+        .call()
+        .await?
+        ._0
+        .try_into()
+        .unwrap();
+    let execution_state_root_proof = get_execution_state_root_proof(epoch * 32).await;
+    println!(
+        "Execution state root proof: {:?}",
+        execution_state_root_proof
+    );
 
     // Fetch the checkpoint at that epoch
-    let checkpoint = get_checkpoint_for_epoch(epoch.try_into().unwrap()).await;
+    let checkpoint = get_checkpoint_for_epoch(epoch).await;
 
     // Get the client from the checkpoint
     let helios_client = get_client(checkpoint.as_bytes().to_vec()).await;

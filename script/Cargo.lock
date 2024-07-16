@@ -3238,6 +3238,7 @@ dependencies = [
  "helios",
  "hex",
  "log",
+ "reqwest 0.12.5",
  "serde",
  "serde_cbor",
  "sp1-helios-primitives",

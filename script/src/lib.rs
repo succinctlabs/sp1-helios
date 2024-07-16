@@ -9,6 +9,7 @@ use helios::{
     },
     prelude::*,
 };
+use serde::Deserialize;
 use ssz_rs::prelude::*;
 use std::sync::Arc;
 use tokio::sync::{mpsc::channel, watch};
@@ -46,6 +47,39 @@ pub async fn get_checkpoint_for_epoch(epoch: u64) -> H256 {
     let first_slot = epoch * SLOTS_PER_EPOCH;
     let mut block = rpc.get_block(first_slot).await.unwrap();
     H256::from_slice(block.hash_tree_root().unwrap().as_ref())
+}
+
+#[derive(Deserialize)]
+struct ApiResponse {
+    success: bool,
+    result: ExecutionStateProof,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct ExecutionStateProof {
+    #[serde(rename = "executionStateRoot")]
+    execution_state_root: H256,
+    #[serde(rename = "executionStateBranch")]
+    execution_state_branch: Vec<H256>,
+    gindex: String,
+}
+
+pub async fn get_execution_state_root_proof(
+    slot: u64,
+) -> Result<ExecutionStateProof, Box<dyn std::error::Error>> {
+    let client = reqwest::Client::new();
+    let url = format!(
+        "https://beaconapi-git-xavier-get-update.succinct.xyz/api/beacon/proof/lightclient/update/{}",
+        slot
+    );
+
+    let response: ApiResponse = client.get(url).send().await?.json().await?;
+
+    if response.success {
+        Ok(response.result)
+    } else {
+        Err("API request was not successful".into())
+    }
 }
 
 pub async fn get_client(checkpoint: Vec<u8>) -> Inner<NimbusRpc> {
