@@ -48,7 +48,6 @@ pub fn main() {
     println!("cycle-tracker-start: verify_and_apply_update");
     for (index, update) in updates.iter().enumerate() {
         println!("Processing update {} of {}", index + 1, updates.len());
-        println!("Update details: {:?}", update);
 
         println!("cycle-tracker-start: verify_update");
         is_valid = is_valid
@@ -69,7 +68,6 @@ pub fn main() {
     }
 
     println!("cycle-tracker-start: verify_finality_update");
-    println!("Finality update details: {:?}", finality_update);
     is_valid = is_valid
         && verify_finality_update(
             &finality_update,
@@ -81,7 +79,7 @@ pub fn main() {
         )
         .is_ok();
     apply_finality_update(&mut store, &finality_update);
-
+    println!("cycle-tracker-end: verify_finality_update");
     println!("cycle-tracker-end: verify_and_apply_update");
 
     println!("cycle-tracker-start: verify_execution_state_proof");
