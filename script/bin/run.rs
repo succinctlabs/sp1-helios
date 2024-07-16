@@ -12,7 +12,7 @@ use helios::{
     prelude::*,
 };
 use helios_2_script::{get_execution_state_root_proof, get_updates};
-use sp1_helios_primitives::types::{ProofInputs, ProofOutputs};
+use sp1_helios_primitives::types::{ExecutionStateProof, ProofInputs, ProofOutputs};
 use sp1_sdk::{utils::setup_logger, ProverClient, SP1Stdin};
 use tracing::{debug, error, info, warn};
 use zduny_wasm_timer::SystemTime;
@@ -115,11 +115,6 @@ async fn main() -> Result<()> {
         ._0
         .try_into()
         .unwrap();
-    let execution_state_root_proof = get_execution_state_root_proof(epoch * 32).await;
-    println!(
-        "Execution state root proof: {:?}",
-        execution_state_root_proof
-    );
 
     // Fetch the checkpoint at that epoch
     let checkpoint = get_checkpoint_for_epoch(epoch).await;
@@ -130,6 +125,15 @@ async fn main() -> Result<()> {
     let updates = get_updates(&helios_client).await;
     let now = SystemTime::now();
     let finality_update = helios_client.rpc.get_finality_update().await.unwrap();
+    let latest_block = finality_update.finalized_header.slot;
+    println!("latest block: {:?}", latest_block);
+    let execution_state_root_proof = get_execution_state_root_proof(latest_block.into())
+        .await
+        .unwrap();
+    println!(
+        "Execution state root proof: {:?}",
+        execution_state_root_proof
+    );
 
     let inputs = ProofInputs {
         updates,
@@ -139,6 +143,7 @@ async fn main() -> Result<()> {
         store: helios_client.store,
         genesis_root: helios_client.config.chain.genesis_root.clone(),
         forks: helios_client.config.forks.clone(),
+        execution_state_proof: execution_state_root_proof,
     };
 
     let mut stdin = SP1Stdin::new();

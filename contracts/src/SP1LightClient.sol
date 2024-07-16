@@ -36,6 +36,7 @@ contract SP1LightClient {
         bytes32 newSyncCommitteeHash;
         uint256 prevHead;
         uint256 newHead;
+        bytes32 executionStateRoot;
     }
 
     event HeadUpdate(uint256 indexed slot, bytes32 indexed root);

@@ -1,10 +1,10 @@
-use alloy_sol_types::{sol, SolStruct, SolValue, SolType};
-use ssz_rs::prelude::*;
-use std::time::SystemTime;
-
+use alloy_primitives::B256;
+use alloy_sol_types::{sol, SolStruct, SolType, SolValue};
 use common::config::types::Forks;
 use common::consensus::types::{FinalityUpdate, LightClientStore, Update};
+use ssz_rs::prelude::*;
 pub use ssz_rs::prelude::{Bitvector, Vector};
+use std::time::SystemTime;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct ProofInputs {
@@ -15,6 +15,16 @@ pub struct ProofInputs {
     pub store: LightClientStore,
     pub genesis_root: Vec<u8>,
     pub forks: Forks,
+    pub execution_state_proof: ExecutionStateProof,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub struct ExecutionStateProof {
+    #[serde(rename = "executionStateRoot")]
+    pub execution_state_root: B256,
+    #[serde(rename = "executionStateBranch")]
+    pub execution_state_branch: Vec<B256>,
+    pub gindex: String,
 }
 
 /// bytes32 prevHeader;
@@ -23,6 +33,7 @@ pub struct ProofInputs {
 /// bytes32 newSyncCommitteeHash;
 /// uint256 prevHead;
 /// uint256 newHead;
+/// bytes32 executionStateRoot;
 pub type ProofOutputs = sol! {
-    tuple(bytes32, bytes32, bytes32, bytes32, uint256, uint256)
+    tuple(bytes32, bytes32, bytes32, bytes32, uint256, uint256, bytes32)
 };

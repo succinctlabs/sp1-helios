@@ -27,7 +27,7 @@ helios = { path = "../../helios" }
 sp1-helios-primitives = { path = "../primitives" }
 tracing = "0.1.37"
 serde = "1.0.203"
-ssz_rs = "0.9.0"
+ssz-rs = { package = "ssz_rs", version = "0.9.0" }
 thiserror = "1.0.61"
 ethers-core = "2.0.14"
 zduny-wasm-timer = "0.2.8"

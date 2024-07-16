@@ -10,6 +10,7 @@ use helios::{
     prelude::*,
 };
 use serde::Deserialize;
+use sp1_helios_primitives::types::ExecutionStateProof;
 use ssz_rs::prelude::*;
 use std::sync::Arc;
 use tokio::sync::{mpsc::channel, watch};
@@ -53,15 +54,6 @@ pub async fn get_checkpoint_for_epoch(epoch: u64) -> H256 {
 struct ApiResponse {
     success: bool,
     result: ExecutionStateProof,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct ExecutionStateProof {
-    #[serde(rename = "executionStateRoot")]
-    execution_state_root: H256,
-    #[serde(rename = "executionStateBranch")]
-    execution_state_branch: Vec<H256>,
-    gindex: String,
 }
 
 pub async fn get_execution_state_root_proof(
