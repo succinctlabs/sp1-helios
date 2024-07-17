@@ -6,10 +6,10 @@ sp1_zkvm::entrypoint!(main);
 use alloy_primitives::{B256, U256};
 use alloy_sol_types::{sol, SolType};
 use common::consensus::{
-    apply_finality_update, apply_update, verify_finality_update, verify_update,
+    apply_finality_update, apply_update, utils::calc_sync_period, verify_finality_update,
+    verify_update,
 };
 use sp1_helios_primitives::types::{ProofInputs, ProofOutputs};
-
 use ssz_rs::prelude::*;
 
 pub fn main() {
@@ -46,9 +46,22 @@ pub fn main() {
     let prev_head = store.finalized_header.slot;
 
     println!("cycle-tracker-start: verify_and_apply_update");
-    for (index, update) in updates.iter().enumerate() {
-        println!("Processing update {} of {}", index + 1, updates.len());
 
+    for (index, update) in updates.iter().enumerate() {
+        // This type of update is for changing to the next sync committee which can only happen once per period. If the update is for the current period, skip it.
+        let current_period = calc_sync_period(store.finalized_header.slot.into());
+        let update_period = calc_sync_period(update.finalized_header.slot.into());
+        if update_period <= current_period {
+            println!(
+                "Skipping update {} of {} because it is for the current period {}",
+                index + 1,
+                updates.len(),
+                current_period
+            );
+            continue;
+        }
+
+        println!("Processing update {} of {}", index + 1, updates.len());
         println!("cycle-tracker-start: verify_update");
         is_valid = is_valid
             && verify_update(
@@ -80,6 +93,7 @@ pub fn main() {
         .is_ok();
     apply_finality_update(&mut store, &finality_update);
     println!("cycle-tracker-end: verify_finality_update");
+
     println!("cycle-tracker-end: verify_and_apply_update");
 
     println!("cycle-tracker-start: verify_execution_state_proof");

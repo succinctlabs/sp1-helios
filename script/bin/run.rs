@@ -125,6 +125,14 @@ async fn main() -> Result<()> {
     let updates = get_updates(&helios_client).await;
     let now = SystemTime::now();
     let finality_update = helios_client.rpc.get_finality_update().await.unwrap();
+    println!(
+        "finality update finalized slot: {:?}",
+        finality_update.finalized_header.slot
+    );
+    println!(
+        "finality update attested header slot: {:?}",
+        finality_update.attested_header.slot
+    );
     let latest_block = finality_update.finalized_header.slot;
     println!("latest block: {:?}", latest_block);
     let execution_state_root_proof = get_execution_state_root_proof(latest_block.into())

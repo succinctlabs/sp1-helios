@@ -987,6 +987,7 @@ dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
  "common",
+ "hex",
  "serde_cbor",
  "sp1-helios-primitives",
  "sp1-zkvm",

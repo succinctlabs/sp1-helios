@@ -54,7 +54,8 @@ contract SP1LightClient {
         uint256 _slotsPerPeriod,
         uint256 _slotsPerEpoch,
         bytes32 _syncCommitteeHash,
-        bytes32 _finalizedHeader,
+        bytes32 _header,
+        bytes32 _executionStateRoot,
         uint256 _head,
         bytes32 _telepathyProgramVkey,
         address _verifier
@@ -66,7 +67,8 @@ contract SP1LightClient {
         SLOTS_PER_EPOCH = _slotsPerEpoch;
         syncCommittees[getSyncCommitteePeriod(_head)] = _syncCommitteeHash;
         telepathyProgramVkey = _telepathyProgramVkey;
-        headers[_head] = _finalizedHeader;
+        headers[_head] = _header;
+        executionStateRoots[_head] = _executionStateRoot;
         head = _head;
         verifier = ISP1Verifier(_verifier);
     }
