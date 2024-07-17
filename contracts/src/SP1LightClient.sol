@@ -46,6 +46,8 @@ contract SP1LightClient {
     error SlotBehindHead(uint256 slot);
     error SlotNotConnected(uint256 slot);
     error SyncCommitteeNotConnected(bytes32 committe);
+    error HeaderRootAlreadySet(uint256 slot);
+    error StateRootAlreadySet(uint256 slot);
 
     constructor(
         bytes32 _genesisValidatorsRoot,
@@ -100,7 +102,14 @@ contract SP1LightClient {
         verifier.verifyProof(telepathyProgramVkey, publicValues, proof);
 
         head = po.newHead;
+        if (headers[po.newHead] != bytes32(0)) {
+            revert HeaderRootAlreadySet(po.newHead);
+        }
         headers[po.newHead] = po.newHeader;
+        if (executionStateRoots[po.newHead] != bytes32(0)) {
+            revert StateRootAlreadySet(po.newHead);
+        }
+        executionStateRoots[po.newHead] = po.executionStateRoot;
         emit HeadUpdate(po.newHead, po.newHeader);
 
         // Sync commitee isn't always updated for a new head

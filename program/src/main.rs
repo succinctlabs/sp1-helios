@@ -48,19 +48,6 @@ pub fn main() {
     println!("cycle-tracker-start: verify_and_apply_update");
 
     for (index, update) in updates.iter().enumerate() {
-        // This type of update is for changing to the next sync committee which can only happen once per period. If the update is for the current period, skip it.
-        let current_period = calc_sync_period(store.finalized_header.slot.into());
-        let update_period = calc_sync_period(update.finalized_header.slot.into());
-        if update_period <= current_period {
-            println!(
-                "Skipping update {} of {} because it is for the current period {}",
-                index + 1,
-                updates.len(),
-                current_period
-            );
-            continue;
-        }
-
         println!("Processing update {} of {}", index + 1, updates.len());
         println!("cycle-tracker-start: verify_update");
         is_valid = is_valid
