@@ -8,6 +8,7 @@
 //!
 
 use clap::Parser;
+use helios_2_script::get_execution_state_root_proof;
 use log::info;
 use sp1_sdk::{HashableKey, ProverClient};
 use std::env;
@@ -129,6 +130,7 @@ pub async fn main() {
         .hash_tree_root()
         .unwrap();
     let genesis_time = helios_client.config.chain.genesis_time;
+    let execution_state_root_proof = get_execution_state_root_proof(head).await.unwrap();
     let genesis_root = B256::from_slice(&helios_client.config.chain.genesis_root);
     const SECONDS_PER_SLOT: u64 = 12;
     const SLOTS_PER_EPOCH: u64 = 32;
@@ -146,6 +148,7 @@ pub async fn main() {
         SLOTS_PER_EPOCH={}\n\
         SYNC_COMMITTEE_HASH={}\n\
         FINALIZED_HEADER={}\n\
+        EXECUTION_STATE_ROOT={}\n\
         HEAD={}",
         sp1_prover,
         vk.bytes32(),
@@ -158,6 +161,7 @@ pub async fn main() {
         SLOTS_PER_EPOCH,
         sync_committee_hash,
         finalized_header,
+        execution_state_root_proof.execution_state_root,
         head
     );
 }

@@ -51,6 +51,7 @@ contract DeployScript is Script {
                 vm.envUint("SLOTS_PER_EPOCH"),
                 vm.envBytes32("SYNC_COMMITTEE_HASH"),
                 vm.envBytes32("FINALIZED_HEADER"),
+                vm.envBytes32("EXECUTION_STATE_ROOT"),
                 vm.envUint("HEAD"),
                 vm.envBytes32("SP1_TELEPATHY_PROGRAM_VKEY"),
                 address(verifier)
