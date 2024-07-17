@@ -8,7 +8,7 @@
 //!
 
 use clap::Parser;
-use helios_2_script::get_execution_state_root_proof;
+use helios_2_script::{get_checkpoint, get_execution_state_root_proof};
 use log::info;
 use sp1_sdk::{HashableKey, ProverClient};
 use std::env;
@@ -79,15 +79,6 @@ async fn get_client(checkpoint: Vec<u8>) -> Inner<NimbusRpc> {
     client
 }
 
-async fn get_checkpoint_for_epoch(epoch: u64) -> H256 {
-    let rpc = NimbusRpc::new("https://www.lightclientdata.org");
-    const SLOTS_PER_EPOCH: u64 = 32;
-
-    let first_slot = epoch * SLOTS_PER_EPOCH;
-    let mut block = rpc.get_block(first_slot).await.unwrap();
-    H256::from_slice(block.hash_tree_root().unwrap().as_ref())
-}
-
 #[tokio::main]
 pub async fn main() {
     env::set_var("RUST_LOG", "info");
@@ -103,7 +94,7 @@ pub async fn main() {
     let verifier;
     let sp1_prover;
     if let Some(temp_epoch) = args.epoch {
-        checkpoint = get_checkpoint_for_epoch(temp_epoch).await;
+        checkpoint = get_checkpoint(temp_epoch).await;
     } else {
         checkpoint = get_latest_checkpoint().await;
     }

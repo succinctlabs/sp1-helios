@@ -32,8 +32,8 @@ contract SP1LightClient {
     struct ProofOutputs {
         bytes32 prevHeader;
         bytes32 newHeader;
-        bytes32 prevSyncCommitteeHash;
-        bytes32 newSyncCommitteeHash;
+        bytes32 syncCommitteeHash;
+        bytes32 nextSyncCommitteeHash;
         uint256 prevHead;
         uint256 newHead;
         bytes32 executionStateRoot;
@@ -46,6 +46,7 @@ contract SP1LightClient {
     error SlotBehindHead(uint256 slot);
     error SlotNotConnected(uint256 slot);
     error SyncCommitteeNotConnected(bytes32 committe);
+    error SyncCommitteeAlreadySet(uint256 period);
     error HeaderRootAlreadySet(uint256 slot);
     error StateRootAlreadySet(uint256 slot);
 
@@ -94,10 +95,6 @@ contract SP1LightClient {
             revert HeaderRootNotConnected(po.prevHeader);
         }
 
-        if (po.prevSyncCommitteeHash != syncCommittees[getSyncCommitteePeriod(po.prevHead)]) {
-            revert SyncCommitteeNotConnected(po.prevSyncCommitteeHash);
-        }
-
         // Verify the proof with the associated public values. This will revert if proof invalid.
         verifier.verifyProof(telepathyProgramVkey, publicValues, proof);
 
@@ -112,17 +109,30 @@ contract SP1LightClient {
         executionStateRoots[po.newHead] = po.executionStateRoot;
         emit HeadUpdate(po.newHead, po.newHeader);
 
-        // Sync commitee isn't always updated for a new head
-        if (po.newSyncCommitteeHash != syncCommittees[getSyncCommitteePeriod(po.prevHead)]) {
-            syncCommittees[getSyncCommitteePeriod(po.newHead)] = po.newSyncCommitteeHash;
-            emit SyncCommitteeUpdate(getSyncCommitteePeriod(po.newHead), po.newSyncCommitteeHash);
+        if (po.syncCommitteeHash != syncCommittees[getSyncCommitteePeriod(head)]) {
+            revert SyncCommitteeNotConnected(po.syncCommitteeHash);
+        }
+
+        if (po.nextSyncCommitteeHash != bytes32(0)) {
+            uint256 period = getSyncCommitteePeriod(head);
+            uint256 nextPeriod = period + 1;
+            
+            // If the next sync committee is already correct, we don't need to update it.
+            if (syncCommittees[nextPeriod] != po.nextSyncCommitteeHash) {
+                if (syncCommittees[nextPeriod] != bytes32(0)) {
+                    revert SyncCommitteeAlreadySet(nextPeriod);
+                }
+            
+                syncCommittees[nextPeriod] = po.nextSyncCommitteeHash;
+                emit SyncCommitteeUpdate(nextPeriod, po.nextSyncCommitteeHash);
+            }
         }
     }
 
     /// @notice Gets the sync committee period from a slot.
     function getSyncCommitteePeriod(
         uint256 slot
-    ) internal view returns (uint256) {
+    ) public view returns (uint256) {
         return slot / SLOTS_PER_PERIOD;
     }
 

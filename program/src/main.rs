@@ -36,13 +36,6 @@ pub fn main() {
         .as_ref()
         .try_into()
         .unwrap();
-    let prev_sync_committee_hash: B256 = store
-        .current_sync_committee
-        .hash_tree_root()
-        .unwrap()
-        .as_ref()
-        .try_into()
-        .unwrap();
     let prev_head = store.finalized_header.slot;
 
     println!("cycle-tracker-start: verify_and_apply_update");
@@ -116,13 +109,22 @@ pub fn main() {
         .as_ref()
         .try_into()
         .unwrap();
+    let next_sync_committee_hash: B256 = match &mut store.next_sync_committee {
+        Some(next_sync_committee) => next_sync_committee
+            .hash_tree_root()
+            .unwrap()
+            .as_ref()
+            .try_into()
+            .unwrap(),
+        None => B256::ZERO,
+    };
     let head = store.finalized_header.slot;
 
     let proof_outputs = ProofOutputs::abi_encode(&(
         prev_header,
         header,
-        prev_sync_committee_hash,
         sync_committee_hash,
+        next_sync_committee_hash,
         U256::from(prev_head.as_u64()),
         U256::from(head.as_u64()),
         execution_state_proof.execution_state_root,

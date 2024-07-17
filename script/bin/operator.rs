@@ -196,7 +196,7 @@ impl SP1LightClientOperator {
             let epoch = contract.getCurrentEpoch().call().await?._0;
 
             // Fetch the checkpoint at that epoch
-            let checkpoint = get_checkpoint_for_epoch(epoch.try_into().unwrap()).await;
+            let checkpoint = get_checkpoint(epoch.try_into().unwrap()).await;
 
             // Get the client from the checkpoint
             let client = get_client(checkpoint.as_bytes().to_vec()).await;

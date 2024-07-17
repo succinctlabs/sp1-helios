@@ -29,8 +29,8 @@ pub struct ExecutionStateProof {
 
 /// bytes32 prevHeader;
 /// bytes32 newHeader;
-/// bytes32 prevSyncCommitteeHash;
-/// bytes32 newSyncCommitteeHash;
+/// bytes32 syncCommitteeHash;
+/// bytes32 nextSyncCommitteeHash;
 /// uint256 prevHead;
 /// uint256 newHead;
 /// bytes32 executionStateRoot;

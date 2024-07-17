@@ -19,26 +19,13 @@ pub mod relay;
 
 pub async fn get_updates(client: &Inner<NimbusRpc>) -> Vec<Update> {
     let period = utils::calc_sync_period(client.store.finalized_header.slot.into());
-    println!("period: {}", period);
+
     let updates = client
         .rpc
         .get_updates(period, constants::MAX_REQUEST_LIGHT_CLIENT_UPDATES)
         .await
         .unwrap();
-    println!("# updates: {:?}", updates.len());
-    println!(
-        "current finalized slot: {:?}",
-        client.store.finalized_header.slot
-    );
- 
-    println!(
-        "update finalized slot: {:?}",
-        updates[0].finalized_header.slot
-    );
-    println!(
-        "update attested header slot: {:?}",
-        updates[0].attested_header.slot
-    );
+
     updates.clone()
 }
 

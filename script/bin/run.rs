@@ -19,7 +19,7 @@ use zduny_wasm_timer::SystemTime;
 const ELF: &[u8] = include_bytes!("../../program/elf/riscv32im-succinct-zkvm-elf");
 use alloy::{
     network::{Ethereum, EthereumWallet},
-    primitives::Address,
+    primitives::{Address, B256, U256},
     providers::{
         fillers::{ChainIdFiller, FillProvider, GasFiller, JoinFill, NonceFiller, WalletFiller},
         Identity, Provider, ProviderBuilder, RootProvider,
@@ -54,8 +54,9 @@ sol! {
         uint256 public immutable SLOTS_PER_PERIOD;
         uint32 public immutable SOURCE_CHAIN_ID;
         uint256 public head;
-        bytes32 public finalizedHeader;
-        bytes32 public syncCommitteeHash;
+        mapping(uint256 => bytes32) public syncCommittees;
+        mapping(uint256 => bytes32) public executionStateRoots;
+        mapping(uint256 => bytes32) public headers;
         bytes32 public telepathyProgramVkey;
         address public verifier;
 
@@ -81,7 +82,6 @@ sol! {
 async fn main() -> Result<()> {
     dotenv::dotenv().ok();
     setup_logger();
-
     let chain_id: u64 = env::var("CHAIN_ID")
         .expect("CHAIN_ID not set")
         .parse()
@@ -108,10 +108,31 @@ async fn main() -> Result<()> {
 
     let contract = SP1LightClient::new(contract_address, wallet_filler.clone());
     // Get the current epoch from the contract
+    let head: u64 = contract
+        .head()
+        .call()
+        .await
+        .unwrap()
+        .head
+        .try_into()
+        .unwrap();
+
+    // Get peroid from head
+    let period: u64 = contract
+        .getSyncCommitteePeriod(U256::from(head))
+        .call()
+        .await
+        .unwrap()
+        ._0
+        .try_into()
+        .unwrap();
+
+    // Get epoch
     let epoch: u64 = contract
         .getCurrentEpoch()
         .call()
-        .await?
+        .await
+        .unwrap()
         ._0
         .try_into()
         .unwrap();
@@ -120,35 +141,99 @@ async fn main() -> Result<()> {
     let checkpoint = get_checkpoint_for_epoch(epoch).await;
 
     // Get the client from the checkpoint
-    let helios_client = get_client(checkpoint.as_bytes().to_vec()).await;
+    let mut helios_client = get_client(checkpoint.as_bytes().to_vec()).await;
 
-    let updates = get_updates(&helios_client).await;
+    let mut updates = get_updates(&helios_client).await;
+
+    let contract_current_sync_committee = contract
+        .syncCommittees(U256::from(period))
+        .call()
+        .await
+        .unwrap()
+        ._0;
+    let contract_next_sync_committee = contract
+        .syncCommittees(U256::from(period + 1))
+        .call()
+        .await
+        .unwrap()
+        ._0;
+    if contract_current_sync_committee.to_vec()
+        != helios_client
+            .store
+            .current_sync_committee
+            .hash_tree_root()
+            .unwrap()
+            .as_ref()
+    {
+        panic!("Client not in sync with contract");
+    }
+
+    // Helios' bootstrap does not set next_sync_committee (see implementation).
+    // If the contract has this value, we need to catch up helios.
+    // The first update is the catch-up update.
+    let contract_has_next_sync_committee =
+        contract_next_sync_committee.to_vec() != B256::ZERO.to_vec();
+    let client_has_next_sync_committee = helios_client.store.next_sync_committee.is_some();
+    if contract_has_next_sync_committee && !client_has_next_sync_committee {
+        if let Some(mut first_update) = updates.first().cloned() {
+            // Sanity check: update will catch-up client with contract
+            assert_eq!(
+                first_update
+                    .next_sync_committee
+                    .hash_tree_root()
+                    .unwrap()
+                    .as_ref(),
+                contract_next_sync_committee.to_vec()
+            );
+
+            updates.remove(0);
+            match helios_client.verify_update(&first_update) {
+                Ok(_) => {
+                    helios_client.apply_update(&first_update);
+
+                    // Sanity check: client is caught up with contract
+                    assert_eq!(
+                        helios_client
+                            .store
+                            .clone()
+                            .next_sync_committee
+                            .unwrap()
+                            .hash_tree_root()
+                            .unwrap()
+                            .as_ref(),
+                        contract_next_sync_committee.to_vec()
+                    );
+                    assert_eq!(head, helios_client.store.finalized_header.slot.as_u64());
+                }
+                Err(e) => {
+                    panic!("Failed to verify catch-up update: {:?}", e);
+                }
+            }
+        } else {
+            panic!("No catch-up updates available");
+        }
+    }
+
     let now = SystemTime::now();
     let finality_update = helios_client.rpc.get_finality_update().await.unwrap();
-    println!(
-        "finality update finalized slot: {:?}",
-        finality_update.finalized_header.slot
-    );
-    println!(
-        "finality update attested header slot: {:?}",
-        finality_update.attested_header.slot
-    );
+
     let latest_block = finality_update.finalized_header.slot;
-    println!("latest block: {:?}", latest_block);
+
+    if latest_block.as_u64() <= head {
+        info!("Contract is up to date. Nothing to update.");
+        return Ok(());
+    }
+
     let execution_state_root_proof = get_execution_state_root_proof(latest_block.into())
         .await
         .unwrap();
-    println!(
-        "Execution state root proof: {:?}",
-        execution_state_root_proof
-    );
 
     let inputs = ProofInputs {
         updates,
         finality_update,
         now,
         genesis_time: helios_client.config.chain.genesis_time,
-        store: helios_client.store,
+        store: helios_client.store.clone(),
         genesis_root: helios_client.config.chain.genesis_root.clone(),
         forks: helios_client.config.forks.clone(),
         execution_state_proof: execution_state_root_proof,
