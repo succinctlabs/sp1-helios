@@ -8,7 +8,7 @@
 //!
 
 use clap::Parser;
-use helios_2_script::{get_checkpoint_for_epoch, get_execution_state_root_proof};
+use helios_2_script::{get_checkpoint, get_execution_state_root_proof};
 use log::info;
 use sp1_sdk::{HashableKey, ProverClient};
 use std::env;
@@ -33,7 +33,7 @@ use tokio::sync::{mpsc::channel, watch};
 #[command(about = "Get the genesis parameters from a block.")]
 pub struct GenesisArgs {
     #[arg(long)]
-    pub epoch: Option<u64>,
+    pub slot: Option<u64>,
     pub verifier: Option<String>,
 }
 
@@ -93,8 +93,8 @@ pub async fn main() {
     let checkpoint;
     let verifier;
     let sp1_prover;
-    if let Some(temp_epoch) = args.epoch {
-        checkpoint = get_checkpoint_for_epoch(temp_epoch).await;
+    if let Some(temp_slot) = args.slot {
+        checkpoint = get_checkpoint(temp_slot).await;
     } else {
         checkpoint = get_latest_checkpoint().await;
     }

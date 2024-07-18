@@ -17,7 +17,7 @@ use helios::{consensus::rpc::ConsensusRpc, types::Update};
 use helios_2_script::*;
 use log::{error, info};
 use sp1_helios_primitives::types::ProofInputs;
-use sp1_sdk::{ProverClient, SP1PlonkBn254Proof, SP1ProvingKey, SP1Stdin};
+use sp1_sdk::{PlonkBn254Proof, ProverClient, SP1ProofWithPublicValues, SP1ProvingKey, SP1Stdin};
 use ssz_rs::prelude::*;
 use std::env;
 use std::sync::Arc;
@@ -216,7 +216,10 @@ impl SP1LightClientOperator {
         (client, updates)
     }
 
-    async fn request_update(&self, client: Inner<NimbusRpc>) -> Result<Option<SP1PlonkBn254Proof>> {
+    async fn request_update(
+        &self,
+        client: Inner<NimbusRpc>,
+    ) -> Result<Option<SP1ProofWithPublicValues>> {
         let contract = SP1LightClient::new(self.contract_address, self.wallet_filler.clone());
         let head: u64 = contract.head().call().await?.head.try_into().unwrap();
 
@@ -252,21 +255,20 @@ impl SP1LightClientOperator {
         let encoded_proof_inputs = serde_cbor::to_vec(&inputs)?;
         stdin.write_slice(&encoded_proof_inputs);
 
-        let proof = self.client.prove_plonk(&self.pk, stdin)?;
+        let proof = self.client.prove(&self.pk, stdin).plonk().run().unwrap();
 
         info!("New head: {:?}", latest_block.as_u64());
         Ok(Some(proof))
     }
 
     /// Relay an update proof to the SP1 LightClient contract.
-    async fn relay_update(&self, proof: SP1PlonkBn254Proof) -> Result<()> {
+    async fn relay_update(&self, proof: SP1ProofWithPublicValues) -> Result<()> {
         // TODO: sp1_sdk should return empty bytes in mock mode.
         let proof_as_bytes = if env::var("SP1_PROVER").unwrap().to_lowercase() == "mock" {
             vec![]
         } else {
-            let proof_str = proof.bytes();
+            proof.bytes()
             // Strip the 0x prefix from proof_str, if it exists.
-            hex::decode(proof_str.replace("0x", "")).unwrap()
         };
         let public_values_bytes = proof.public_values.to_vec();
 
@@ -311,11 +313,11 @@ impl SP1LightClientOperator {
         loop {
             let contract = SP1LightClient::new(self.contract_address, self.wallet_filler.clone());
 
-            // Get the current epoch from the contract
-            let epoch = contract.getCurrentEpoch().call().await?._0;
+            // Get the current slot from the contract
+            let slot = contract.head().call().await?.head.try_into().unwrap();
 
-            // Fetch the checkpoint at that epoch
-            let checkpoint = get_checkpoint_for_epoch(epoch.try_into().unwrap()).await;
+            // Fetch the checkpoint at that slot
+            let checkpoint = get_checkpoint(slot).await;
 
             // Get the client from the checkpoint
             let client = get_client(checkpoint.as_bytes().to_vec()).await;
