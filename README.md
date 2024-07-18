@@ -21,12 +21,12 @@ Prod: TBA when SP1 goes to mainnet
 - [Foundry](https://book.getfoundry.sh/getting-started/installation)
 - [SP1](https://docs.succinct.xyz/getting-started/install.html)
   
-### 1. Generate genesis parameters for contract
+### 1. Generate genesis parameters
 
 1. `cd ./script`
 2. `RUST_LOG=info cargo run --release --bin genesis`
 
-### 2. Deploy contracts with Foundry
+### 2. Deploy contracts
 
 1. `cd ../contracts`
 2. `cp .env.example .env`
@@ -38,7 +38,7 @@ Prod: TBA when SP1 goes to mainnet
    
    ![alt text](./return-image.png)
 
-### 3. Run Light Client
+### 3. Run light client
 
 1. `cd ./script`
 2. `cp .env.example .env`
