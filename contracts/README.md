@@ -17,4 +17,5 @@
 6. `source .env`
 7. `forge script script/Deploy.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --etherscan-api-key $ETHERSCAN_API_KEY --broadcast --verify`
 8. Take note of the light client contract address returned by the script
+   
    ![alt text](../return-image.png)
