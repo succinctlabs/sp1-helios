@@ -28,7 +28,7 @@ On-chain Ethereum light client built with SP1.
 8. Take note of the light client contract address printed by the script
    ![alt text](./return-image.png)
 
-## Run Light Client & Generate Proofs
+## Run Light Client
 
 1. Install [SP1](https://docs.succinct.xyz/getting-started/install.html)
 2. `cd ./script`
