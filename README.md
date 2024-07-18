@@ -43,7 +43,4 @@ Prod: TBA when SP1 goes to mainnet
 1. `cd ./script`
 2. `cp .env.example .env`
 3. Paste in the contract address in `.env` and fill out the other parameters
-
-To update the light client once (for testing): `RUST_LOG=info cargo run --release --bin run`
-
-To update the light client continuously (for production): `RUST_LOG=info cargo run --release --bin operator`
+4. `RUST_LOG=info cargo run --release --bin operator`
