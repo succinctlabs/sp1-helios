@@ -38,3 +38,8 @@ On-chain Ethereum light client built with SP1.
 To update the light client once (for testing): `RUST_LOG=info cargo run --release --bin run`
 
 To update the light client continuously (for production): `RUST_LOG=info cargo run --release --bin operator`
+
+
+## Deployments
+Test deployment (mock proof verifier): sepolia:0x0E2451C03C1B63D3187999ceDe8106a0eD1691c8
+Prod deployment: Will be deployed when SP1 goes to mainnet
