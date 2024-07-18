@@ -1,5 +1,4 @@
-//! A simple script to generate and verify the proof of a given program.
-
+/// Update the light client once
 use helios::consensus::rpc::ConsensusRpc;
 use helios_2_script::{get_execution_state_root_proof, get_updates};
 use sp1_helios_primitives::types::ProofInputs;

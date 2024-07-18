@@ -1,3 +1,4 @@
+/// Continuously generate proofs & keep light client updated with chain
 use alloy::{
     network::{Ethereum, EthereumWallet},
     primitives::Address,
