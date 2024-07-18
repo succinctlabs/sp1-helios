@@ -9,14 +9,16 @@ use alloy::{
     sol,
     transports::http::{Client, Http},
 };
+use alloy_primitives::{B256, U256};
 use anyhow::Result;
 
-use helios::consensus::rpc::ConsensusRpc;
 use helios::consensus::{rpc::nimbus_rpc::NimbusRpc, Inner};
+use helios::{consensus::rpc::ConsensusRpc, types::Update};
 use helios_2_script::*;
 use log::{error, info};
 use sp1_helios_primitives::types::ProofInputs;
 use sp1_sdk::{ProverClient, SP1PlonkBn254Proof, SP1ProvingKey, SP1Stdin};
+use ssz_rs::prelude::*;
 use std::env;
 use std::sync::Arc;
 use std::time::Duration;
@@ -54,8 +56,9 @@ sol! {
         uint256 public immutable SLOTS_PER_PERIOD;
         uint32 public immutable SOURCE_CHAIN_ID;
         uint256 public head;
-        bytes32 public finalizedHeader;
-        bytes32 public syncCommitteeHash;
+        mapping(uint256 => bytes32) public syncCommittees;
+        mapping(uint256 => bytes32) public executionStateRoots;
+        mapping(uint256 => bytes32) public headers;
         bytes32 public telepathyProgramVkey;
         address public verifier;
 
@@ -77,7 +80,6 @@ sol! {
         function getCurrentEpoch() internal view returns (uint256);
     }
 }
-
 impl SP1LightClientOperator {
     pub async fn new() -> Self {
         dotenv::dotenv().ok();
@@ -116,12 +118,125 @@ impl SP1LightClientOperator {
         }
     }
 
-    async fn request_update(&self, client: Inner<NimbusRpc>) -> Result<SP1PlonkBn254Proof> {
+    async fn sync_client(
+        &self,
+        mut client: Inner<NimbusRpc>,
+        mut updates: Vec<Update>,
+    ) -> (Inner<NimbusRpc>, Vec<Update>) {
+        let contract = SP1LightClient::new(self.contract_address, self.wallet_filler.clone());
+
+        // Fetch required values
+        let head: u64 = contract
+            .head()
+            .call()
+            .await
+            .unwrap()
+            .head
+            .try_into()
+            .unwrap();
+        let period: u64 = contract
+            .getSyncCommitteePeriod(U256::from(head))
+            .call()
+            .await
+            .unwrap()
+            ._0
+            .try_into()
+            .unwrap();
+        let contract_current_sync_committee = contract
+            .syncCommittees(U256::from(period))
+            .call()
+            .await
+            .unwrap()
+            ._0;
+        let contract_next_sync_committee = contract
+            .syncCommittees(U256::from(period + 1))
+            .call()
+            .await
+            .unwrap()
+            ._0;
+
+        // Sync client with contract
+        if contract_current_sync_committee.to_vec()
+            != client
+                .store
+                .current_sync_committee
+                .hash_tree_root()
+                .unwrap()
+                .as_ref()
+        {
+            panic!("Client not in sync with contract");
+        }
+
+        // Helios' bootstrap does not set next_sync_committee (see implementation).
+        // If the contract has this value, we need to catch up helios.
+        // The first update is the catch-up update.
+        let contract_has_next_sync_committee =
+            contract_next_sync_committee.to_vec() != B256::ZERO.to_vec();
+        let client_has_next_sync_committee = client.store.next_sync_committee.is_some();
+        if contract_has_next_sync_committee && !client_has_next_sync_committee {
+            if let Some(mut first_update) = updates.first().cloned() {
+                // Sanity check: update will catch-up client with contract
+                assert_eq!(
+                    first_update
+                        .next_sync_committee
+                        .hash_tree_root()
+                        .unwrap()
+                        .as_ref(),
+                    contract_next_sync_committee.to_vec()
+                );
+
+                updates.remove(0);
+                match client.verify_update(&first_update) {
+                    Ok(_) => {
+                        client.apply_update(&first_update);
+
+                        // Sanity check: client is caught up with contract
+                        assert_eq!(
+                            client
+                                .store
+                                .clone()
+                                .next_sync_committee
+                                .unwrap()
+                                .hash_tree_root()
+                                .unwrap()
+                                .as_ref(),
+                            contract_next_sync_committee.to_vec()
+                        );
+                        assert_eq!(head, client.store.finalized_header.slot.as_u64());
+                    }
+                    Err(e) => {
+                        panic!("Failed to verify catch-up update: {:?}", e);
+                    }
+                }
+            } else {
+                panic!("No catch-up updates available");
+            }
+        }
+
+        (client, updates)
+    }
+
+    async fn request_update(&self, client: Inner<NimbusRpc>) -> Result<Option<SP1PlonkBn254Proof>> {
+        let contract = SP1LightClient::new(self.contract_address, self.wallet_filler.clone());
+        let head: u64 = contract.head().call().await?.head.try_into().unwrap();
+
         let mut stdin = SP1Stdin::new();
 
         let updates = get_updates(&client).await;
+        let (client, updates) = self.sync_client(client, updates).await;
+
         let now = SystemTime::now();
         let finality_update = client.rpc.get_finality_update().await.unwrap();
+        let latest_block = finality_update.finalized_header.slot;
+
+        if latest_block.as_u64() <= head {
+            info!("Contract is up to date. Nothing to update.");
+            return Ok(None);
+        }
+
+        let execution_state_proof = get_execution_state_root_proof(latest_block.into())
+            .await
+            .unwrap();
 
         let inputs = ProofInputs {
             updates,
@@ -131,12 +246,16 @@ impl SP1LightClientOperator {
             store: client.store,
             genesis_root: client.config.chain.genesis_root.clone(),
             forks: client.config.forks.clone(),
+            execution_state_proof,
         };
 
         let encoded_proof_inputs = serde_cbor::to_vec(&inputs)?;
         stdin.write_slice(&encoded_proof_inputs);
 
-        self.client.prove_plonk(&self.pk, stdin)
+        let proof = self.client.prove_plonk(&self.pk, stdin)?;
+
+        info!("New head: {:?}", latest_block.as_u64());
+        Ok(Some(proof))
     }
 
     /// Relay an update proof to the SP1 LightClient contract.
@@ -196,22 +315,25 @@ impl SP1LightClientOperator {
             let epoch = contract.getCurrentEpoch().call().await?._0;
 
             // Fetch the checkpoint at that epoch
-            let checkpoint = get_checkpoint(epoch.try_into().unwrap()).await;
+            let checkpoint = get_checkpoint_for_epoch(epoch.try_into().unwrap()).await;
 
             // Get the client from the checkpoint
             let client = get_client(checkpoint.as_bytes().to_vec()).await;
 
             // Request an update
             match self.request_update(client).await {
-                Ok(proof) => {
+                Ok(Some(proof)) => {
                     self.relay_update(proof).await?;
+                }
+                Ok(None) => {
+                    // Contract is up to date. Nothing to update.
                 }
                 Err(e) => {
                     error!("Header range request failed: {}", e);
-                    continue;
                 }
             };
 
+            info!("Sleeping for {:?} minutes", loop_delay_mins);
             tokio::time::sleep(tokio::time::Duration::from_secs(60 * loop_delay_mins)).await;
         }
     }

@@ -8,7 +8,7 @@
 //!
 
 use clap::Parser;
-use helios_2_script::{get_checkpoint, get_execution_state_root_proof};
+use helios_2_script::{get_checkpoint_for_epoch, get_execution_state_root_proof};
 use log::info;
 use sp1_sdk::{HashableKey, ProverClient};
 use std::env;
@@ -94,7 +94,7 @@ pub async fn main() {
     let verifier;
     let sp1_prover;
     if let Some(temp_epoch) = args.epoch {
-        checkpoint = get_checkpoint(temp_epoch).await;
+        checkpoint = get_checkpoint_for_epoch(temp_epoch).await;
     } else {
         checkpoint = get_latest_checkpoint().await;
     }
