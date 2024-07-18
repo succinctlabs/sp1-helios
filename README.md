@@ -28,9 +28,10 @@ On-chain light client for Ethereum built with SP1.
 
 ## Run Light Client & Generate Proofs
 
-1. `cd ./script`
-2. `cp .env.example .env`
-3. Paste in the contract address in `.env` and fill out the other parameters
+1. Install [SP1](https://docs.succinct.xyz/getting-started/install.html)
+2. `cd ./script`
+3. `cp .env.example .env`
+4. Paste in the contract address in `.env` and fill out the other parameters
 
 To update the light client once (for testing): `RUST_LOG=info cargo run --release --bin run`
 
