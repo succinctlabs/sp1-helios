@@ -4,7 +4,8 @@
 
 On-chain light client for Ethereum built with SP1.
 
-- `/program`: The SP1 Telepathy program.
+- `/program`: The SP1 Telepathy program
+- `/contracts`: Contracts for the Telepathy light client
 - `/primitives`: Common types shared between the program, contract, and script
 - `/script`: Scripts for getting the contract's genesis parameters and generating proofs
 
@@ -25,6 +26,7 @@ On-chain light client for Ethereum built with SP1.
 6. `source .env`
 7. `forge script script/Deploy.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --etherscan-api-key $ETHERSCAN_API_KEY --broadcast --verify`
 8. Take note of the light client contract address printed by the script
+   ![alt text](./return-image.png)
 
 ## Run Light Client & Generate Proofs
 
