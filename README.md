@@ -2,7 +2,7 @@
 
 ## Overview
 
-On-chain light client for Ethereum built with SP1.
+On-chain Ethereum light client built with SP1.
 
 - `/program`: The SP1 Telepathy program
 - `/contracts`: Contracts for the Telepathy light client
