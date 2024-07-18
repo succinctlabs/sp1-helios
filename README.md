@@ -44,3 +44,7 @@ Continuously generate proofs & keep light client updated with chain
 2. `cp .env.example .env`
 3. Paste in the contract address in `.env` and fill out the other parameters
 4. `RUST_LOG=info cargo run --release --bin operator`
+
+
+todo:
+manually patch sha, tiny-keccak, milagro, and bls12_381 in helios fork
