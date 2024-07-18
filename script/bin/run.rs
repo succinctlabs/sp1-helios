@@ -107,7 +107,7 @@ async fn main() -> Result<()> {
     let wallet_filler: Arc<EthereumFillProvider> = Arc::new(provider);
 
     let contract = SP1LightClient::new(contract_address, wallet_filler.clone());
-    // Get the current epoch from the contract
+    // Get the current slot from the contract
     let head: u64 = contract
         .head()
         .call()
@@ -127,18 +127,8 @@ async fn main() -> Result<()> {
         .try_into()
         .unwrap();
 
-    // Get epoch
-    let epoch: u64 = contract
-        .getCurrentEpoch()
-        .call()
-        .await
-        .unwrap()
-        ._0
-        .try_into()
-        .unwrap();
-
-    // Fetch the checkpoint at that epoch
-    let checkpoint = get_checkpoint_for_epoch(epoch).await;
+    // Fetch the checkpoint at that slot
+    let checkpoint = get_checkpoint(head).await;
 
     // Get the client from the checkpoint
     let mut helios_client = get_client(checkpoint.as_bytes().to_vec()).await;
@@ -189,7 +179,15 @@ async fn main() -> Result<()> {
             updates.remove(0);
             match helios_client.verify_update(&first_update) {
                 Ok(_) => {
+                    println!(
+                        "Slot before: {:?}",
+                        helios_client.store.finalized_header.slot
+                    );
                     helios_client.apply_update(&first_update);
+                    println!(
+                        "Slot after: {:?}",
+                        helios_client.store.finalized_header.slot
+                    );
 
                     // Sanity check: client is caught up with contract
                     assert_eq!(
@@ -245,14 +243,13 @@ async fn main() -> Result<()> {
 
     let client = ProverClient::new();
     let (pk, _) = client.setup(ELF);
-    let proof = client.prove_plonk(&pk, stdin).expect("proving failed");
+    let proof = client.prove(&pk, stdin).plonk().run().unwrap();
 
     // Relay the update to the contract
     let proof_as_bytes = if env::var("SP1_PROVER").unwrap().to_lowercase() == "mock" {
         vec![]
     } else {
-        let proof_str = proof.bytes();
-        hex::decode(proof_str.replace("0x", "")).unwrap()
+        proof.bytes()
     };
     let public_values_bytes = proof.public_values.to_vec();
 

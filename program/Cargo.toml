@@ -5,7 +5,7 @@ name = "helios-2-program"
 edition = "2021"
 
 [dependencies]
-sp1-zkvm = { git = "https://github.com/succinctlabs/sp1.git", tag = "v1.0.8-testnet" }
+sp1-zkvm = { git = "https://github.com/succinctlabs/sp1.git", branch = "chris/v1.0.9-testnet" }
 common = { git = "https://github.com/succinctlabs/helios.git", package = "common" }
 serde_cbor = "0.11.2"
 sp1-helios-primitives = { path = "../primitives" }

@@ -41,12 +41,10 @@ pub async fn get_latest_checkpoint() -> H256 {
         .unwrap()
 }
 
-pub async fn get_checkpoint_for_epoch(epoch: u64) -> H256 {
-    let rpc = NimbusRpc::new("https://www.lightclientdata.org");
-    const SLOTS_PER_EPOCH: u64 = 32;
+pub async fn get_checkpoint(slot: u64) -> H256 {
+    let rpc: NimbusRpc = NimbusRpc::new("https://www.lightclientdata.org");
 
-    let first_slot = epoch * SLOTS_PER_EPOCH;
-    let mut block = rpc.get_block(first_slot).await.unwrap();
+    let mut block = rpc.get_block(slot).await.unwrap();
     H256::from_slice(block.hash_tree_root().unwrap().as_ref())
 }
 
