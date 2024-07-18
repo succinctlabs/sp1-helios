@@ -291,14 +291,11 @@ async fn main() {
     dotenv::dotenv().ok();
     env_logger::init();
 
-    let loop_delay_mins_env = env::var("LOOP_DELAY_MINS");
-    let mut loop_delay_mins = 5;
-    if loop_delay_mins_env.is_ok() {
-        loop_delay_mins = loop_delay_mins_env
-            .unwrap()
-            .parse::<u64>()
-            .expect("invalid LOOP_DELAY_MINS");
-    }
+    let loop_delay_mins = match env::var("LOOP_DELAY_MINS") {
+        Ok(value) if value.is_empty() => 5, // Use default if empty
+        Ok(value) => value.parse().expect("Invalid LOOP_DELAY_MINS"),
+        Err(_) => 5, // Use default if not set
+    };
 
     let mut operator = SP1LightClientOperator::new().await;
     loop {
