@@ -349,21 +349,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bls12_381"
-version = "0.8.0"
-source = "git+https://github.com/succinctlabs/bls12_381#b7d743272fd80e8619d407145d0255b31b676a2b"
-dependencies = [
- "digest 0.9.0",
- "ff",
- "group",
- "pairing",
- "rand_core",
- "sha2 0.9.9",
- "sp1-lib",
- "subtle",
-]
-
-[[package]]
 name = "bumpalo"
 version = "3.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -419,13 +404,13 @@ dependencies = [
 name = "common"
 version = "0.1.0"
 dependencies = [
- "bls12_381",
  "bytes",
  "ethers-core",
  "eyre",
  "hex",
  "serde",
  "serde_json",
+ "snowbridge-milagro-bls",
  "ssz_rs",
  "superstruct",
  "thiserror",
@@ -804,7 +789,6 @@ version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ded41244b729663b1e574f1b4fb731469f69f79c17667b5d776b16cda0479449"
 dependencies = [
- "bitvec",
  "rand_core",
  "subtle",
 ]
@@ -1308,15 +1292,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pairing"
-version = "0.23.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "81fec4625e73cf41ef4bb6846cafa6d44736525f442ba45e407c4a000a13996f"
-dependencies = [
- "group",
-]
-
-[[package]]
 name = "parity-scale-codec"
 version = "3.6.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1719,6 +1694,7 @@ version = "2.11.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eca070c12893629e2cc820a9761bedf6ce1dcddc9852984d1dc734b8bd9bd024"
 dependencies = [
+ "bitvec",
  "cfg-if",
  "derive_more",
  "parity-scale-codec",
@@ -1930,6 +1906,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "snowbridge-milagro-bls"
+version = "1.5.2"
+source = "git+https://github.com/Snowfork/milagro_bls?rev=6a95c9e33c6a41d9137761e593d53742ebb964de#6a95c9e33c6a41d9137761e593d53742ebb964de"
+dependencies = [
+ "hex",
+ "lazy_static",
+ "parity-scale-codec",
+ "rand",
+ "scale-info",
+ "snowbridge-amcl",
+ "zeroize",
+]
+
+[[package]]
 name = "sp1-helios-primitives"
 version = "0.1.0"
 dependencies = [
@@ -1952,9 +1942,7 @@ dependencies = [
  "anyhow",
  "bincode",
  "cfg-if",
- "hex",
  "serde",
- "snowbridge-amcl",
 ]
 
 [[package]]
