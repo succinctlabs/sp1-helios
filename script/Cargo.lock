@@ -1214,6 +1214,7 @@ dependencies = [
 [[package]]
 name = "bls12_381"
 version = "0.8.0"
+source = "git+https://github.com/succinctlabs/bls12_381#b7d743272fd80e8619d407145d0255b31b676a2b"
 dependencies = [
  "digest 0.9.0",
  "ff 0.13.0",
@@ -6337,6 +6338,7 @@ dependencies = [
 [[package]]
 name = "snowbridge-milagro-bls"
 version = "1.5.2"
+source = "git+https://github.com/succinctlabs/milagro_bls#8a063edf2259c0a8c98a4a7f6f84b0ac10b0f9d4"
 dependencies = [
  "hex",
  "lazy_static",

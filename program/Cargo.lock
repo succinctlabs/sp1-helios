@@ -351,6 +351,7 @@ dependencies = [
 [[package]]
 name = "bls12_381"
 version = "0.8.0"
+source = "git+https://github.com/succinctlabs/bls12_381#b7d743272fd80e8619d407145d0255b31b676a2b"
 dependencies = [
  "digest 0.9.0",
  "ff",
