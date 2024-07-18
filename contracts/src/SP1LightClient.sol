@@ -3,6 +3,8 @@ pragma solidity ^0.8.16;
 
 import {ISP1Verifier} from "@sp1-contracts/ISP1Verifier.sol";
 
+/// @title SP1LightClient
+/// @notice An ethereum light client, built with SP1.
 contract SP1LightClient {
     bytes32 public immutable GENESIS_VALIDATORS_ROOT;
     uint256 public immutable GENESIS_TIME;
@@ -77,7 +79,7 @@ contract SP1LightClient {
     }
 
    
-    /// @notice Updates the light client with a new header and sync committee (if changed)
+    /// @notice Updates the light client with a new header, execution state root, and sync committee (if changed)
     /// @param proof The proof bytes for the SP1 proof.
     /// @param publicValues The public commitments from the SP1 proof.
     function update(bytes calldata proof, bytes calldata publicValues) external {

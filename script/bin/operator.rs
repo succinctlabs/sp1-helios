@@ -1,3 +1,4 @@
+/// Continuously generate proofs & keep light client updated with chain
 use alloy::{
     network::{Ethereum, EthereumWallet},
     primitives::Address,
@@ -9,20 +10,20 @@ use alloy::{
     sol,
     transports::http::{Client, Http},
 };
-use alloy_primitives::{B256, U256};
+use alloy_primitives::U256;
 use anyhow::Result;
-
+use helios::consensus::rpc::ConsensusRpc;
 use helios::consensus::{rpc::nimbus_rpc::NimbusRpc, Inner};
-use helios::{consensus::rpc::ConsensusRpc, types::Update};
 use helios_2_script::*;
 use log::{error, info};
 use sp1_helios_primitives::types::ProofInputs;
-use sp1_sdk::{PlonkBn254Proof, ProverClient, SP1ProofWithPublicValues, SP1ProvingKey, SP1Stdin};
+use sp1_sdk::{ProverClient, SP1ProofWithPublicValues, SP1ProvingKey, SP1Stdin};
 use ssz_rs::prelude::*;
 use std::env;
 use std::sync::Arc;
 use std::time::Duration;
 use zduny_wasm_timer::SystemTime;
+
 const ELF: &[u8] = include_bytes!("../../program/elf/riscv32im-succinct-zkvm-elf");
 
 /// Alias the fill provider for the Ethereum network. Retrieved from the instantiation of the
@@ -65,10 +66,11 @@ sol! {
         struct ProofOutputs {
             bytes32 prevHeader;
             bytes32 newHeader;
-            bytes32 prevSyncCommitteeHash;
-            bytes32 newSyncCommitteeHash;
+            bytes32 syncCommitteeHash;
+            bytes32 nextSyncCommitteeHash;
             uint256 prevHead;
             uint256 newHead;
+            bytes32 executionStateRoot;
         }
 
         event HeadUpdate(uint256 indexed slot, bytes32 indexed root);
@@ -80,6 +82,7 @@ sol! {
         function getCurrentEpoch() internal view returns (uint256);
     }
 }
+
 impl SP1LightClientOperator {
     pub async fn new() -> Self {
         dotenv::dotenv().ok();
@@ -118,14 +121,13 @@ impl SP1LightClientOperator {
         }
     }
 
-    async fn sync_client(
+    /// Fetch values and generate an 'update' proof for the SP1 LightClient contract.
+    async fn request_update(
         &self,
-        mut client: Inner<NimbusRpc>,
-        mut updates: Vec<Update>,
-    ) -> (Inner<NimbusRpc>, Vec<Update>) {
+        client: Inner<NimbusRpc>,
+    ) -> Result<Option<SP1ProofWithPublicValues>> {
+        // Fetch required values.
         let contract = SP1LightClient::new(self.contract_address, self.wallet_filler.clone());
-
-        // Fetch required values
         let head: u64 = contract
             .head()
             .call()
@@ -155,78 +157,18 @@ impl SP1LightClientOperator {
             .unwrap()
             ._0;
 
-        // Sync client with contract
-        if contract_current_sync_committee.to_vec()
-            != client
-                .store
-                .current_sync_committee
-                .hash_tree_root()
-                .unwrap()
-                .as_ref()
-        {
-            panic!("Client not in sync with contract");
-        }
-
-        // Helios' bootstrap does not set next_sync_committee (see implementation).
-        // If the contract has this value, we need to catch up helios.
-        // The first update is the catch-up update.
-        let contract_has_next_sync_committee =
-            contract_next_sync_committee.to_vec() != B256::ZERO.to_vec();
-        let client_has_next_sync_committee = client.store.next_sync_committee.is_some();
-        if contract_has_next_sync_committee && !client_has_next_sync_committee {
-            if let Some(mut first_update) = updates.first().cloned() {
-                // Sanity check: update will catch-up client with contract
-                assert_eq!(
-                    first_update
-                        .next_sync_committee
-                        .hash_tree_root()
-                        .unwrap()
-                        .as_ref(),
-                    contract_next_sync_committee.to_vec()
-                );
-
-                updates.remove(0);
-                match client.verify_update(&first_update) {
-                    Ok(_) => {
-                        client.apply_update(&first_update);
-
-                        // Sanity check: client is caught up with contract
-                        assert_eq!(
-                            client
-                                .store
-                                .clone()
-                                .next_sync_committee
-                                .unwrap()
-                                .hash_tree_root()
-                                .unwrap()
-                                .as_ref(),
-                            contract_next_sync_committee.to_vec()
-                        );
-                        assert_eq!(head, client.store.finalized_header.slot.as_u64());
-                    }
-                    Err(e) => {
-                        panic!("Failed to verify catch-up update: {:?}", e);
-                    }
-                }
-            } else {
-                panic!("No catch-up updates available");
-            }
-        }
-
-        (client, updates)
-    }
-
-    async fn request_update(
-        &self,
-        client: Inner<NimbusRpc>,
-    ) -> Result<Option<SP1ProofWithPublicValues>> {
-        let contract = SP1LightClient::new(self.contract_address, self.wallet_filler.clone());
-        let head: u64 = contract.head().call().await?.head.try_into().unwrap();
-
         let mut stdin = SP1Stdin::new();
 
+        // Setup client.
         let updates = get_updates(&client).await;
-        let (client, updates) = self.sync_client(client, updates).await;
+        let (client, updates) = sync_client(
+            client,
+            updates,
+            head,
+            contract_current_sync_committee,
+            contract_next_sync_committee,
+        )
+        .await;
 
         let now = SystemTime::now();
         let finality_update = client.rpc.get_finality_update().await.unwrap();
@@ -255,6 +197,7 @@ impl SP1LightClientOperator {
         let encoded_proof_inputs = serde_cbor::to_vec(&inputs)?;
         stdin.write_slice(&encoded_proof_inputs);
 
+        // Generate proof.
         let proof = self.client.prove(&self.pk, stdin).plonk().run().unwrap();
 
         info!("New head: {:?}", latest_block.as_u64());
@@ -267,8 +210,8 @@ impl SP1LightClientOperator {
         let proof_as_bytes = if env::var("SP1_PROVER").unwrap().to_lowercase() == "mock" {
             vec![]
         } else {
+            // TODO: Untested, may not work in non-mock mode.
             proof.bytes()
-            // Strip the 0x prefix from proof_str, if it exists.
         };
         let public_values_bytes = proof.public_values.to_vec();
 
@@ -307,6 +250,7 @@ impl SP1LightClientOperator {
         Ok(())
     }
 
+    /// Start the operator.
     async fn run(&mut self, loop_delay_mins: u64) -> Result<()> {
         info!("Starting SP1 Telepathy operator");
 
@@ -347,34 +291,11 @@ async fn main() {
     dotenv::dotenv().ok();
     env_logger::init();
 
-    let loop_delay_mins_env = env::var("LOOP_DELAY_MINS");
-    let mut loop_delay_mins = 5;
-    if loop_delay_mins_env.is_ok() {
-        loop_delay_mins = loop_delay_mins_env
-            .unwrap()
-            .parse::<u64>()
-            .expect("invalid LOOP_DELAY_MINS");
-    }
-
-    let update_delay_blocks_env = env::var("UPDATE_DELAY_BLOCKS");
-    let mut update_delay_blocks = 300;
-    if update_delay_blocks_env.is_ok() {
-        update_delay_blocks = update_delay_blocks_env
-            .unwrap()
-            .parse::<u64>()
-            .expect("invalid UPDATE_DELAY_BLOCKS");
-    }
-
-    let data_commitment_max_env = env::var("DATA_COMMITMENT_MAX");
-    // Note: This default value reflects the max data commitment size that can be rquested from the
-    // Celestia node.
-    let mut data_commitment_max = 1000;
-    if data_commitment_max_env.is_ok() {
-        data_commitment_max = data_commitment_max_env
-            .unwrap()
-            .parse::<u64>()
-            .expect("invalid DATA_COMMITMENT_MAX");
-    }
+    let loop_delay_mins = match env::var("LOOP_DELAY_MINS") {
+        Ok(value) if value.is_empty() => 5, // Use default if empty
+        Ok(value) => value.parse().expect("Invalid LOOP_DELAY_MINS"),
+        Err(_) => 5, // Use default if not set
+    };
 
     let mut operator = SP1LightClientOperator::new().await;
     loop {

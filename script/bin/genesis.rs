@@ -1,14 +1,8 @@
-//! To build the binary:
-//!
-//!     `cargo build --release --bin genesis`
-//!
-//!
-//!
-//!
-//!
-
+/// Generate genesis parameters for light client contract
 use clap::Parser;
-use helios_2_script::{get_checkpoint, get_execution_state_root_proof};
+use helios_2_script::{
+    get_checkpoint, get_client, get_execution_state_root_proof, get_latest_checkpoint,
+};
 use log::info;
 use sp1_sdk::{HashableKey, ProverClient};
 use std::env;
@@ -35,48 +29,6 @@ pub struct GenesisArgs {
     #[arg(long)]
     pub slot: Option<u64>,
     pub verifier: Option<String>,
-}
-
-async fn get_latest_checkpoint() -> H256 {
-    let cf = checkpoints::CheckpointFallback::new()
-        .build()
-        .await
-        .unwrap();
-
-    // Fetch the latest mainnet checkpoint
-
-    cf.fetch_latest_checkpoint(&networks::Network::MAINNET)
-        .await
-        .unwrap()
-}
-
-async fn get_client(checkpoint: Vec<u8>) -> Inner<NimbusRpc> {
-    let consensus_rpc = "https://www.lightclientdata.org";
-
-    let base_config = networks::mainnet();
-    let config = Config {
-        consensus_rpc: consensus_rpc.to_string(),
-        execution_rpc: String::new(),
-        chain: base_config.chain,
-        forks: base_config.forks,
-        strict_checkpoint_age: false,
-        ..Default::default()
-    };
-
-    let (block_send, _) = channel(256);
-    let (finalized_block_send, _) = watch::channel(None);
-    let (channel_send, _) = watch::channel(None);
-
-    let mut client = Inner::<NimbusRpc>::new(
-        consensus_rpc,
-        block_send,
-        finalized_block_send,
-        channel_send,
-        Arc::new(config),
-    );
-
-    client.bootstrap(&checkpoint).await.unwrap();
-    client
 }
 
 #[tokio::main]

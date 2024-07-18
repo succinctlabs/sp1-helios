@@ -4,14 +4,18 @@
 sp1_zkvm::entrypoint!(main);
 
 use alloy_primitives::{B256, U256};
-use alloy_sol_types::{sol, SolType};
+use alloy_sol_types::SolType;
 use common::consensus::{
-    apply_finality_update, apply_update, utils::calc_sync_period, verify_finality_update,
-    verify_update,
+    apply_finality_update, apply_update, verify_finality_update, verify_update,
 };
 use sp1_helios_primitives::types::{ProofInputs, ProofOutputs};
 use ssz_rs::prelude::*;
 
+/// Program flow:
+/// 1. Apply sync committee updates, if any
+/// 2. Apply finality update
+/// 3. Verify execution state root proof
+/// 4. Commit new state root, header, and sync committee for usage in the on-chain contract
 pub fn main() {
     let encoded_inputs = sp1_zkvm::io::read_vec();
 
@@ -40,6 +44,7 @@ pub fn main() {
 
     println!("cycle-tracker-start: verify_and_apply_update");
 
+    // 1. Apply sync committee updates, if any
     for (index, update) in updates.iter().enumerate() {
         println!("Processing update {} of {}", index + 1, updates.len());
         println!("cycle-tracker-start: verify_update");
@@ -60,6 +65,7 @@ pub fn main() {
         println!("cycle-tracker-end: apply_update");
     }
 
+    // 2. Apply finality update
     println!("cycle-tracker-start: verify_finality_update");
     is_valid = is_valid
         && verify_finality_update(
@@ -76,6 +82,7 @@ pub fn main() {
 
     println!("cycle-tracker-end: verify_and_apply_update");
 
+    // 3. Verify execution state root proof
     println!("cycle-tracker-start: verify_execution_state_proof");
     let execution_state_branch_nodes: Vec<Node> = execution_state_proof
         .execution_state_branch
@@ -120,6 +127,7 @@ pub fn main() {
     };
     let head = store.finalized_header.slot;
 
+    // 4. Commit new state root, header, and sync committee for usage in the on-chain contract
     let proof_outputs = ProofOutputs::abi_encode(&(
         prev_header,
         header,
