@@ -1,32 +1,22 @@
 //! A simple script to generate and verify the proof of a given program.
 
-use ethers_core::types::H256;
-use helios::{
-    common::consensus::types::Update,
-    common::consensus::utils,
-    consensus::{
-        constants,
-        rpc::{nimbus_rpc::NimbusRpc, ConsensusRpc},
-        Inner,
-    },
-    prelude::*,
-};
+use helios::consensus::rpc::ConsensusRpc;
 use helios_2_script::{get_execution_state_root_proof, get_updates};
-use sp1_helios_primitives::types::{ExecutionStateProof, ProofInputs, ProofOutputs};
+use sp1_helios_primitives::types::ProofInputs;
 use sp1_sdk::{utils::setup_logger, ProverClient, SP1Stdin};
-use tracing::{debug, error, info, warn};
+use tracing::{error, info};
 use zduny_wasm_timer::SystemTime;
 const ELF: &[u8] = include_bytes!("../../program/elf/riscv32im-succinct-zkvm-elf");
 use alloy::{
     network::{Ethereum, EthereumWallet},
-    primitives::{Address, B256, U256},
+    primitives::{Address, U256},
     providers::{
         fillers::{ChainIdFiller, FillProvider, GasFiller, JoinFill, NonceFiller, WalletFiller},
         Identity, Provider, ProviderBuilder, RootProvider,
     },
     signers::local::PrivateKeySigner,
     sol,
-    transports::http::{reqwest::Url, Client, Http},
+    transports::http::{Client, Http},
 };
 use anyhow::Result;
 use helios_2_script::*;
@@ -63,10 +53,11 @@ sol! {
         struct ProofOutputs {
             bytes32 prevHeader;
             bytes32 newHeader;
-            bytes32 prevSyncCommitteeHash;
-            bytes32 newSyncCommitteeHash;
+            bytes32 syncCommitteeHash;
+            bytes32 nextSyncCommitteeHash;
             uint256 prevHead;
             uint256 newHead;
+            bytes32 executionStateRoot;
         }
 
         event HeadUpdate(uint256 indexed slot, bytes32 indexed root);
@@ -130,11 +121,9 @@ async fn main() -> Result<()> {
     // Fetch the checkpoint at that slot
     let checkpoint = get_checkpoint(head).await;
 
-    // Get the client from the checkpoint
+    // Setup & sync client.
     let mut helios_client = get_client(checkpoint.as_bytes().to_vec()).await;
-
-    let mut updates = get_updates(&helios_client).await;
-
+    let updates = get_updates(&helios_client).await;
     let contract_current_sync_committee = contract
         .syncCommittees(U256::from(period))
         .call()
@@ -157,64 +146,17 @@ async fn main() -> Result<()> {
     {
         panic!("Client not in sync with contract");
     }
-
-    // Helios' bootstrap does not set next_sync_committee (see implementation).
-    // If the contract has this value, we need to catch up helios.
-    // The first update is the catch-up update.
-    let contract_has_next_sync_committee =
-        contract_next_sync_committee.to_vec() != B256::ZERO.to_vec();
-    let client_has_next_sync_committee = helios_client.store.next_sync_committee.is_some();
-    if contract_has_next_sync_committee && !client_has_next_sync_committee {
-        if let Some(mut first_update) = updates.first().cloned() {
-            // Sanity check: update will catch-up client with contract
-            assert_eq!(
-                first_update
-                    .next_sync_committee
-                    .hash_tree_root()
-                    .unwrap()
-                    .as_ref(),
-                contract_next_sync_committee.to_vec()
-            );
-
-            updates.remove(0);
-            match helios_client.verify_update(&first_update) {
-                Ok(_) => {
-                    println!(
-                        "Slot before: {:?}",
-                        helios_client.store.finalized_header.slot
-                    );
-                    helios_client.apply_update(&first_update);
-                    println!(
-                        "Slot after: {:?}",
-                        helios_client.store.finalized_header.slot
-                    );
-
-                    // Sanity check: client is caught up with contract
-                    assert_eq!(
-                        helios_client
-                            .store
-                            .clone()
-                            .next_sync_committee
-                            .unwrap()
-                            .hash_tree_root()
-                            .unwrap()
-                            .as_ref(),
-                        contract_next_sync_committee.to_vec()
-                    );
-                    assert_eq!(head, helios_client.store.finalized_header.slot.as_u64());
-                }
-                Err(e) => {
-                    panic!("Failed to verify catch-up update: {:?}", e);
-                }
-            }
-        } else {
-            panic!("No catch-up updates available");
-        }
-    }
+    let (helios_client, updates) = sync_client(
+        helios_client,
+        updates,
+        head,
+        contract_current_sync_committee,
+        contract_next_sync_committee,
+    )
+    .await;
 
     let now = SystemTime::now();
     let finality_update = helios_client.rpc.get_finality_update().await.unwrap();
-
     let latest_block = finality_update.finalized_header.slot;
 
     if latest_block.as_u64() <= head {
@@ -241,6 +183,7 @@ async fn main() -> Result<()> {
     let encoded_inputs = serde_cbor::to_vec(&inputs).unwrap();
     stdin.write_slice(&encoded_inputs);
 
+    // Generate proof.
     let client = ProverClient::new();
     let (pk, _) = client.setup(ELF);
     let proof = client.prove(&pk, stdin).plonk().run().unwrap();
@@ -249,6 +192,7 @@ async fn main() -> Result<()> {
     let proof_as_bytes = if env::var("SP1_PROVER").unwrap().to_lowercase() == "mock" {
         vec![]
     } else {
+        // TODO: Untested, may not work in non-mock mode.
         proof.bytes()
     };
     let public_values_bytes = proof.public_values.to_vec();
@@ -261,6 +205,7 @@ async fn main() -> Result<()> {
     const NUM_CONFIRMATIONS: u64 = 3;
     const TIMEOUT_SECONDS: u64 = 60;
 
+    // Relay the update to the contract
     let receipt = contract
         .update(proof_as_bytes.into(), public_values_bytes.into())
         .gas_price(max_fee_per_gas)
