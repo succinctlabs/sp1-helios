@@ -39,7 +39,7 @@ Prod: TBA when SP1 goes to mainnet
    ![alt text](./return-image.png)
 
 ### 3. Run light client
-
+Continuously generate proofs & keep light client updated with chain
 1. `cd ./script`
 2. `cp .env.example .env`
 3. Paste in the contract address in `.env` and fill out the other parameters
