@@ -5,9 +5,7 @@ sp1_zkvm::entrypoint!(main);
 
 use alloy_primitives::{B256, U256};
 use alloy_sol_types::SolType;
-use common::consensus::{
-    apply_finality_update, apply_update, verify_finality_update, verify_update,
-};
+use consensus_core::{apply_finality_update, apply_update, verify_finality_update, verify_update};
 use sp1_helios_primitives::types::{ProofInputs, ProofOutputs};
 use ssz_rs::prelude::*;
 

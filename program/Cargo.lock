@@ -351,9 +351,10 @@ dependencies = [
 [[package]]
 name = "bls12_381"
 version = "0.8.0"
-source = "git+https://github.com/succinctlabs/bls12_381#b7d743272fd80e8619d407145d0255b31b676a2b"
+source = "git+https://github.com/succinctlabs/bls12_381#cac2414652c536a12396f3528b56d6b4632fb52d"
 dependencies = [
  "digest 0.9.0",
+ "eyre",
  "ff",
  "group",
  "pairing",
@@ -418,10 +419,28 @@ dependencies = [
 [[package]]
 name = "common"
 version = "0.1.0"
-source = "git+https://github.com/succinctlabs/helios.git#bd1859b0737b728f238bdd49bae3b46551792cfe"
 dependencies = [
  "bls12_381",
  "bytes",
+ "ethers-core",
+ "eyre",
+ "hex",
+ "serde",
+ "serde_json",
+ "ssz_rs",
+ "superstruct",
+ "thiserror",
+ "tracing",
+ "zduny-wasm-timer",
+]
+
+[[package]]
+name = "consensus_core"
+version = "0.1.0"
+dependencies = [
+ "bls12_381",
+ "bytes",
+ "common",
  "ethers-core",
  "eyre",
  "hex",
@@ -987,6 +1006,7 @@ dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
  "common",
+ "consensus_core",
  "hex",
  "serde_cbor",
  "sp1-helios-primitives",
@@ -1937,6 +1957,7 @@ dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
  "common",
+ "consensus_core",
  "eyre",
  "hex",
  "serde",
