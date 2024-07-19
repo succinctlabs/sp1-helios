@@ -419,6 +419,7 @@ dependencies = [
 [[package]]
 name = "common"
 version = "0.1.0"
+source = "git+https://github.com/succinctlabs/helios.git?branch=patched#af0ac966a030e67127b84501468946e557976954"
 dependencies = [
  "bls12_381",
  "bytes",
@@ -437,6 +438,7 @@ dependencies = [
 [[package]]
 name = "consensus_core"
 version = "0.1.0"
+source = "git+https://github.com/succinctlabs/helios.git?branch=patched#af0ac966a030e67127b84501468946e557976954"
 dependencies = [
  "bls12_381",
  "bytes",
