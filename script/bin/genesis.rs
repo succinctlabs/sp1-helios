@@ -10,13 +10,13 @@ const TELEPATHY_ELF: &[u8] = include_bytes!("../../program/elf/riscv32im-succinc
 use alloy_primitives::B256;
 use ethers_core::types::H256;
 use helios::{
-    common::consensus::types::Update,
-    common::consensus::utils,
     consensus::{
         constants,
         rpc::{nimbus_rpc::NimbusRpc, ConsensusRpc},
         Inner,
     },
+    consensus_core::types::Update,
+    consensus_core::utils,
     prelude::*,
 };
 use ssz_rs::prelude::*;

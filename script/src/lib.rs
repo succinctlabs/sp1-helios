@@ -1,8 +1,8 @@
 use alloy_primitives::B256;
 use ethers_core::types::H256;
 use helios::{
-    common::consensus::types::Update,
-    common::consensus::utils,
+    consensus_core::types::Update,
+    consensus_core::utils,
     consensus::{
         constants,
         rpc::{nimbus_rpc::NimbusRpc, ConsensusRpc},

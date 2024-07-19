@@ -1542,6 +1542,7 @@ name = "config"
 version = "0.5.5"
 dependencies = [
  "common",
+ "consensus_core",
  "dirs",
  "ethers-core 2.0.13",
  "eyre",
@@ -1567,6 +1568,7 @@ dependencies = [
  "chrono",
  "common",
  "config",
+ "consensus_core",
  "ethers-core 2.0.13",
  "eyre",
  "futures",
@@ -1584,6 +1586,25 @@ dependencies = [
  "tokio",
  "tracing",
  "wasm-bindgen-futures",
+ "zduny-wasm-timer",
+]
+
+[[package]]
+name = "consensus_core"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "common",
+ "ethers-core 2.0.13",
+ "eyre",
+ "hex",
+ "serde",
+ "serde_json",
+ "snowbridge-milagro-bls",
+ "ssz_rs",
+ "superstruct",
+ "thiserror",
+ "tracing",
  "zduny-wasm-timer",
 ]
 
@@ -2686,7 +2707,6 @@ dependencies = [
  "revm",
  "serde",
  "serde_json",
- "snowbridge-milagro-bls",
  "ssz_rs",
  "thiserror",
  "tokio",
@@ -3215,6 +3235,7 @@ dependencies = [
  "common",
  "config",
  "consensus",
+ "consensus_core",
  "execution",
 ]
 
@@ -6428,6 +6449,7 @@ dependencies = [
  "alloy-primitives 0.7.7",
  "alloy-sol-types",
  "common",
+ "consensus_core",
  "eyre",
  "hex",
  "serde",

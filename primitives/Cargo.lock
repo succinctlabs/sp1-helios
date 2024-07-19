@@ -404,6 +404,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "consensus_core"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "common",
+ "ethers-core",
+ "eyre",
+ "hex",
+ "serde",
+ "serde_json",
+ "snowbridge-milagro-bls",
+ "ssz_rs",
+ "superstruct",
+ "thiserror",
+ "tracing",
+ "zduny-wasm-timer",
+]
+
+[[package]]
 name = "const-hex"
 version = "1.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1881,6 +1900,7 @@ dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
  "common",
+ "consensus_core",
  "eyre",
  "hex",
  "serde",
