@@ -118,6 +118,7 @@ contract SP1LightClient {
         // This may leave gaps in the sync committee history
         if (syncCommittees[period] == bytes32(0)) {
             syncCommittees[period] = po.syncCommitteeHash;
+            emit SyncCommitteeUpdate(period, po.syncCommitteeHash);
         }
         // Set next peroid's sync committee hash if value exists.
         if (po.nextSyncCommitteeHash != bytes32(0)) {
