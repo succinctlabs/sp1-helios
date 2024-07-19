@@ -114,7 +114,8 @@ contract SP1LightClient {
 
         // If the sync committee for the new peroid is not set, set it.
         // This can happen if the light client was very behind and had a lot of updates
-        // Note: Only the latest sync committee is stored, not the intermediate ones from every update
+        // Note: Only the latest sync committee is stored, not the intermediate ones from every update.
+        // This may leave gaps in the sync committee history
         if (syncCommittees[period] == bytes32(0)) {
             syncCommittees[period] = po.syncCommitteeHash;
         }
