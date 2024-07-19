@@ -26,7 +26,6 @@ contract DeployScript is Script {
             verifier = ISP1Verifier(address(vm.envAddress("SP1_VERIFIER_ADDRESS")));
         }
 
-
         // Deploy the SP1Telepathy contract.
         SP1LightClient lightClient =
             new SP1LightClient{salt: bytes32(vm.envBytes("CREATE2_SALT"))}(

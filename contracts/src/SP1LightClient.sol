@@ -111,10 +111,7 @@ contract SP1LightClient {
         executionStateRoots[po.newHead] = po.executionStateRoot;
         emit HeadUpdate(po.newHead, po.newHeader);
 
-        if (po.syncCommitteeHash != syncCommittees[getSyncCommitteePeriod(head)]) {
-            revert SyncCommitteeNotConnected(po.syncCommitteeHash);
-        }
-
+        // Set next peroid's sync committee hash if value exists.
         if (po.nextSyncCommitteeHash != bytes32(0)) {
             uint256 period = getSyncCommitteePeriod(head);
             uint256 nextPeriod = period + 1;

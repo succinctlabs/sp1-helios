@@ -1,13 +1,13 @@
 use alloy_primitives::B256;
 use ethers_core::types::H256;
 use helios::{
-    consensus_core::types::Update,
-    consensus_core::utils,
     consensus::{
         constants,
         rpc::{nimbus_rpc::NimbusRpc, ConsensusRpc},
         Inner,
     },
+    consensus_core::types::Update,
+    consensus_core::utils,
     prelude::*,
 };
 use serde::Deserialize;
@@ -162,7 +162,7 @@ pub async fn sync_client(
                         contract_next_sync_committee.to_vec()
                     );
                     // Sanity check that fails sometimes
-                    // assert_eq!(head, client.store.finalized_header.slot.as_u64());
+                    assert_eq!(head, client.store.finalized_header.slot.as_u64());
                 }
                 Err(e) => {
                     panic!("Failed to verify catch-up update: {:?}", e);
