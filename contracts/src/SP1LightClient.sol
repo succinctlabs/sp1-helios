@@ -47,7 +47,6 @@ contract SP1LightClient {
     error HeaderRootNotConnected(bytes32 header);
     error SlotBehindHead(uint256 slot);
     error SlotNotConnected(uint256 slot);
-    error SyncCommitteeNotConnected(bytes32 committe);
     error SyncCommitteeAlreadySet(uint256 period);
     error HeaderRootAlreadySet(uint256 slot);
     error StateRootAlreadySet(uint256 slot);
