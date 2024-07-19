@@ -154,7 +154,6 @@ async fn main() -> Result<()> {
     )
     .await;
 
-    let now = SystemTime::now();
     let finality_update = helios_client.rpc.get_finality_update().await.unwrap();
     let latest_block = finality_update.finalized_header.slot;
 
@@ -167,13 +166,19 @@ async fn main() -> Result<()> {
         .await
         .unwrap();
 
+    let expected_current_slot = helios_client.expected_current_slot();
     let inputs = ProofInputs {
         updates,
         finality_update,
-        now,
-        genesis_time: helios_client.config.chain.genesis_time,
+        expected_current_slot,
         store: helios_client.store.clone(),
-        genesis_root: helios_client.config.chain.genesis_root.clone(),
+        genesis_root: helios_client
+            .config
+            .chain
+            .genesis_root
+            .clone()
+            .try_into()
+            .unwrap(),
         forks: helios_client.config.forks.clone(),
         execution_state_proof: execution_state_root_proof,
     };

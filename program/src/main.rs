@@ -21,8 +21,7 @@ pub fn main() {
     let ProofInputs {
         updates,
         finality_update,
-        now,
-        genesis_time,
+        expected_current_slot,
         mut store,
         genesis_root,
         forks,
@@ -49,8 +48,7 @@ pub fn main() {
         is_valid = is_valid
             && verify_update(
                 update,
-                now,
-                genesis_time,
+                expected_current_slot,
                 &store,
                 genesis_root.clone(),
                 &forks,
@@ -68,8 +66,7 @@ pub fn main() {
     is_valid = is_valid
         && verify_finality_update(
             &finality_update,
-            now,
-            genesis_time,
+            expected_current_slot,
             &store,
             genesis_root.clone(),
             &forks,

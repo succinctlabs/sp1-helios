@@ -1,7 +1,7 @@
 use alloy_primitives::B256;
 use alloy_sol_types::{sol, SolStruct, SolType, SolValue};
 use common::config::types::Forks;
-use consensus_core::types::{FinalityUpdate, LightClientStore, Update};
+use consensus_core::types::{FinalityUpdate, LightClientStore, Update, Bytes32};
 use ssz_rs::prelude::*;
 pub use ssz_rs::prelude::{Bitvector, Vector};
 use std::time::SystemTime;
@@ -10,10 +10,9 @@ use std::time::SystemTime;
 pub struct ProofInputs {
     pub updates: Vec<Update>,
     pub finality_update: FinalityUpdate,
-    pub now: SystemTime,
-    pub genesis_time: u64,
+    pub expected_current_slot: u64,
     pub store: LightClientStore,
-    pub genesis_root: Vec<u8>,
+    pub genesis_root: Bytes32,
     pub forks: Forks,
     pub execution_state_proof: ExecutionStateProof,
 }
@@ -37,5 +36,3 @@ pub struct ExecutionStateProof {
 pub type ProofOutputs = sol! {
     tuple(bytes32, bytes32, bytes32, bytes32, uint256, uint256, bytes32)
 };
-
-

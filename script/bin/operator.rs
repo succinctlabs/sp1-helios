@@ -183,13 +183,13 @@ impl SP1LightClientOperator {
             .await
             .unwrap();
 
+        let expected_current_slot = client.expected_current_slot();
         let inputs = ProofInputs {
             updates,
             finality_update,
-            now,
-            genesis_time: client.config.chain.genesis_time,
+            expected_current_slot,
             store: client.store,
-            genesis_root: client.config.chain.genesis_root.clone(),
+            genesis_root: client.config.chain.genesis_root.clone().try_into().unwrap(),
             forks: client.config.forks.clone(),
             execution_state_proof,
         };

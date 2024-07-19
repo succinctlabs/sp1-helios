@@ -393,9 +393,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.1.5"
+version = "1.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "324c74f2155653c90b04f25b2a47a8a631360cb908f92a772695f430c7e31052"
+checksum = "2aba8f4e9906c7ce3c73463f62a7f0c65183ada1a2d47e397cc8810827f9694f"
 
 [[package]]
 name = "cfg-if"
@@ -419,7 +419,7 @@ dependencies = [
 [[package]]
 name = "common"
 version = "0.1.0"
-source = "git+https://github.com/succinctlabs/helios.git?branch=patched#af0ac966a030e67127b84501468946e557976954"
+source = "git+https://github.com/succinctlabs/helios.git?branch=patched#cc1d5e00e3eb133505c47702ac8f9ed978a7923c"
 dependencies = [
  "bls12_381",
  "bytes",
@@ -438,7 +438,7 @@ dependencies = [
 [[package]]
 name = "consensus_core"
 version = "0.1.0"
-source = "git+https://github.com/succinctlabs/helios.git?branch=patched#af0ac966a030e67127b84501468946e557976954"
+source = "git+https://github.com/succinctlabs/helios.git?branch=patched#cc1d5e00e3eb133505c47702ac8f9ed978a7923c"
 dependencies = [
  "bls12_381",
  "bytes",
