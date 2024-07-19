@@ -161,7 +161,6 @@ pub async fn sync_client(
                             .as_ref(),
                         contract_next_sync_committee.to_vec()
                     );
-                    // Sanity check that fails sometimes
                     assert_eq!(head, client.store.finalized_header.slot.as_u64());
                 }
                 Err(e) => {

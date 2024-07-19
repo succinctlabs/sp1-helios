@@ -110,9 +110,16 @@ contract SP1LightClient {
         executionStateRoots[po.newHead] = po.executionStateRoot;
         emit HeadUpdate(po.newHead, po.newHeader);
 
+        uint256 period = getSyncCommitteePeriod(head);
+
+        // If the sync committee for the new peroid is not set, set it.
+        // This can happen if the light client was very behind and had a lot of updates
+        // Note: Only the latest sync committee is stored, not the intermediate ones from every update
+        if (syncCommittees[period] == bytes32(0)) {
+            syncCommittees[period] = po.syncCommitteeHash;
+        }
         // Set next peroid's sync committee hash if value exists.
         if (po.nextSyncCommitteeHash != bytes32(0)) {
-            uint256 period = getSyncCommitteePeriod(head);
             uint256 nextPeriod = period + 1;
             
             // If the next sync committee is already correct, we don't need to update it.
