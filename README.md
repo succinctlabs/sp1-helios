@@ -11,7 +11,7 @@ On-chain Ethereum light client built with SP1.
 
 
 ## Deployments
-Test (mock proof verifier): [`sepolia:0x0E2451C03C1B63D3187999ceDe8106a0eD1691c8`](https://sepolia.etherscan.io/address/0x0E2451C03C1B63D3187999ceDe8106a0eD1691c8)
+Test (mock proof verifier): [`sepolia:0xE9d36c391F2B4982AFc2f74C95C535d68Cdae5F4`](https://sepolia.etherscan.io/address/0xE9d36c391F2B4982AFc2f74C95C535d68Cdae5F4)
 
 Prod: TBA when SP1 goes to mainnet
 
