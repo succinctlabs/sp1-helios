@@ -1,10 +1,9 @@
 use alloy_primitives::B256;
-use alloy_sol_types::{sol, SolStruct, SolType, SolValue};
+use alloy_sol_types::sol;
 use common::config::types::Forks;
-use consensus_core::types::{FinalityUpdate, LightClientStore, Update, Bytes32};
+use consensus_core::types::{Bytes32, FinalityUpdate, LightClientStore, Update};
 use ssz_rs::prelude::*;
 pub use ssz_rs::prelude::{Bitvector, Vector};
-use std::time::SystemTime;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct ProofInputs {
