@@ -62,7 +62,7 @@ pub async fn get_execution_state_root_proof(
 ) -> Result<ExecutionStateProof, Box<dyn std::error::Error>> {
     let client = reqwest::Client::new();
     let url = format!(
-        "https://beaconapi-git-xavier-get-update.succinct.xyz/api/beacon/proof/lightclient/update/{}",
+        "https://beaconapi-git-xavier-get-update.succinct.xyz/api/beacon/proof/executionStateRoot/{}",
         slot
     );
 
