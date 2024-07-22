@@ -9,6 +9,10 @@ use consensus_core::{apply_finality_update, apply_update, verify_finality_update
 use sp1_helios_primitives::types::{ProofInputs, ProofOutputs};
 use ssz_rs::prelude::*;
 
+/// The merkle branch index & depth for the execution state root proof.
+const MERKLE_BRANCH_INDEX: usize = 802;
+const MERKLE_BRANCH_DEPTH: usize = 9;
+
 /// Program flow:
 /// 1. Apply sync committee updates, if any
 /// 2. Apply finality update
@@ -89,8 +93,8 @@ pub fn main() {
         && is_valid_merkle_branch(
             &Node::try_from(execution_state_proof.execution_state_root.as_ref()).unwrap(),
             execution_state_branch_nodes.iter(),
-            execution_state_proof.execution_state_branch.len(),
-            execution_state_proof.gindex.parse::<usize>().unwrap(),
+            MERKLE_BRANCH_DEPTH,
+            MERKLE_BRANCH_INDEX,
             &Node::try_from(store.finalized_header.body_root.as_ref()).unwrap(),
         );
     println!("cycle-tracker-end: verify_execution_state_proof");
