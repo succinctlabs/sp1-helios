@@ -28,6 +28,7 @@ use tokio::sync::{mpsc::channel, watch};
 pub struct GenesisArgs {
     #[arg(long)]
     pub slot: Option<u64>,
+    #[arg(long)]
     pub verifier: Option<String>,
 }
 
@@ -52,7 +53,7 @@ pub async fn main() {
     }
     if let Some(temp_verifier) = args.verifier {
         verifier = temp_verifier;
-        sp1_prover = String::new();
+        sp1_prover = "network".to_string();
     } else {
         verifier = String::new();
         sp1_prover = "mock".to_string()
