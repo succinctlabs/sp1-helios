@@ -48,5 +48,5 @@ You can find a list of [deployed verifiers here.](https://github.com/succinctlab
 Continuously generate proofs & keep light client updated with chain
 1. `cd ../script`
 2. `cp .env.example .env`
-3. Paste in the contract address in `.env` and fill out the other parameters. Set `SP1_PROVER` to `mock` for testing, or `network` to generate real proofs on the cluster
+3. Paste in the contract address in `.env` and fill out the other parameters.
 4. `RUST_LOG=info cargo run --release --bin operator`
