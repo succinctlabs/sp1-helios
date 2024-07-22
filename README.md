@@ -25,6 +25,12 @@ Prod: TBA when SP1 goes to mainnet
 
 1. `cd ./script`
 2. `RUST_LOG=info cargo run --release --bin genesis`
+   
+For testing, the contract defaults to verifying mock proofs. If you want to verify real proofs, pass in the address of the verifier as an argument:
+
+e.g `RUST_LOG=info cargo run --release --bin genesis -- --verifier 0x3B6041173B80E77f038f3F2C0f9744f04837185e`
+
+You can find a list of [deployed verifiers here.](https://github.com/succinctlabs/sp1/blob/main/book/onchain-verification/contract-addresses.md)
 
 ### 2. Deploy contracts
 
@@ -42,5 +48,5 @@ Prod: TBA when SP1 goes to mainnet
 Continuously generate proofs & keep light client updated with chain
 1. `cd ../script`
 2. `cp .env.example .env`
-3. Paste in the contract address in `.env` and fill out the other parameters
+3. Paste in the contract address in `.env` and fill out the other parameters. Set `SP1_PROVER` to `mock` for testing, or `network` to generate real proofs on the cluster
 4. `RUST_LOG=info cargo run --release --bin operator`
