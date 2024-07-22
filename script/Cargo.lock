@@ -6721,8 +6721,8 @@ dependencies = [
 
 [[package]]
 name = "sp1-core"
-version = "0.0.2-test"
-source = "git+https://github.com/succinctlabs/sp1.git?branch=chris/v1.0.9-testnet#504d24f00ff3ac2e0c7e6da2d1e62a7cb5bf6520"
+version = "1.0.0-rc.1"
+source = "git+https://github.com/succinctlabs/sp1.git?tag=v1.0.0-rc.1#6be0efa16f8cc56a9c7a286fef71d8f0b51f2c62"
 dependencies = [
  "anyhow",
  "arrayref",
@@ -6782,8 +6782,8 @@ dependencies = [
 
 [[package]]
 name = "sp1-derive"
-version = "0.0.2-test"
-source = "git+https://github.com/succinctlabs/sp1.git?branch=chris/v1.0.9-testnet#504d24f00ff3ac2e0c7e6da2d1e62a7cb5bf6520"
+version = "1.0.0-rc.1"
+source = "git+https://github.com/succinctlabs/sp1.git?tag=v1.0.0-rc.1#6be0efa16f8cc56a9c7a286fef71d8f0b51f2c62"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -6830,8 +6830,8 @@ dependencies = [
 
 [[package]]
 name = "sp1-primitives"
-version = "0.0.2-test"
-source = "git+https://github.com/succinctlabs/sp1.git?branch=chris/v1.0.9-testnet#504d24f00ff3ac2e0c7e6da2d1e62a7cb5bf6520"
+version = "1.0.0-rc.1"
+source = "git+https://github.com/succinctlabs/sp1.git?tag=v1.0.0-rc.1#6be0efa16f8cc56a9c7a286fef71d8f0b51f2c62"
 dependencies = [
  "itertools 0.13.0",
  "lazy_static",
@@ -6843,8 +6843,8 @@ dependencies = [
 
 [[package]]
 name = "sp1-prover"
-version = "0.0.2-test"
-source = "git+https://github.com/succinctlabs/sp1.git?branch=chris/v1.0.9-testnet#504d24f00ff3ac2e0c7e6da2d1e62a7cb5bf6520"
+version = "1.0.0-rc.1"
+source = "git+https://github.com/succinctlabs/sp1.git?tag=v1.0.0-rc.1#6be0efa16f8cc56a9c7a286fef71d8f0b51f2c62"
 dependencies = [
  "anyhow",
  "bincode",
@@ -6879,8 +6879,8 @@ dependencies = [
 
 [[package]]
 name = "sp1-recursion-circuit"
-version = "0.0.2-test"
-source = "git+https://github.com/succinctlabs/sp1.git?branch=chris/v1.0.9-testnet#504d24f00ff3ac2e0c7e6da2d1e62a7cb5bf6520"
+version = "1.0.0-rc.1"
+source = "git+https://github.com/succinctlabs/sp1.git?tag=v1.0.0-rc.1#6be0efa16f8cc56a9c7a286fef71d8f0b51f2c62"
 dependencies = [
  "bincode",
  "itertools 0.13.0",
@@ -6902,8 +6902,8 @@ dependencies = [
 
 [[package]]
 name = "sp1-recursion-compiler"
-version = "0.0.2-test"
-source = "git+https://github.com/succinctlabs/sp1.git?branch=chris/v1.0.9-testnet#504d24f00ff3ac2e0c7e6da2d1e62a7cb5bf6520"
+version = "1.0.0-rc.1"
+source = "git+https://github.com/succinctlabs/sp1.git?tag=v1.0.0-rc.1#6be0efa16f8cc56a9c7a286fef71d8f0b51f2c62"
 dependencies = [
  "backtrace",
  "itertools 0.13.0",
@@ -6927,8 +6927,8 @@ dependencies = [
 
 [[package]]
 name = "sp1-recursion-core"
-version = "0.0.2-test"
-source = "git+https://github.com/succinctlabs/sp1.git?branch=chris/v1.0.9-testnet#504d24f00ff3ac2e0c7e6da2d1e62a7cb5bf6520"
+version = "1.0.0-rc.1"
+source = "git+https://github.com/succinctlabs/sp1.git?tag=v1.0.0-rc.1#6be0efa16f8cc56a9c7a286fef71d8f0b51f2c62"
 dependencies = [
  "arrayref",
  "backtrace",
@@ -6962,8 +6962,8 @@ dependencies = [
 
 [[package]]
 name = "sp1-recursion-derive"
-version = "0.0.2-test"
-source = "git+https://github.com/succinctlabs/sp1.git?branch=chris/v1.0.9-testnet#504d24f00ff3ac2e0c7e6da2d1e62a7cb5bf6520"
+version = "1.0.0-rc.1"
+source = "git+https://github.com/succinctlabs/sp1.git?tag=v1.0.0-rc.1#6be0efa16f8cc56a9c7a286fef71d8f0b51f2c62"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -6972,8 +6972,8 @@ dependencies = [
 
 [[package]]
 name = "sp1-recursion-gnark-ffi"
-version = "0.0.2-test"
-source = "git+https://github.com/succinctlabs/sp1.git?branch=chris/v1.0.9-testnet#504d24f00ff3ac2e0c7e6da2d1e62a7cb5bf6520"
+version = "1.0.0-rc.1"
+source = "git+https://github.com/succinctlabs/sp1.git?tag=v1.0.0-rc.1#6be0efa16f8cc56a9c7a286fef71d8f0b51f2c62"
 dependencies = [
  "anyhow",
  "bincode",
@@ -6997,8 +6997,8 @@ dependencies = [
 
 [[package]]
 name = "sp1-recursion-program"
-version = "0.0.2-test"
-source = "git+https://github.com/succinctlabs/sp1.git?branch=chris/v1.0.9-testnet#504d24f00ff3ac2e0c7e6da2d1e62a7cb5bf6520"
+version = "1.0.0-rc.1"
+source = "git+https://github.com/succinctlabs/sp1.git?tag=v1.0.0-rc.1#6be0efa16f8cc56a9c7a286fef71d8f0b51f2c62"
 dependencies = [
  "itertools 0.13.0",
  "p3-air",
@@ -7026,8 +7026,8 @@ dependencies = [
 
 [[package]]
 name = "sp1-sdk"
-version = "0.0.2-test"
-source = "git+https://github.com/succinctlabs/sp1.git?branch=chris/v1.0.9-testnet#504d24f00ff3ac2e0c7e6da2d1e62a7cb5bf6520"
+version = "1.0.0-rc.1"
+source = "git+https://github.com/succinctlabs/sp1.git?tag=v1.0.0-rc.1#6be0efa16f8cc56a9c7a286fef71d8f0b51f2c62"
 dependencies = [
  "alloy-sol-types",
  "anyhow",
