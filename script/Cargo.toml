@@ -21,7 +21,7 @@ path = "./bin/operator.rs"
 [dependencies]
 dotenv = "0.15.0"
 eyre = "0.6.12"
-sp1-sdk = { git = "https://github.com/succinctlabs/sp1.git", tag = "v1.0.0-rc.1"   }
+sp1-sdk = { git = "https://github.com/succinctlabs/sp1.git", tag = "v1.0.1"   }
 tokio = "1.38.0"
 helios = { git = "https://github.com/succinctlabs/helios.git", branch= "patched"}
 sp1-helios-primitives = { path = "../primitives" }
