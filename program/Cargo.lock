@@ -351,7 +351,7 @@ dependencies = [
 [[package]]
 name = "bls12_381"
 version = "0.8.0"
-source = "git+https://github.com/succinctlabs/bls12_381#d87a681efc702aaa34c0e977b3c19f382def36c6"
+source = "git+https://github.com/succinctlabs/bls12_381#0d32fdeb01fe829dd47169c79519bb2e5c0bde7f"
 dependencies = [
  "digest 0.9.0",
  "eyre",
@@ -1970,8 +1970,8 @@ dependencies = [
 
 [[package]]
 name = "sp1-lib"
-version = "1.0.0-rc.1"
-source = "git+https://github.com/succinctlabs/sp1.git?tag=v1.0.0-rc.1#6be0efa16f8cc56a9c7a286fef71d8f0b51f2c62"
+version = "1.0.1"
+source = "git+https://github.com/succinctlabs/sp1.git?tag=v1.0.1#dd032eb23949828d244d1ad1f1569aa78155837c"
 dependencies = [
  "anyhow",
  "bincode",
@@ -1983,8 +1983,8 @@ dependencies = [
 
 [[package]]
 name = "sp1-zkvm"
-version = "1.0.0-rc.1"
-source = "git+https://github.com/succinctlabs/sp1.git?tag=v1.0.0-rc.1#6be0efa16f8cc56a9c7a286fef71d8f0b51f2c62"
+version = "1.0.1"
+source = "git+https://github.com/succinctlabs/sp1.git?tag=v1.0.1#dd032eb23949828d244d1ad1f1569aa78155837c"
 dependencies = [
  "bincode",
  "cfg-if",
