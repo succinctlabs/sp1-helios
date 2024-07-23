@@ -22,7 +22,6 @@ use ssz_rs::prelude::*;
 use std::env;
 use std::sync::Arc;
 use std::time::Duration;
-use zduny_wasm_timer::SystemTime;
 
 const ELF: &[u8] = include_bytes!("../../program/elf/riscv32im-succinct-zkvm-elf");
 

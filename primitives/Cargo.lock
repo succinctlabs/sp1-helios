@@ -351,7 +351,7 @@ dependencies = [
 [[package]]
 name = "bls12_381"
 version = "0.8.0"
-source = "git+https://github.com/succinctlabs/bls12_381#cac2414652c536a12396f3528b56d6b4632fb52d"
+source = "git+https://github.com/succinctlabs/bls12_381#0d32fdeb01fe829dd47169c79519bb2e5c0bde7f"
 dependencies = [
  "digest 0.9.0",
  "eyre",
@@ -419,7 +419,7 @@ dependencies = [
 [[package]]
 name = "common"
 version = "0.5.5"
-source = "git+https://github.com/succinctlabs/helios.git?branch=patched#b90bfee35c2688d8a71f67bac48981ac1d08c3df"
+source = "git+https://github.com/succinctlabs/helios.git?branch=patched#48b178a3b8b23b5f7c011fa4481149a194d967a3"
 dependencies = [
  "bls12_381",
  "bytes",
@@ -436,9 +436,9 @@ dependencies = [
 ]
 
 [[package]]
-name = "consensus_core"
+name = "consensus-core"
 version = "0.1.0"
-source = "git+https://github.com/succinctlabs/helios.git?branch=patched#b90bfee35c2688d8a71f67bac48981ac1d08c3df"
+source = "git+https://github.com/succinctlabs/helios.git?branch=patched#48b178a3b8b23b5f7c011fa4481149a194d967a3"
 dependencies = [
  "bls12_381",
  "bytes",
@@ -1928,7 +1928,7 @@ dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
  "common",
- "consensus_core",
+ "consensus-core",
  "eyre",
  "hex",
  "serde",
@@ -1939,8 +1939,8 @@ dependencies = [
 
 [[package]]
 name = "sp1-lib"
-version = "0.0.2-test"
-source = "git+https://github.com/succinctlabs/sp1.git?branch=chris/v1.0.9-testnet#504d24f00ff3ac2e0c7e6da2d1e62a7cb5bf6520"
+version = "1.0.1"
+source = "git+https://github.com/succinctlabs/sp1.git?tag=v1.0.1#dd032eb23949828d244d1ad1f1569aa78155837c"
 dependencies = [
  "anyhow",
  "bincode",

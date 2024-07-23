@@ -419,7 +419,7 @@ dependencies = [
 [[package]]
 name = "common"
 version = "0.5.5"
-source = "git+https://github.com/succinctlabs/helios.git?branch=patched#375744b15412a86724a7045404850eb915c2b6b4"
+source = "git+https://github.com/succinctlabs/helios.git?branch=patched#48b178a3b8b23b5f7c011fa4481149a194d967a3"
 dependencies = [
  "bls12_381",
  "bytes",
@@ -436,9 +436,9 @@ dependencies = [
 ]
 
 [[package]]
-name = "consensus_core"
+name = "consensus-core"
 version = "0.1.0"
-source = "git+https://github.com/succinctlabs/helios.git?branch=patched#375744b15412a86724a7045404850eb915c2b6b4"
+source = "git+https://github.com/succinctlabs/helios.git?branch=patched#48b178a3b8b23b5f7c011fa4481149a194d967a3"
 dependencies = [
  "bls12_381",
  "bytes",
@@ -1008,7 +1008,7 @@ dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
  "common",
- "consensus_core",
+ "consensus-core",
  "hex",
  "serde_cbor",
  "sp1-helios-primitives",
@@ -1959,7 +1959,7 @@ dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
  "common",
- "consensus_core",
+ "consensus-core",
  "eyre",
  "hex",
  "serde",
