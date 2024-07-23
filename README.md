@@ -11,7 +11,7 @@ On-chain Ethereum light client built with SP1.
 
 
 ## Deployments
-Sepolia: [`0x28fd761c337CbDdd725852091d02Cef2d5B66F20`](https://sepolia.etherscan.io/address/0x28fd761c337CbDdd725852091d02Cef2d5B66F20)
+Sepolia: [`0x91F06297221f09824A0052c24BE4536b93d3e2b9`](https://sepolia.etherscan.io/address/0x91F06297221f09824A0052c24BE4536b93d3e2b9)
 
 ## Deploy a light client
 
