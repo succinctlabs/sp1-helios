@@ -8,20 +8,7 @@ use sp1_sdk::{HashableKey, ProverClient};
 use std::env;
 const TELEPATHY_ELF: &[u8] = include_bytes!("../../program/elf/riscv32im-succinct-zkvm-elf");
 use alloy_primitives::B256;
-use ethers_core::types::H256;
-use helios::{
-    consensus::{
-        constants,
-        rpc::{nimbus_rpc::NimbusRpc, ConsensusRpc},
-        Inner,
-    },
-    consensus_core::types::Update,
-    consensus_core::utils,
-    prelude::*,
-};
 use ssz_rs::prelude::*;
-use std::sync::Arc;
-use tokio::sync::{mpsc::channel, watch};
 
 #[derive(Parser, Debug, Clone)]
 #[command(about = "Get the genesis parameters from a block.")]
