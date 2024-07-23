@@ -196,7 +196,6 @@ async fn main() -> Result<()> {
     let proof_as_bytes = if env::var("SP1_PROVER").unwrap().to_lowercase() == "mock" {
         vec![]
     } else {
-        // TODO: Untested, may not work in non-mock mode.
         proof.bytes()
     };
     let public_values_bytes = proof.public_values.to_vec();

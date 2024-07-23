@@ -205,11 +205,9 @@ impl SP1LightClientOperator {
 
     /// Relay an update proof to the SP1 LightClient contract.
     async fn relay_update(&self, proof: SP1ProofWithPublicValues) -> Result<()> {
-        // TODO: sp1_sdk should return empty bytes in mock mode.
         let proof_as_bytes = if env::var("SP1_PROVER").unwrap().to_lowercase() == "mock" {
             vec![]
         } else {
-            // TODO: Untested, may not work in non-mock mode.
             proof.bytes()
         };
         let public_values_bytes = proof.public_values.to_vec();
