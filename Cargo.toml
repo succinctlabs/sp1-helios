@@ -10,7 +10,7 @@ license = "MIT"
 dotenv = "0.15.0"
 eyre = "0.6.12"
 sp1-sdk = { git = "https://github.com/succinctlabs/sp1.git", tag = "v1.0.1" }
-sp1-zkvm = { git = "https://github.com/succinctlabs/sp1.git", tag = "v1.0.1" }
+
 tokio = "1.38.0"
 helios = { git = "https://github.com/succinctlabs/helios.git", branch="patched" }
 common = { git = "https://github.com/succinctlabs/helios.git", branch="patched" }
@@ -39,3 +39,4 @@ sp1-helper = { git = "https://github.com/succinctlabs/sp1", tag = "v1.0.1" }
 sha2-v0-9-9 = { git = "https://github.com/sp1-patches/RustCrypto-hashes", package = "sha2", branch = "patch-sha2-v0.9.9" }
 sha2-v0-10-8 = { git = "https://github.com/sp1-patches/RustCrypto-hashes", package = "sha2", branch = "patch-sha2-v0.10.8" }
 tiny-keccak = { git = "https://github.com/sp1-patches/tiny-keccak", branch = "patch-v2.0.2" }
+milagro_bls = { package = "bls12_381", git = "https://github.com/succinctlabs/bls12_381"} 

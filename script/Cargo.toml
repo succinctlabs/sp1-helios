@@ -43,3 +43,8 @@ reqwest = { workspace = true }
 
 [build-dependencies]
 sp1-helper = { workspace = true }
+[patch.crates-io]
+sha2-v0-9-9 = { git = "https://github.com/sp1-patches/RustCrypto-hashes", package = "sha2", branch = "patch-sha2-v0.9.9" }
+sha2-v0-10-8 = { git = "https://github.com/sp1-patches/RustCrypto-hashes", package = "sha2", branch = "patch-sha2-v0.10.8" }
+tiny-keccak = { git = "https://github.com/sp1-patches/tiny-keccak", branch = "patch-v2.0.2" }
+milagro_bls = { package = "bls12_381", git = "https://github.com/succinctlabs/bls12_381"} 
