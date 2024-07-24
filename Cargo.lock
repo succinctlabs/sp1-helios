@@ -763,8 +763,24 @@ checksum = "a3c196a77437e7cc2fb515ce413a6401291578b5afc8ecb29a3c7ab957f05941"
 dependencies = [
  "ff 0.12.1",
  "group 0.12.1",
- "pairing",
+ "pairing 0.22.0",
  "rand_core 0.6.4",
+ "subtle",
+]
+
+[[package]]
+name = "bls12_381"
+version = "0.8.0"
+source = "git+https://github.com/succinctlabs/bls12_381#0d32fdeb01fe829dd47169c79519bb2e5c0bde7f"
+dependencies = [
+ "digest 0.9.0",
+ "eyre",
+ "ff 0.13.0",
+ "group 0.13.0",
+ "pairing 0.23.0",
+ "rand_core 0.6.4",
+ "sha2 0.9.9",
+ "sp1-lib",
  "subtle",
 ]
 
@@ -1010,7 +1026,7 @@ checksum = "4b82cf0babdbd58558212896d1a4272303a57bdb245c2bf1147185fb45640e70"
 [[package]]
 name = "client"
 version = "0.5.5"
-source = "git+https://github.com/succinctlabs/helios.git#6e0e4f122038d8b570f9c5af9a834c79ec597c29"
+source = "git+https://github.com/succinctlabs/helios.git?branch=patched#a21a145b243e608acdaeefa7ef0751b4b5b45219"
 dependencies = [
  "common",
  "config",
@@ -1099,15 +1115,15 @@ checksum = "0b6a852b24ab71dffc585bcb46eaf7959d175cb865a7152e35b348d1b2960422"
 [[package]]
 name = "common"
 version = "0.5.5"
-source = "git+https://github.com/succinctlabs/helios.git#6e0e4f122038d8b570f9c5af9a834c79ec597c29"
+source = "git+https://github.com/succinctlabs/helios.git?branch=patched#a21a145b243e608acdaeefa7ef0751b4b5b45219"
 dependencies = [
+ "bls12_381 0.8.0",
  "bytes",
  "ethers-core 2.0.13",
  "eyre",
  "hex",
  "serde",
  "serde_json",
- "snowbridge-milagro-bls",
  "ssz_rs",
  "superstruct",
  "thiserror",
@@ -1118,7 +1134,7 @@ dependencies = [
 [[package]]
 name = "config"
 version = "0.5.5"
-source = "git+https://github.com/succinctlabs/helios.git#6e0e4f122038d8b570f9c5af9a834c79ec597c29"
+source = "git+https://github.com/succinctlabs/helios.git?branch=patched#a21a145b243e608acdaeefa7ef0751b4b5b45219"
 dependencies = [
  "common",
  "consensus-core",
@@ -1141,9 +1157,10 @@ dependencies = [
 [[package]]
 name = "consensus"
 version = "0.5.5"
-source = "git+https://github.com/succinctlabs/helios.git#6e0e4f122038d8b570f9c5af9a834c79ec597c29"
+source = "git+https://github.com/succinctlabs/helios.git?branch=patched#a21a145b243e608acdaeefa7ef0751b4b5b45219"
 dependencies = [
  "async-trait",
+ "bls12_381 0.8.0",
  "bytes",
  "chrono",
  "common",
@@ -1160,7 +1177,6 @@ dependencies = [
  "retri",
  "serde",
  "serde_json",
- "snowbridge-milagro-bls",
  "ssz_rs",
  "superstruct",
  "thiserror",
@@ -1173,8 +1189,9 @@ dependencies = [
 [[package]]
 name = "consensus-core"
 version = "0.1.0"
-source = "git+https://github.com/succinctlabs/helios.git#6e0e4f122038d8b570f9c5af9a834c79ec597c29"
+source = "git+https://github.com/succinctlabs/helios.git?branch=patched#a21a145b243e608acdaeefa7ef0751b4b5b45219"
 dependencies = [
+ "bls12_381 0.8.0",
  "bytes",
  "common",
  "ethers-core 2.0.13",
@@ -1182,7 +1199,6 @@ dependencies = [
  "hex",
  "serde",
  "serde_json",
- "snowbridge-milagro-bls",
  "ssz_rs",
  "superstruct",
  "thiserror",
@@ -2315,7 +2331,7 @@ checksum = "0206175f82b8d6bf6652ff7d71a1e27fd2e4efde587fd368662814d6ec1d9ce0"
 [[package]]
 name = "execution"
 version = "0.5.5"
-source = "git+https://github.com/succinctlabs/helios.git#6e0e4f122038d8b570f9c5af9a834c79ec597c29"
+source = "git+https://github.com/succinctlabs/helios.git?branch=patched#a21a145b243e608acdaeefa7ef0751b4b5b45219"
 dependencies = [
  "async-trait",
  "bytes",
@@ -2911,7 +2927,7 @@ checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 [[package]]
 name = "helios"
 version = "0.5.5"
-source = "git+https://github.com/succinctlabs/helios.git#6e0e4f122038d8b570f9c5af9a834c79ec597c29"
+source = "git+https://github.com/succinctlabs/helios.git?branch=patched#a21a145b243e608acdaeefa7ef0751b4b5b45219"
 dependencies = [
  "client",
  "common",
@@ -3619,7 +3635,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a575df5f985fe1cd5b2b05664ff6accfc46559032b954529fd225a2168d27b0f"
 dependencies = [
  "bitvec 1.0.1",
- "bls12_381",
+ "bls12_381 0.7.1",
  "ff 0.12.1",
  "group 0.12.1",
  "rand_core 0.6.4",
@@ -4475,6 +4491,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "135590d8bdba2b31346f9cd1fb2a912329f5135e832a4f422942eb6ead8b6b3b"
 dependencies = [
  "group 0.12.1",
+]
+
+[[package]]
+name = "pairing"
+version = "0.23.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "81fec4625e73cf41ef4bb6846cafa6d44736525f442ba45e407c4a000a13996f"
+dependencies = [
+ "group 0.13.0",
 ]
 
 [[package]]
@@ -5706,7 +5731,6 @@ version = "2.11.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eca070c12893629e2cc820a9761bedf6ce1dcddc9852984d1dc734b8bd9bd024"
 dependencies = [
- "bitvec 1.0.1",
  "cfg-if",
  "derive_more",
  "parity-scale-codec 3.6.12",
@@ -6162,20 +6186,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "snowbridge-milagro-bls"
-version = "1.5.2"
-source = "git+https://github.com/Snowfork/milagro_bls?rev=6a95c9e33c6a41d9137761e593d53742ebb964de#6a95c9e33c6a41d9137761e593d53742ebb964de"
-dependencies = [
- "hex",
- "lazy_static",
- "parity-scale-codec 3.6.12",
- "rand 0.8.5",
- "scale-info",
- "snowbridge-amcl",
- "zeroize",
-]
-
-[[package]]
 name = "socket2"
 version = "0.5.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6330,7 +6340,9 @@ dependencies = [
  "anyhow",
  "bincode",
  "cfg-if",
+ "hex",
  "serde",
+ "snowbridge-amcl",
 ]
 
 [[package]]
@@ -8011,7 +8023,7 @@ dependencies = [
  "ark-std 0.4.0",
  "bitvec 1.0.1",
  "blake2",
- "bls12_381",
+ "bls12_381 0.7.1",
  "byteorder",
  "cfg-if",
  "group 0.12.1",
