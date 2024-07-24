@@ -1,5 +1,5 @@
-use alloy::primitives::B256;
-use alloy::sol;
+use alloy_primitives::B256;
+use alloy_sol_types::sol;
 use common::config::types::Forks;
 use consensus_core::types::{Bytes32, FinalityUpdate, LightClientStore, Update};
 use ssz_rs::prelude::*;

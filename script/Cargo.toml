@@ -32,12 +32,12 @@ ethers-core = { workspace = true }
 zduny-wasm-timer = { workspace = true }
 serde_cbor = { workspace = true }
 hex = { workspace = true }
-# alloy-sol-types = {workspace = true}
+alloy-sol-types = {workspace = true}
 clap = { workspace = true }
 log = { workspace = true }
 env_logger = { workspace = true }
-# alloy-primitives = {workspace = true}
-alloy = { workspace = true }
+alloy-primitives = {workspace = true}
+
 anyhow = { workspace = true }
 reqwest = { workspace = true }
 cargo-machete = { workspace = true }

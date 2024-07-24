@@ -9,7 +9,7 @@ common = { workspace = true }
 consensus-core = { workspace = true }
 serde_cbor = { workspace = true }
 sp1-helios-primitives = { workspace = true }
-# alloy-sol-types = "0.7.7"
+alloy-sol-types = {workspace = true}
 ssz-rs = { workspace = true }
-# alloy-primitives = "0.7.7"
+alloy-primitives = { workspace = true }
 hex = { workspace = true }
