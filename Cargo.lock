@@ -96,6 +96,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "529fc6310dc1126c8de51c376cbc59c79c7f662bd742be7dc67055d5421a81b4"
 dependencies = [
  "alloy-primitives 0.7.7",
+ "alloy-sol-types",
 ]
 
 [[package]]
@@ -6541,6 +6542,7 @@ dependencies = [
 name = "sp1-helios-primitives"
 version = "0.1.0"
 dependencies = [
+ "alloy",
  "common",
  "consensus-core",
  "eyre",
