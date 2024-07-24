@@ -34,6 +34,9 @@ env_logger = "0.11.3"
 alloy = { version = "0.1.1", default-features = false, features = [
     "transports",
     "providers",
+    "provider-http",
+    "sol-types",
+    "transport-http",
 ] }
 anyhow = "1.0.86"
 reqwest = "0.12.5"

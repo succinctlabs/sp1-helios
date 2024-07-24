@@ -13,3 +13,4 @@ sp1-helios-primitives = { workspace = true }
 ssz-rs = { workspace = true }
 # alloy-primitives = "0.7.7"
 hex = { workspace = true }
+alloy = { workspace = true }

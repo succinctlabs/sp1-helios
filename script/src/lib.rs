@@ -1,4 +1,4 @@
-use alloy_primitives::B256;
+use alloy::primitives::B256;
 use ethers_core::types::H256;
 use helios::{
     consensus::{
