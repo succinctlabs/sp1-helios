@@ -84,7 +84,7 @@ pub async fn main() {
         sp1_prover,
         vk.bytes32(),
         verifier,
-        "0xaa",
+        "0xaz",
         genesis_root,
         genesis_time,
         SECONDS_PER_SLOT,
