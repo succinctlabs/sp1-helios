@@ -14,7 +14,7 @@ use alloy_primitives::U256;
 use anyhow::Result;
 use helios::consensus::rpc::ConsensusRpc;
 use helios::consensus::{rpc::nimbus_rpc::NimbusRpc, Inner};
-use helios_2_script::*;
+use helios_script::*;
 use log::{error, info};
 use sp1_helios_primitives::types::ProofInputs;
 use sp1_sdk::{ProverClient, SP1ProofWithPublicValues, SP1ProvingKey, SP1Stdin};

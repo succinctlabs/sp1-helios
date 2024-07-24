@@ -1,5 +1,5 @@
 use alloy_primitives::B256;
-use ethers_core::types::H256;
+use ethers::types::H256;
 use helios::{
     consensus::{
         constants,

@@ -1,6 +1,6 @@
 /// Update the light client once
 use helios::consensus::rpc::ConsensusRpc;
-use helios_2_script::{get_execution_state_root_proof, get_updates};
+use helios_script::{get_execution_state_root_proof, get_updates};
 use sp1_helios_primitives::types::ProofInputs;
 use sp1_sdk::{utils::setup_logger, ProverClient, SP1Stdin};
 use tracing::{error, info};
@@ -18,7 +18,7 @@ use alloy::{
     transports::http::{Client, Http},
 };
 use anyhow::Result;
-use helios_2_script::*;
+use helios_script::*;
 use ssz_rs::prelude::*;
 use std::sync::Arc;
 use std::{env, time::Duration};

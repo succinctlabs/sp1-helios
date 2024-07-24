@@ -28,7 +28,7 @@ tracing = { workspace = true }
 serde = { workspace = true }
 ssz-rs = { workspace = true }
 thiserror = { workspace = true }
-ethers-core = { workspace = true }
+ethers = { workspace = true }
 zduny-wasm-timer = { workspace = true }
 serde_cbor = { workspace = true }
 hex = { workspace = true }

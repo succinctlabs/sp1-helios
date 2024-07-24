@@ -1,6 +1,6 @@
 /// Generate genesis parameters for light client contract
 use clap::Parser;
-use helios_2_script::{
+use helios_script::{
     get_checkpoint, get_client, get_execution_state_root_proof, get_latest_checkpoint,
 };
 use log::info;

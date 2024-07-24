@@ -1912,11 +1912,11 @@ dependencies = [
  "ethers-addressbook 2.0.13",
  "ethers-contract 2.0.13",
  "ethers-core 2.0.13",
- "ethers-etherscan",
+ "ethers-etherscan 2.0.13",
  "ethers-middleware 2.0.13",
  "ethers-providers 2.0.13",
  "ethers-signers 2.0.13",
- "ethers-solc",
+ "ethers-solc 2.0.13",
 ]
 
 [[package]]
@@ -1928,9 +1928,11 @@ dependencies = [
  "ethers-addressbook 2.0.14",
  "ethers-contract 2.0.14",
  "ethers-core 2.0.14",
+ "ethers-etherscan 2.0.14",
  "ethers-middleware 2.0.14",
  "ethers-providers 2.0.14",
  "ethers-signers 2.0.14",
+ "ethers-solc 2.0.14",
 ]
 
 [[package]]
@@ -2002,7 +2004,7 @@ dependencies = [
  "const-hex",
  "dunce",
  "ethers-core 2.0.13",
- "ethers-etherscan",
+ "ethers-etherscan 2.0.13",
  "eyre",
  "prettyplease",
  "proc-macro2",
@@ -2026,11 +2028,13 @@ dependencies = [
  "const-hex",
  "dunce",
  "ethers-core 2.0.14",
+ "ethers-etherscan 2.0.14",
  "eyre",
  "prettyplease",
  "proc-macro2",
  "quote",
  "regex",
+ "reqwest 0.11.27",
  "serde",
  "serde_json",
  "syn 2.0.72",
@@ -2144,6 +2148,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "ethers-etherscan"
+version = "2.0.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e79e5973c26d4baf0ce55520bd732314328cabe53193286671b47144145b9649"
+dependencies = [
+ "chrono",
+ "ethers-core 2.0.14",
+ "reqwest 0.11.27",
+ "semver 1.0.23",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tracing",
+]
+
+[[package]]
 name = "ethers-middleware"
 version = "2.0.13"
 source = "git+https://github.com/gakonst/ethers-rs?rev=3bf1a9e0d698e9fdfc91d0353878901af5a5c5ef#3bf1a9e0d698e9fdfc91d0353878901af5a5c5ef"
@@ -2152,7 +2172,7 @@ dependencies = [
  "auto_impl",
  "ethers-contract 2.0.13",
  "ethers-core 2.0.13",
- "ethers-etherscan",
+ "ethers-etherscan 2.0.13",
  "ethers-providers 2.0.13",
  "ethers-signers 2.0.13",
  "futures-channel",
@@ -2179,6 +2199,7 @@ dependencies = [
  "auto_impl",
  "ethers-contract 2.0.14",
  "ethers-core 2.0.14",
+ "ethers-etherscan 2.0.14",
  "ethers-providers 2.0.14",
  "ethers-signers 2.0.14",
  "futures-channel",
@@ -2258,6 +2279,7 @@ dependencies = [
  "serde_json",
  "thiserror",
  "tokio",
+ "tokio-tungstenite",
  "tracing",
  "tracing-futures",
  "url",
@@ -2314,6 +2336,38 @@ dependencies = [
  "dirs",
  "dunce",
  "ethers-core 2.0.13",
+ "glob",
+ "home",
+ "md-5",
+ "num_cpus",
+ "once_cell",
+ "path-slash",
+ "rayon",
+ "regex",
+ "semver 1.0.23",
+ "serde",
+ "serde_json",
+ "solang-parser",
+ "svm-rs",
+ "thiserror",
+ "tiny-keccak 2.0.2",
+ "tokio",
+ "tracing",
+ "walkdir",
+ "yansi 0.5.1",
+]
+
+[[package]]
+name = "ethers-solc"
+version = "2.0.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "66244a771d9163282646dbeffe0e6eca4dda4146b6498644e678ac6089b11edd"
+dependencies = [
+ "cfg-if",
+ "const-hex",
+ "dirs",
+ "dunce",
+ "ethers-core 2.0.14",
  "glob",
  "home",
  "md-5",
@@ -3055,7 +3109,7 @@ dependencies = [
  "clap",
  "dotenv",
  "env_logger 0.11.4",
- "ethers-core 2.0.14",
+ "ethers 2.0.14",
  "eyre",
  "helios",
  "hex",
@@ -6356,8 +6410,8 @@ dependencies = [
 
 [[package]]
 name = "sp1-build"
-version = "1.0.0-rc.1"
-source = "git+https://github.com/succinctlabs/sp1?tag=v1.0.0-rc.1#6be0efa16f8cc56a9c7a286fef71d8f0b51f2c62"
+version = "1.0.1"
+source = "git+https://github.com/succinctlabs/sp1.git?tag=v1.0.1#dd032eb23949828d244d1ad1f1569aa78155837c"
 dependencies = [
  "anyhow",
  "cargo_metadata",
@@ -6453,8 +6507,8 @@ dependencies = [
 
 [[package]]
 name = "sp1-helper"
-version = "1.0.0-rc.1"
-source = "git+https://github.com/succinctlabs/sp1?tag=v1.0.0-rc.1#6be0efa16f8cc56a9c7a286fef71d8f0b51f2c62"
+version = "1.0.1"
+source = "git+https://github.com/succinctlabs/sp1.git?tag=v1.0.1#dd032eb23949828d244d1ad1f1569aa78155837c"
 dependencies = [
  "cargo_metadata",
  "chrono",
