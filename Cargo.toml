@@ -31,11 +31,14 @@ clap = "4.5.9"
 log = "0.4.22"
 env_logger = "0.11.3"
 # alloy-primitives = "0.7.7"
-alloy = { version = "0.1.1", features = ["full"] }
+alloy = { version = "0.1.1", default-features = false, features = [
+    "transports",
+    "providers",
+] }
 anyhow = "1.0.86"
 reqwest = "0.12.5"
 cargo-machete = "0.6.2"
-sp1-helper = { git = "https://github.com/succinctlabs/sp1-helper.git", tag = "v1.0.0-rc.1" }
+sp1-helper = { git = "https://github.com/succinctlabs/sp1", tag = "v1.0.0-rc.1" }
 
 [patch.crates-io]
 sha2-v0-9-9 = { git = "https://github.com/sp1-patches/RustCrypto-hashes", package = "sha2", branch = "patch-sha2-v0.9.9" }

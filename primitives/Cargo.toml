@@ -12,4 +12,3 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 consensus-core = { workspace = true }
 common = { workspace = true }
-alloy = { workspace = true }
