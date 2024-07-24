@@ -1,19 +1,18 @@
-[workspace]
 [package]
 version = "0.1.0"
 name = "helios-2-program"
 edition = "2021"
 
 [dependencies]
-sp1-zkvm = { git = "https://github.com/succinctlabs/sp1.git", tag = "v1.0.1" }
-common = { git = "https://github.com/succinctlabs/helios.git", branch= "patched"}
-consensus-core = { git = "https://github.com/succinctlabs/helios.git", branch= "patched"}
-serde_cbor = "0.11.2"
-sp1-helios-primitives = { path = "../primitives" }
-alloy-sol-types = "0.7.7"
-ssz-rs = { package = "ssz_rs", version = "0.9.0" }
-alloy-primitives = "0.7.7"
-hex = "0.4.3"
+sp1-zkvm = {workspace = true}
+common = {workspace = true}
+consensus-core = {workspace = true}
+serde_cbor = {workspace = true}
+sp1-helios-primitives = {workspace = true}
+# alloy-sol-types = "0.7.7"
+ssz-rs = {workspace = true}
+# alloy-primitives = "0.7.7"
+hex = {workspace = true}
 
 [patch.crates-io]
 sha2-v0-9-9 = { git = "https://github.com/sp1-patches/RustCrypto-hashes", package = "sha2", branch = "patch-sha2-v0.9.9" }
