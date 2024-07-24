@@ -1,85 +1,40 @@
+use alloy_primitives::B256;
 /// Continuously generate proofs & keep light client updated with chain
-use alloy::{
-    network::{Ethereum, EthereumWallet},
-    primitives::Address,
-    providers::{
-        fillers::{ChainIdFiller, FillProvider, GasFiller, JoinFill, NonceFiller, WalletFiller},
-        Identity, Provider, ProviderBuilder, RootProvider,
-    },
-    signers::local::PrivateKeySigner,
-    sol,
-    transports::http::{Client, Http},
-};
-use alloy_primitives::U256;
 use anyhow::Result;
+use ethers::{
+    prelude::*,
+    providers::{Http, Middleware, Provider},
+    signers::{LocalWallet, Signer},
+};
 use helios::consensus::rpc::ConsensusRpc;
 use helios::consensus::{rpc::nimbus_rpc::NimbusRpc, Inner};
 use helios_script::*;
 use log::{error, info};
 use sp1_helios_primitives::types::ProofInputs;
 use sp1_sdk::{ProverClient, SP1ProofWithPublicValues, SP1ProvingKey, SP1Stdin};
-use ssz_rs::prelude::*;
+
 use std::env;
 use std::sync::Arc;
-use std::time::Duration;
 
 const ELF: &[u8] = include_bytes!("../../program/elf/riscv32im-succinct-zkvm-elf");
 
-/// Alias the fill provider for the Ethereum network. Retrieved from the instantiation of the
-/// ProviderBuilder. Recommended method for passing around a ProviderBuilder.
-type EthereumFillProvider = FillProvider<
-    JoinFill<
-        JoinFill<JoinFill<JoinFill<Identity, GasFiller>, NonceFiller>, ChainIdFiller>,
-        WalletFiller<EthereumWallet>,
-    >,
-    RootProvider<Http<Client>>,
-    Http<Client>,
-    Ethereum,
->;
+abigen!(
+    SP1LightClient,
+    r#"[
+        function update(bytes calldata proof, bytes calldata publicValues) external
+        function head() external view returns (uint256)
+        function getSyncCommitteePeriod(uint256 slot) external view returns (uint256)
+        function syncCommittees(uint256 period) external view returns (bytes32)
+    ]"#
+);
 
 struct SP1LightClientOperator {
     client: ProverClient,
     pk: SP1ProvingKey,
-    wallet_filler: Arc<EthereumFillProvider>,
-    contract_address: Address,
-    relayer_address: Address,
+    provider: Provider<Http>,
+    contract: SP1LightClient<SignerMiddleware<Provider<Http>, LocalWallet>>,
     chain_id: u64,
-}
-
-sol! {
-    #[allow(missing_docs)]
-    #[sol(rpc)]
-    contract SP1LightClient {
-        bytes32 public immutable GENESIS_VALIDATORS_ROOT;
-        uint256 public immutable GENESIS_TIME;
-        uint256 public immutable SECONDS_PER_SLOT;
-        uint256 public immutable SLOTS_PER_PERIOD;
-        uint32 public immutable SOURCE_CHAIN_ID;
-        uint256 public head;
-        mapping(uint256 => bytes32) public syncCommittees;
-        mapping(uint256 => bytes32) public executionStateRoots;
-        mapping(uint256 => bytes32) public headers;
-        bytes32 public telepathyProgramVkey;
-        address public verifier;
-
-        struct ProofOutputs {
-            bytes32 prevHeader;
-            bytes32 newHeader;
-            bytes32 syncCommitteeHash;
-            bytes32 nextSyncCommitteeHash;
-            uint256 prevHead;
-            uint256 newHead;
-            bytes32 executionStateRoot;
-        }
-
-        event HeadUpdate(uint256 indexed slot, bytes32 indexed root);
-        event SyncCommitteeUpdate(uint256 indexed period, bytes32 indexed root);
-
-        function update(bytes calldata proof, bytes calldata publicValues) external;
-        function getSyncCommitteePeriod(uint256 slot) internal view returns (uint256);
-        function getCurrentSlot() internal view returns (uint256);
-        function getCurrentEpoch() internal view returns (uint256);
-    }
+    relayer_address: Address,
 }
 
 impl SP1LightClientOperator {
@@ -92,69 +47,50 @@ impl SP1LightClientOperator {
             .expect("CHAIN_ID not set")
             .parse()
             .unwrap();
-        let rpc_url = env::var("RPC_URL")
-            .expect("RPC_URL not set")
-            .parse()
-            .unwrap();
+        let rpc_url = env::var("RPC_URL").expect("RPC_URL not set");
 
         let private_key = env::var("PRIVATE_KEY").expect("PRIVATE_KEY not set");
         let contract_address: Address = env::var("CONTRACT_ADDRESS")
             .expect("CONTRACT_ADDRESS not set")
             .parse()
             .unwrap();
-        let signer: PrivateKeySigner = private_key.parse().expect("Failed to parse private key");
-        let relayer_address = signer.address();
-        let wallet = EthereumWallet::from(signer);
-        let provider = ProviderBuilder::new()
-            .with_recommended_fillers()
-            .wallet(wallet)
-            .on_http(rpc_url);
+
+        let provider = Provider::<Http>::try_from(rpc_url).unwrap();
+        let wallet: LocalWallet = private_key.parse().expect("Failed to parse private key");
+        let relayer_address = wallet.address();
+        let signer = SignerMiddleware::new(provider.clone(), wallet);
+
+        let contract = SP1LightClient::new(contract_address, Arc::new(signer));
 
         Self {
             client,
             pk,
-            wallet_filler: Arc::new(provider),
+            provider,
+            contract,
             chain_id,
-            contract_address,
             relayer_address,
         }
     }
 
-    /// Fetch values and generate an 'update' proof for the SP1 LightClient contract.
     async fn request_update(
         &self,
         client: Inner<NimbusRpc>,
     ) -> Result<Option<SP1ProofWithPublicValues>> {
         // Fetch required values.
-        let contract = SP1LightClient::new(self.contract_address, self.wallet_filler.clone());
-        let head: u64 = contract
-            .head()
+        let head: u64 = self.contract.head().call().await?.as_u64();
+        let period: u64 = self
+            .contract
+            .get_sync_committee_period(head.into())
             .call()
-            .await
-            .unwrap()
-            .head
-            .try_into()
-            .unwrap();
-        let period: u64 = contract
-            .getSyncCommitteePeriod(U256::from(head))
+            .await?
+            .as_u64();
+        let contract_current_sync_committee =
+            self.contract.sync_committees(period.into()).call().await?;
+        let contract_next_sync_committee = self
+            .contract
+            .sync_committees((period + 1).into())
             .call()
-            .await
-            .unwrap()
-            ._0
-            .try_into()
-            .unwrap();
-        let contract_current_sync_committee = contract
-            .syncCommittees(U256::from(period))
-            .call()
-            .await
-            .unwrap()
-            ._0;
-        let contract_next_sync_committee = contract
-            .syncCommittees(U256::from(period + 1))
-            .call()
-            .await
-            .unwrap()
-            ._0;
+            .await?;
 
         let mut stdin = SP1Stdin::new();
 
@@ -164,8 +100,8 @@ impl SP1LightClientOperator {
             client,
             updates,
             head,
-            contract_current_sync_committee,
-            contract_next_sync_committee,
+            B256::from(contract_current_sync_committee),
+            B256::from(contract_next_sync_committee),
         )
         .await;
 
@@ -202,7 +138,6 @@ impl SP1LightClientOperator {
         Ok(Some(proof))
     }
 
-    /// Relay an update proof to the SP1 LightClient contract.
     async fn relay_update(&self, proof: SP1ProofWithPublicValues) -> Result<()> {
         let proof_as_bytes = if env::var("SP1_PROVER").unwrap().to_lowercase() == "mock" {
             vec![]
@@ -211,33 +146,30 @@ impl SP1LightClientOperator {
         };
         let public_values_bytes = proof.public_values.to_vec();
 
-        let contract = SP1LightClient::new(self.contract_address, self.wallet_filler.clone());
-
-        let gas_limit = relay::get_gas_limit(self.chain_id);
-        let max_fee_per_gas = relay::get_fee_cap(self.chain_id, self.wallet_filler.root()).await;
+        let gas_limit = get_gas_limit(self.chain_id);
+        let max_fee_per_gas = get_fee_cap(self.chain_id, &self.provider).await;
 
         let nonce = self
-            .wallet_filler
-            .get_transaction_count(self.relayer_address)
+            .provider
+            .get_transaction_count(self.relayer_address, None)
             .await?;
 
-        // Wait for 3 required confirmations with a timeout of 60 seconds.
-        const NUM_CONFIRMATIONS: u64 = 3;
-        const TIMEOUT_SECONDS: u64 = 60;
-        let receipt = contract
+        const NUM_CONFIRMATIONS: usize = 3;
+
+        let tx = self
+            .contract
             .update(proof_as_bytes.into(), public_values_bytes.into())
-            .gas_price(max_fee_per_gas)
             .gas(gas_limit)
-            .nonce(nonce)
-            .send()
-            .await?
-            .with_required_confirmations(NUM_CONFIRMATIONS)
-            .with_timeout(Some(Duration::from_secs(TIMEOUT_SECONDS)))
-            .get_receipt()
-            .await?;
+            .gas_price(max_fee_per_gas)
+            .nonce(nonce);
 
-        // If status is false, it reverted.
-        if !receipt.status() {
+        let pending_tx = tx.send().await?;
+        let receipt = pending_tx
+            .confirmations(NUM_CONFIRMATIONS)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("Transaction failed to confirm"))?;
+
+        if receipt.status != Some(1.into()) {
             error!("Transaction reverted!");
         }
 
@@ -246,15 +178,15 @@ impl SP1LightClientOperator {
         Ok(())
     }
 
-    /// Start the operator.
     async fn run(&mut self, loop_delay_mins: u64) -> Result<()> {
         info!("Starting SP1 Telepathy operator");
 
         loop {
-            let contract = SP1LightClient::new(self.contract_address, self.wallet_filler.clone());
+            let contract =
+                SP1LightClient::new(self.contract.address(), Arc::new(self.provider.clone()));
 
             // Get the current slot from the contract
-            let slot = contract.head().call().await?.head.try_into().unwrap();
+            let slot = contract.head().call().await?.as_u64();
 
             // Fetch the checkpoint at that slot
             let checkpoint = get_checkpoint(slot).await;
@@ -279,6 +211,26 @@ impl SP1LightClientOperator {
             tokio::time::sleep(tokio::time::Duration::from_secs(60 * loop_delay_mins)).await;
         }
     }
+}
+
+fn get_gas_limit(chain_id: u64) -> U256 {
+    match chain_id {
+        42161 | 421614 => U256::from(25_000_000),
+        _ => U256::from(1_500_000),
+    }
+}
+
+async fn get_fee_cap(chain_id: u64, provider: &Provider<Http>) -> U256 {
+    let multiplier =
+        if chain_id == 17000 || chain_id == 421614 || chain_id == 11155111 || chain_id == 84532 {
+            100
+        } else {
+            20
+        };
+
+    let gas_price = provider.get_gas_price().await.unwrap();
+
+    gas_price * (100 + multiplier) / 100
 }
 
 #[tokio::main]

@@ -1,73 +1,29 @@
+use alloy_primitives::B256;
+use ethers::prelude::*;
 /// Update the light client once
 use helios::consensus::rpc::ConsensusRpc;
 use helios_script::{get_execution_state_root_proof, get_updates};
 use sp1_helios_primitives::types::ProofInputs;
 use sp1_sdk::{utils::setup_logger, ProverClient, SP1Stdin};
+use std::sync::Arc;
 use tracing::{error, info};
 
 const ELF: &[u8] = include_bytes!("../../program/elf/riscv32im-succinct-zkvm-elf");
-use alloy::{
-    network::{Ethereum, EthereumWallet},
-    primitives::{Address, U256},
-    providers::{
-        fillers::{ChainIdFiller, FillProvider, GasFiller, JoinFill, NonceFiller, WalletFiller},
-        Identity, Provider, ProviderBuilder, RootProvider,
-    },
-    signers::local::PrivateKeySigner,
-    sol,
-    transports::http::{Client, Http},
-};
+
 use anyhow::Result;
 use helios_script::*;
-use ssz_rs::prelude::*;
-use std::sync::Arc;
-use std::{env, time::Duration};
+use std::env;
 
-type EthereumFillProvider = FillProvider<
-    JoinFill<
-        JoinFill<JoinFill<JoinFill<Identity, GasFiller>, NonceFiller>, ChainIdFiller>,
-        WalletFiller<EthereumWallet>,
-    >,
-    RootProvider<Http<Client>>,
-    Http<Client>,
-    Ethereum,
->;
+abigen!(
+    SP1LightClient,
+    r#"[
+        function update(bytes calldata proof, bytes calldata publicValues) external
+        function head() external view returns (uint256)
+        function getSyncCommitteePeriod(uint256 slot) external view returns (uint256)
+        function syncCommittees(uint256 period) external view returns (bytes32)
+    ]"#
+);
 
-sol! {
-    #[allow(missing_docs)]
-    #[sol(rpc)]
-    contract SP1LightClient {
-        bytes32 public immutable GENESIS_VALIDATORS_ROOT;
-        uint256 public immutable GENESIS_TIME;
-        uint256 public immutable SECONDS_PER_SLOT;
-        uint256 public immutable SLOTS_PER_PERIOD;
-        uint32 public immutable SOURCE_CHAIN_ID;
-        uint256 public head;
-        mapping(uint256 => bytes32) public syncCommittees;
-        mapping(uint256 => bytes32) public executionStateRoots;
-        mapping(uint256 => bytes32) public headers;
-        bytes32 public telepathyProgramVkey;
-        address public verifier;
-
-        struct ProofOutputs {
-            bytes32 prevHeader;
-            bytes32 newHeader;
-            bytes32 syncCommitteeHash;
-            bytes32 nextSyncCommitteeHash;
-            uint256 prevHead;
-            uint256 newHead;
-            bytes32 executionStateRoot;
-        }
-
-        event HeadUpdate(uint256 indexed slot, bytes32 indexed root);
-        event SyncCommitteeUpdate(uint256 indexed period, bytes32 indexed root);
-
-        function update(bytes calldata proof, bytes calldata publicValues) external;
-        function getSyncCommitteePeriod(uint256 slot) internal view returns (uint256);
-        function getCurrentSlot() internal view returns (uint256);
-        function getCurrentEpoch() internal view returns (uint256);
-    }
-}
 #[tokio::main]
 async fn main() -> Result<()> {
     dotenv::dotenv().ok();
@@ -76,81 +32,40 @@ async fn main() -> Result<()> {
         .expect("CHAIN_ID not set")
         .parse()
         .unwrap();
-    let rpc_url = env::var("RPC_URL")
-        .expect("RPC_URL not set")
-        .parse()
-        .unwrap();
+    let rpc_url = env::var("RPC_URL").expect("RPC_URL not set");
     let private_key = env::var("PRIVATE_KEY").expect("PRIVATE_KEY not set");
     let contract_address: Address = env::var("CONTRACT_ADDRESS")
         .expect("CONTRACT_ADDRESS not set")
         .parse()
         .unwrap();
 
-    let signer: PrivateKeySigner = private_key.parse().expect("Failed to parse private key");
-    let relayer_address = signer.address();
-    let wallet = EthereumWallet::from(signer);
-    let provider = ProviderBuilder::new()
-        .with_recommended_fillers()
-        .wallet(wallet)
-        .on_http(rpc_url);
+    let wallet: LocalWallet = private_key.parse().expect("Failed to parse private key");
+    let provider = Provider::<Http>::try_from(rpc_url).unwrap();
+    let client = SignerMiddleware::new(provider.clone(), wallet.clone());
+    let contract = SP1LightClient::new(contract_address, Arc::new(client));
 
-    let wallet_filler: Arc<EthereumFillProvider> = Arc::new(provider);
-
-    let contract = SP1LightClient::new(contract_address, wallet_filler.clone());
-    // Get the current slot from the contract
-    let head: u64 = contract
-        .head()
-        .call()
-        .await
-        .unwrap()
-        .head
-        .try_into()
-        .unwrap();
-
-    // Get peroid from head
+    let head: u64 = contract.head().call().await?.as_u64();
     let period: u64 = contract
-        .getSyncCommitteePeriod(U256::from(head))
+        .get_sync_committee_period(head.into())
         .call()
-        .await
-        .unwrap()
-        ._0
-        .try_into()
-        .unwrap();
+        .await?
+        .as_u64();
+    let contract_current_sync_committee = contract.sync_committees(period.into()).call().await?;
+    let contract_next_sync_committee = contract.sync_committees((period + 1).into()).call().await?;
 
     // Fetch the checkpoint at that slot
     let checkpoint = get_checkpoint(head).await;
 
     // Setup & sync client.
-    let mut helios_client = get_client(checkpoint.as_bytes().to_vec()).await;
+    let  helios_client = get_client(checkpoint.as_bytes().to_vec()).await;
     let updates = get_updates(&helios_client).await;
-    let contract_current_sync_committee = contract
-        .syncCommittees(U256::from(period))
-        .call()
-        .await
-        .unwrap()
-        ._0;
-    let contract_next_sync_committee = contract
-        .syncCommittees(U256::from(period + 1))
-        .call()
-        .await
-        .unwrap()
-        ._0;
-    if contract_current_sync_committee.to_vec()
-        != helios_client
-            .store
-            .current_sync_committee
-            .hash_tree_root()
-            .unwrap()
-            .as_ref()
-    {
-        panic!("Client not in sync with contract");
-    }
+
     let (helios_client, updates) = sync_client(
         helios_client,
         updates,
         head,
-        contract_current_sync_committee,
-        contract_next_sync_committee,
+        B256::from(contract_current_sync_committee),
+        B256::from(contract_next_sync_committee),
     )
     .await;
 
@@ -201,27 +116,27 @@ async fn main() -> Result<()> {
     let public_values_bytes = proof.public_values.to_vec();
 
     let gas_limit = relay::get_gas_limit(chain_id);
-    let max_fee_per_gas = relay::get_fee_cap(chain_id, wallet_filler.root()).await;
+    let max_fee_per_gas = relay::get_fee_cap(chain_id, &provider).await;
 
-    let nonce = wallet_filler.get_transaction_count(relayer_address).await?;
-
-    const NUM_CONFIRMATIONS: u64 = 3;
-    const TIMEOUT_SECONDS: u64 = 60;
-
-    // Relay the update to the contract
-    let receipt = contract
-        .update(proof_as_bytes.into(), public_values_bytes.into())
-        .gas_price(max_fee_per_gas)
-        .gas(gas_limit)
-        .nonce(nonce)
-        .send()
-        .await?
-        .with_required_confirmations(NUM_CONFIRMATIONS)
-        .with_timeout(Some(Duration::from_secs(TIMEOUT_SECONDS)))
-        .get_receipt()
+    let nonce = provider
+        .get_transaction_count(wallet.address(), None)
         .await?;
 
-    if !receipt.status() {
+    const NUM_CONFIRMATIONS: usize = 3;
+
+    let tx = contract
+        .update(proof_as_bytes.into(), public_values_bytes.into())
+        .gas(gas_limit)
+        .gas_price(max_fee_per_gas)
+        .nonce(nonce);
+
+    let pending_tx = tx.send().await?;
+    let receipt = pending_tx
+        .confirmations(NUM_CONFIRMATIONS)
+        .await?
+        .ok_or_else(|| anyhow::anyhow!("Transaction failed to confirm"))?;
+
+    if receipt.status != Some(1.into()) {
         error!("Transaction reverted!");
     } else {
         info!("Transaction hash: {:?}", receipt.transaction_hash);

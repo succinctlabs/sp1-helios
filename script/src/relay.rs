@@ -1,8 +1,6 @@
-use anyhow::Result;
 use ethers::{
-    middleware::SignerMiddleware,
     providers::{Http, Middleware, Provider},
-    types::{Address, TransactionReceipt, TransactionRequest, U256},
+    types::U256,
 };
 
 /// Get the gas limit associated with the chain id.

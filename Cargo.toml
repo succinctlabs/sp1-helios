@@ -33,7 +33,6 @@ alloy-sol-types = {version = "0.7.7"}
 ethers = "2.0.14"
 anyhow = "1.0.86"
 reqwest = "0.12.5"
-cargo-machete = "0.6.2"
 sp1-helper = { git = "https://github.com/succinctlabs/sp1", tag = "v1.0.1" }
 
 [patch.crates-io]
