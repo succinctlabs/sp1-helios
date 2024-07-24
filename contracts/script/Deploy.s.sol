@@ -5,6 +5,7 @@ import "forge-std/Script.sol";
 import {SP1LightClient} from "../src/SP1LightClient.sol";
 import {SP1MockVerifier} from "@sp1-contracts/SP1MockVerifier.sol";
 import {ISP1Verifier} from "@sp1-contracts/ISP1Verifier.sol";
+import {Vm} from "forge-std/Vm.sol";
 
 /// @title DeployScript
 /// @notice Deploy script for the SP1LightClient contract.
@@ -26,6 +27,9 @@ contract DeployScript is Script {
             verifier = ISP1Verifier(address(vm.envAddress("SP1_VERIFIER_ADDRESS")));
         }
 
+        // Read trusted initialization parameters from environment.
+        address guardian = vm.envOr("GUARDIAN_ADDRESS", msg.sender);
+
         // Deploy the SP1Telepathy contract.
         SP1LightClient lightClient =
             new SP1LightClient{salt: bytes32(vm.envBytes("CREATE2_SALT"))}(
@@ -39,7 +43,8 @@ contract DeployScript is Script {
                 vm.envBytes32("EXECUTION_STATE_ROOT"),
                 vm.envUint("HEAD"),
                 vm.envBytes32("SP1_TELEPATHY_PROGRAM_VKEY"),
-                address(verifier)
+                address(verifier),
+                guardian
             );
 
         return address(lightClient);

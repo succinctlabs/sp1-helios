@@ -1247,9 +1247,9 @@ dependencies = [
 
 [[package]]
 name = "blst"
-version = "0.3.12"
+version = "0.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "62dc83a094a71d43eeadd254b1ec2d24cb6a0bb6cadce00df51f0db594711a32"
+checksum = "4378725facc195f1a538864863f6de233b500a8862747e7f165078a419d5e874"
 dependencies = [
  "cc",
  "glob",
@@ -1502,7 +1502,7 @@ checksum = "4b82cf0babdbd58558212896d1a4272303a57bdb245c2bf1147185fb45640e70"
 [[package]]
 name = "client"
 version = "0.5.5"
-source = "git+https://github.com/succinctlabs/helios.git?branch=patched#121b535ce99b41974ae2d1ade35d1db61943b41b"
+source = "git+https://github.com/succinctlabs/helios.git?branch=patched#3d774b52576b2e24363896460d9e033c38e550f3"
 dependencies = [
  "common",
  "config",
@@ -1591,7 +1591,7 @@ checksum = "0b6a852b24ab71dffc585bcb46eaf7959d175cb865a7152e35b348d1b2960422"
 [[package]]
 name = "common"
 version = "0.5.5"
-source = "git+https://github.com/succinctlabs/helios.git?branch=patched#121b535ce99b41974ae2d1ade35d1db61943b41b"
+source = "git+https://github.com/succinctlabs/helios.git?branch=patched#3d774b52576b2e24363896460d9e033c38e550f3"
 dependencies = [
  "bls12_381 0.8.0",
  "bytes",
@@ -1610,7 +1610,7 @@ dependencies = [
 [[package]]
 name = "config"
 version = "0.5.5"
-source = "git+https://github.com/succinctlabs/helios.git?branch=patched#121b535ce99b41974ae2d1ade35d1db61943b41b"
+source = "git+https://github.com/succinctlabs/helios.git?branch=patched#3d774b52576b2e24363896460d9e033c38e550f3"
 dependencies = [
  "common",
  "consensus-core",
@@ -1633,7 +1633,7 @@ dependencies = [
 [[package]]
 name = "consensus"
 version = "0.5.5"
-source = "git+https://github.com/succinctlabs/helios.git?branch=patched#121b535ce99b41974ae2d1ade35d1db61943b41b"
+source = "git+https://github.com/succinctlabs/helios.git?branch=patched#3d774b52576b2e24363896460d9e033c38e550f3"
 dependencies = [
  "async-trait",
  "bls12_381 0.8.0",
@@ -1665,7 +1665,7 @@ dependencies = [
 [[package]]
 name = "consensus-core"
 version = "0.1.0"
-source = "git+https://github.com/succinctlabs/helios.git?branch=patched#121b535ce99b41974ae2d1ade35d1db61943b41b"
+source = "git+https://github.com/succinctlabs/helios.git?branch=patched#3d774b52576b2e24363896460d9e033c38e550f3"
 dependencies = [
  "bls12_381 0.8.0",
  "bytes",
@@ -2772,7 +2772,7 @@ checksum = "0206175f82b8d6bf6652ff7d71a1e27fd2e4efde587fd368662814d6ec1d9ce0"
 [[package]]
 name = "execution"
 version = "0.5.5"
-source = "git+https://github.com/succinctlabs/helios.git?branch=patched#121b535ce99b41974ae2d1ade35d1db61943b41b"
+source = "git+https://github.com/succinctlabs/helios.git?branch=patched#3d774b52576b2e24363896460d9e033c38e550f3"
 dependencies = [
  "async-trait",
  "bytes",
@@ -3374,7 +3374,7 @@ checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 [[package]]
 name = "helios"
 version = "0.5.5"
-source = "git+https://github.com/succinctlabs/helios.git?branch=patched#121b535ce99b41974ae2d1ade35d1db61943b41b"
+source = "git+https://github.com/succinctlabs/helios.git?branch=patched#3d774b52576b2e24363896460d9e033c38e550f3"
 dependencies = [
  "client",
  "common",
@@ -4569,9 +4569,9 @@ checksum = "830b246a0e5f20af87141b25c173cd1b609bd7779a4617d6ec582abaf90870f3"
 
 [[package]]
 name = "object"
-version = "0.36.1"
+version = "0.36.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "081b846d1d56ddfc18fdf1a922e4f6e07a11768ea1b92dec44e42b72712ccfce"
+checksum = "3f203fa8daa7bb185f760ae12bd8e097f63d17041dcdcaf675ac54cdf863170e"
 dependencies = [
  "memchr",
 ]
@@ -6245,9 +6245,9 @@ dependencies = [
 
 [[package]]
 name = "scc"
-version = "2.1.4"
+version = "2.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4465c22496331e20eb047ff46e7366455bc01c0c02015c4a376de0b2cd3a1af"
+checksum = "1fadf67e3cf23f8b11a6c8c48a16cb2437381503615acd91094ec7b4686a5a53"
 dependencies = [
  "sdd",
 ]

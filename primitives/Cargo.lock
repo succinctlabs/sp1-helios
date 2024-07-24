@@ -54,7 +54,7 @@ dependencies = [
  "proc-macro-error",
  "proc-macro2",
  "quote",
- "syn 2.0.71",
+ "syn 2.0.72",
 ]
 
 [[package]]
@@ -70,7 +70,7 @@ dependencies = [
  "proc-macro-error",
  "proc-macro2",
  "quote",
- "syn 2.0.71",
+ "syn 2.0.72",
  "syn-solidity",
  "tiny-keccak",
 ]
@@ -86,7 +86,7 @@ dependencies = [
  "heck",
  "proc-macro2",
  "quote",
- "syn 2.0.71",
+ "syn 2.0.72",
  "syn-solidity",
 ]
 
@@ -261,7 +261,7 @@ checksum = "3c87f3f15e7794432337fc718554eaa4dc8f04c9677a950ffe366f20a162ae42"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.71",
+ "syn 2.0.72",
 ]
 
 [[package]]
@@ -419,7 +419,7 @@ dependencies = [
 [[package]]
 name = "common"
 version = "0.5.5"
-source = "git+https://github.com/succinctlabs/helios.git?branch=patched#094b60025bee7595690d7a802d859c8139757c77"
+source = "git+https://github.com/succinctlabs/helios.git?branch=patched#3d774b52576b2e24363896460d9e033c38e550f3"
 dependencies = [
  "bls12_381",
  "bytes",
@@ -438,7 +438,7 @@ dependencies = [
 [[package]]
 name = "consensus-core"
 version = "0.1.0"
-source = "git+https://github.com/succinctlabs/helios.git?branch=patched#094b60025bee7595690d7a802d859c8139757c77"
+source = "git+https://github.com/succinctlabs/helios.git?branch=patched#3d774b52576b2e24363896460d9e033c38e550f3"
 dependencies = [
  "bls12_381",
  "bytes",
@@ -568,7 +568,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "strsim 0.11.1",
- "syn 2.0.71",
+ "syn 2.0.72",
 ]
 
 [[package]]
@@ -590,7 +590,7 @@ checksum = "d336a2a514f6ccccaa3e09b02d41d35330c07ddf03a62165fcec10bb561c7806"
 dependencies = [
  "darling_core 0.20.10",
  "quote",
- "syn 2.0.71",
+ "syn 2.0.72",
 ]
 
 [[package]]
@@ -634,7 +634,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "rustc_version 0.4.0",
- "syn 2.0.71",
+ "syn 2.0.72",
 ]
 
 [[package]]
@@ -911,7 +911,7 @@ checksum = "87750cf4b7a4c0625b1529e4c543c2182106e4dedc60a2a6455e00d212c489ac"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.71",
+ "syn 2.0.72",
 ]
 
 [[package]]
@@ -1269,7 +1269,7 @@ dependencies = [
  "proc-macro-crate",
  "proc-macro2",
  "quote",
- "syn 2.0.71",
+ "syn 2.0.72",
 ]
 
 [[package]]
@@ -1800,7 +1800,7 @@ checksum = "e0cd7e117be63d3c3678776753929474f3b04a43a080c744d6b0ae2a8c28e222"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.71",
+ "syn 2.0.72",
 ]
 
 [[package]]
@@ -1841,7 +1841,7 @@ dependencies = [
  "darling 0.20.10",
  "proc-macro2",
  "quote",
- "syn 2.0.71",
+ "syn 2.0.72",
 ]
 
 [[package]]
@@ -2022,7 +2022,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "rustversion",
- "syn 2.0.71",
+ "syn 2.0.72",
 ]
 
 [[package]]
@@ -2058,9 +2058,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "2.0.71"
+version = "2.0.72"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b146dcf730474b4bcd16c311627b31ede9ab149045db4d6088b3becaea046462"
+checksum = "dc4b9b9bf2add8093d3f2c0204471e951b2285580335de42f9d2534f3ae7a8af"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2076,7 +2076,7 @@ dependencies = [
  "paste",
  "proc-macro2",
  "quote",
- "syn 2.0.71",
+ "syn 2.0.72",
 ]
 
 [[package]]
@@ -2114,7 +2114,7 @@ checksum = "a4558b58466b9ad7ca0f102865eccc95938dca1a74a856f2b57b6629050da261"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.71",
+ "syn 2.0.72",
 ]
 
 [[package]]
@@ -2193,7 +2193,7 @@ checksum = "34704c8d6ebcbc939824180af020566b01a7c01f80641264eba0999f6c2b6be7"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.71",
+ "syn 2.0.72",
 ]
 
 [[package]]
@@ -2295,7 +2295,7 @@ dependencies = [
  "once_cell",
  "proc-macro2",
  "quote",
- "syn 2.0.71",
+ "syn 2.0.72",
  "wasm-bindgen-shared",
 ]
 
@@ -2329,7 +2329,7 @@ checksum = "e94f17b526d0a461a191c78ea52bbce64071ed5c04c9ffe424dcb38f74171bb7"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.71",
+ "syn 2.0.72",
  "wasm-bindgen-backend",
  "wasm-bindgen-shared",
 ]
@@ -2482,5 +2482,5 @@ checksum = "ce36e65b0d2999d2aafac989fb249189a141aee1f53c612c1f37d72631959f69"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.71",
+ "syn 2.0.72",
 ]
