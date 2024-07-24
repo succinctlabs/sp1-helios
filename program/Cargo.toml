@@ -5,8 +5,8 @@ edition = "2021"
 
 [dependencies]
 sp1-zkvm = { workspace = true }
-common = { workspace = true }
-consensus-core = { workspace = true }
+common = { workspace = true, branch="patched"  }
+consensus-core = { workspace = true, branch="patched" }
 serde_cbor = { workspace = true }
 sp1-helios-primitives = { workspace = true }
 alloy-sol-types = {workspace = true}

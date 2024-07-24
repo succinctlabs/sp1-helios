@@ -13,6 +13,11 @@ contract SP1LightClient {
     uint256 public immutable SLOTS_PER_EPOCH;
     uint32 public immutable SOURCE_CHAIN_ID;
 
+    modifier onlyGuardian() {
+        require(msg.sender == guardian, "Caller is not the guardian");
+        _;
+    }
+
     /// @notice The latest slot the light client has a finalized header for.
     uint256 public head = 0;
 
@@ -30,6 +35,9 @@ contract SP1LightClient {
 
     /// @notice The deployed SP1 verifier contract.
     ISP1Verifier public verifier;
+
+    /// @notice The address of the guardian
+    address public guardian;
 
     struct ProofOutputs {
         bytes32 prevHeader;
@@ -62,7 +70,8 @@ contract SP1LightClient {
         bytes32 _executionStateRoot,
         uint256 _head,
         bytes32 _telepathyProgramVkey,
-        address _verifier
+        address _verifier,
+        address _guardian
     ) {
         GENESIS_VALIDATORS_ROOT = _genesisValidatorsRoot;
         GENESIS_TIME = _genesisTime;
@@ -75,6 +84,7 @@ contract SP1LightClient {
         executionStateRoots[_head] = _executionStateRoot;
         head = _head;
         verifier = ISP1Verifier(_verifier);
+        guardian = _guardian;
     }
 
    
@@ -146,5 +156,10 @@ contract SP1LightClient {
     /// @notice Gets the current epoch
     function getCurrentEpoch() public view returns (uint256) {
         return head / SLOTS_PER_EPOCH;
+    }
+
+    /// @notice Updates the telepathy program vKey. Call when changing the telepathy program (e.g. adding a new constraint or updating a dependency)
+    function updateTelepathyProgramVkey(bytes32 newVkey) external onlyGuardian {
+        telepathyProgramVkey = newVkey;
     }
 }

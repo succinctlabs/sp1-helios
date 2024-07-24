@@ -72,10 +72,10 @@ async fn main() -> Result<()> {
     let finality_update = helios_client.rpc.get_finality_update().await.unwrap();
     let latest_block = finality_update.finalized_header.slot;
 
-    if latest_block.as_u64() <= head {
-        info!("Contract is up to date. Nothing to update.");
-        return Ok(());
-    }
+    // if latest_block.as_u64() <= head {
+    //     info!("Contract is up to date. Nothing to update.");
+    //     return Ok(());
+    // }
 
     let execution_state_root_proof = get_execution_state_root_proof(latest_block.into())
         .await
