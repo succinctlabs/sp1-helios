@@ -1,6 +1,6 @@
 [package]
 version = "0.1.0"
-name = "helios-2-script"
+name = "helios-script"
 edition = "2021"
 
 
@@ -18,34 +18,29 @@ name = "operator"
 path = "./bin/operator.rs"
 
 [dependencies]
-dotenv = {workspace = true}
-eyre = {workspace = true}
-sp1-sdk = {workspace = true}
-tokio = {workspace = true}
-helios = {workspace = true}
-sp1-helios-primitives = {path = "../primitives"}
-tracing = {workspace = true}
-serde = {workspace = true}
-ssz-rs = {workspace = true}
-thiserror = {workspace = true}
-ethers-core = {workspace = true}
-zduny-wasm-timer = {workspace = true}
-serde_cbor = {workspace = true}
-hex = {workspace = true}
+dotenv = { workspace = true }
+eyre = { workspace = true }
+sp1-sdk = { workspace = true }
+tokio = { workspace = true }
+helios = { workspace = true }
+sp1-helios-primitives = { path = "../primitives" }
+tracing = { workspace = true }
+serde = { workspace = true }
+ssz-rs = { workspace = true }
+thiserror = { workspace = true }
+ethers-core = { workspace = true }
+zduny-wasm-timer = { workspace = true }
+serde_cbor = { workspace = true }
+hex = { workspace = true }
 # alloy-sol-types = {workspace = true}
-clap = {workspace = true}
-log = {workspace = true}
-env_logger = {workspace = true}
+clap = { workspace = true }
+log = { workspace = true }
+env_logger = { workspace = true }
 # alloy-primitives = {workspace = true}
-alloy = {workspace = true}
-anyhow = {workspace = true}
-reqwest = {workspace = true}
-cargo-machete = {workspace = true}
+alloy = { workspace = true }
+anyhow = { workspace = true }
+reqwest = { workspace = true }
+cargo-machete = { workspace = true }
 
 [build-dependencies]
-sp1-helper = { git = "https://github.com/succinctlabs/sp1.git", tag = "v1.0.0-rc.1" }
-
-[patch.crates-io]
-sha2-v0-9-9 = { git = "https://github.com/sp1-patches/RustCrypto-hashes", package = "sha2", branch = "patch-sha2-v0.9.9" }
-sha2-v0-10-8 = { git = "https://github.com/sp1-patches/RustCrypto-hashes", package = "sha2", branch = "patch-sha2-v0.10.8" }
-tiny-keccak = { git = "https://github.com/sp1-patches/tiny-keccak", branch = "patch-v2.0.2" }
+sp1-helper = { workspace = true }

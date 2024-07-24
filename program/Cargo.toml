@@ -1,20 +1,15 @@
 [package]
 version = "0.1.0"
-name = "helios-2-program"
+name = "helios-program"
 edition = "2021"
 
 [dependencies]
-sp1-zkvm = {workspace = true}
-common = {workspace = true}
-consensus-core = {workspace = true}
-serde_cbor = {workspace = true}
-sp1-helios-primitives = {workspace = true}
+sp1-zkvm = { workspace = true }
+common = { workspace = true }
+consensus-core = { workspace = true }
+serde_cbor = { workspace = true }
+sp1-helios-primitives = { workspace = true }
 # alloy-sol-types = "0.7.7"
-ssz-rs = {workspace = true}
+ssz-rs = { workspace = true }
 # alloy-primitives = "0.7.7"
-hex = {workspace = true}
-
-[patch.crates-io]
-sha2-v0-9-9 = { git = "https://github.com/sp1-patches/RustCrypto-hashes", package = "sha2", branch = "patch-sha2-v0.9.9" }
-sha2-v0-10-8 = { git = "https://github.com/sp1-patches/RustCrypto-hashes", package = "sha2", branch = "patch-sha2-v0.10.8" }
-tiny-keccak = { git = "https://github.com/sp1-patches/tiny-keccak", branch = "patch-v2.0.2" }
+hex = { workspace = true }
