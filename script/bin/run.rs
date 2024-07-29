@@ -72,8 +72,8 @@ sol! {
 async fn main() -> Result<()> {
     dotenv::dotenv().ok();
     setup_logger();
-    let chain_id: u64 = env::var("CHAIN_ID")
-        .expect("CHAIN_ID not set")
+    let chain_id: u64 = env::var("DEST_CHAIN_ID")
+        .expect("DEST_CHAIN_ID not set")
         .parse()
         .unwrap();
     let rpc_url = env::var("RPC_URL")

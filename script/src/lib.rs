@@ -1,13 +1,13 @@
 use alloy_primitives::B256;
 use ethers_core::types::H256;
 use helios::{
+    config::networks::Network,
     consensus::{
         constants,
         rpc::{nimbus_rpc::NimbusRpc, ConsensusRpc},
         Inner,
     },
-    consensus_core::types::Update,
-    consensus_core::utils,
+    consensus_core::{types::Update, utils},
     prelude::*,
 };
 use serde::Deserialize;
@@ -37,14 +37,17 @@ pub async fn get_latest_checkpoint() -> H256 {
         .await
         .unwrap();
 
-    cf.fetch_latest_checkpoint(&networks::Network::MAINNET)
+    let chain_id = std::env::var("SOURCE_CHAIN_ID").unwrap();
+    let network = Network::from_chain_id(chain_id.parse().unwrap()).unwrap();
+    cf.fetch_latest_checkpoint(&network)
         .await
         .unwrap()
 }
 
 /// Fetch checkpoint from a slot number.
 pub async fn get_checkpoint(slot: u64) -> H256 {
-    let rpc: NimbusRpc = NimbusRpc::new("https://www.lightclientdata.org");
+    let rpc_url = std::env::var("SOURCE_CONSENSUS_RPC_URL").unwrap();
+    let rpc: NimbusRpc = NimbusRpc::new(&rpc_url);
 
     let mut block = rpc.get_block(slot).await.unwrap();
     H256::from_slice(block.hash_tree_root().unwrap().as_ref())
@@ -77,9 +80,11 @@ pub async fn get_execution_state_root_proof(
 
 /// Setup a client from a checkpoint.
 pub async fn get_client(checkpoint: Vec<u8>) -> Inner<NimbusRpc> {
-    let consensus_rpc = "https://www.lightclientdata.org";
+    let consensus_rpc = std::env::var("SOURCE_CONSENSUS_RPC_URL").unwrap();
+    let chain_id = std::env::var("SOURCE_CHAIN_ID").unwrap();
+    let network = Network::from_chain_id(chain_id.parse().unwrap()).unwrap();
+    let base_config = network.to_base_config();
 
-    let base_config = networks::mainnet();
     let config = Config {
         consensus_rpc: consensus_rpc.to_string(),
         execution_rpc: String::new(),
@@ -94,13 +99,13 @@ pub async fn get_client(checkpoint: Vec<u8>) -> Inner<NimbusRpc> {
     let (channel_send, _) = watch::channel(None);
 
     let mut client = Inner::<NimbusRpc>::new(
-        consensus_rpc,
+        &consensus_rpc,
         block_send,
         finalized_block_send,
         channel_send,
         Arc::new(config),
     );
-
+    println!("BOOTSTRAP: {:?}", hex::encode(&checkpoint));
     client.bootstrap(&checkpoint).await.unwrap();
     client
 }

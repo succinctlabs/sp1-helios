@@ -88,12 +88,12 @@ impl SP1LightClientOperator {
 
         let client = ProverClient::new();
         let (pk, _) = client.setup(ELF);
-        let chain_id: u64 = env::var("CHAIN_ID")
-            .expect("CHAIN_ID not set")
+        let chain_id: u64 = env::var("DEST_CHAIN_ID")
+            .expect("DEST_CHAIN_ID not set")
             .parse()
             .unwrap();
-        let rpc_url = env::var("RPC_URL")
-            .expect("RPC_URL not set")
+        let rpc_url = env::var("DEST_RPC_URL")
+            .expect("DEST_RPC_URL not set")
             .parse()
             .unwrap();
 
