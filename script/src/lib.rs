@@ -64,9 +64,18 @@ pub async fn get_execution_state_root_proof(
     slot: u64,
 ) -> Result<ExecutionStateProof, Box<dyn std::error::Error>> {
     let client = reqwest::Client::new();
+    
+    let chain_id = std::env::var("SOURCE_CHAIN_ID").unwrap();
+    let url_suffix = match chain_id.as_str() {
+        "11155111" => "-sepolia",  // Sepolia chain ID
+        "17000" => "-holesky",     // Holesky chain ID
+        "1" => "",                 // Mainnet chain ID
+        _ => return Err(format!("Unsupported chain ID: {}", chain_id).into()),
+    };
+
     let url = format!(
-        "https://beaconapi.succinct.xyz/api/beacon/proof/executionStateRoot/{}",
-        slot
+        "https://beaconapi{}.succinct.xyz/api/beacon/proof/executionStateRoot/{}",
+        url_suffix, slot
     );
 
     let response: ApiResponse = client.get(url).send().await?.json().await?;

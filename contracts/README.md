@@ -15,7 +15,7 @@
 4. Paste the genesis parameters into `.env` and manually fill in the other parameters
 5. `forge install`
 6. `source .env`
-7. `forge script script/Deploy.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --etherscan-api-key $ETHERSCAN_API_KEY --broadcast --verify`
+7. `forge script script/Deploy.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --etherscan-api-key $ETHERSCAN_API_KEY --broadcast --verify --via-ir`
 8. Take note of the light client contract address returned by the script
    
    ![alt text](../return-image.png)

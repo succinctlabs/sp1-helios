@@ -66,6 +66,13 @@ pub async fn main() {
     const SECONDS_PER_SLOT: u64 = 12;
     const SLOTS_PER_EPOCH: u64 = 32;
     const SLOTS_PER_PERIOD: u64 = SLOTS_PER_EPOCH * 256;
+    let source_chain_id: u64 = match env::var("SOURCE_CHAIN_ID") {
+        Ok(val) => val.parse().unwrap(),
+        Err(_) => {
+            println!("SOURCE_CHAIN_ID not set, defaulting to mainnet");
+            1 // Mainnet chain ID
+        }
+    };
 
     info!(
         "\nSP1_PROVER={}\n\
@@ -77,6 +84,7 @@ pub async fn main() {
         SECONDS_PER_SLOT={}\n\
         SLOTS_PER_PERIOD={}\n\
         SLOTS_PER_EPOCH={}\n\
+        SOURCE_CHAIN_ID={}\n\
         SYNC_COMMITTEE_HASH={}\n\
         FINALIZED_HEADER={}\n\
         EXECUTION_STATE_ROOT={}\n\
@@ -84,12 +92,13 @@ pub async fn main() {
         sp1_prover,
         vk.bytes32(),
         verifier,
-        "0xaz",
+        "0xaa",
         genesis_root,
         genesis_time,
         SECONDS_PER_SLOT,
         SLOTS_PER_PERIOD,
         SLOTS_PER_EPOCH,
+        source_chain_id,
         sync_committee_hash,
         finalized_header,
         execution_state_root_proof.execution_state_root,

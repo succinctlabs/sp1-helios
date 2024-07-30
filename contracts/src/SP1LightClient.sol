@@ -11,7 +11,7 @@ contract SP1LightClient {
     uint256 public immutable SECONDS_PER_SLOT;
     uint256 public immutable SLOTS_PER_PERIOD;
     uint256 public immutable SLOTS_PER_EPOCH;
-    uint32 public immutable SOURCE_CHAIN_ID;
+    uint256 public immutable SOURCE_CHAIN_ID;
 
     modifier onlyGuardian() {
         require(msg.sender == guardian, "Caller is not the guardian");
@@ -65,6 +65,7 @@ contract SP1LightClient {
         uint256 _secondsPerSlot,
         uint256 _slotsPerPeriod,
         uint256 _slotsPerEpoch,
+        uint256 _sourceChainId,
         bytes32 _syncCommitteeHash,
         bytes32 _header,
         bytes32 _executionStateRoot,
@@ -78,6 +79,7 @@ contract SP1LightClient {
         SECONDS_PER_SLOT = _secondsPerSlot;
         SLOTS_PER_PERIOD = _slotsPerPeriod;
         SLOTS_PER_EPOCH = _slotsPerEpoch;
+        SOURCE_CHAIN_ID = _sourceChainId;
         syncCommittees[getSyncCommitteePeriod(_head)] = _syncCommitteeHash;
         telepathyProgramVkey = _telepathyProgramVkey;
         headers[_head] = _header;

@@ -40,7 +40,7 @@ You can find a list of [deployed verifiers here.](https://github.com/succinctlab
 3. Paste the genesis parameters into `.env` and manually fill in the other parameters
 4. `forge install`
 5. `source .env`
-6. `forge script script/Deploy.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --etherscan-api-key $ETHERSCAN_API_KEY --broadcast --verify`
+6. `forge script script/Deploy.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --etherscan-api-key $ETHERSCAN_API_KEY --broadcast --verify --via-ir`
 7. Take note of the light client contract address printed by the script
 
    ![alt text](./return-image.png)
