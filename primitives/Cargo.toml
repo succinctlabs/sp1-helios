@@ -11,8 +11,8 @@ hex = "0.4.3"
 serde_with = { version = "3.4.0", features = ["hex"] }
 serde = { version = "1.0.195", features = ["derive"] }
 serde_json = "1.0.11"
-consensus-core = { git = "https://github.com/a16z/helios.git"}
-common = { git = "https://github.com/a16z/helios.git"}
+consensus-core = { git = "https://github.com/succinctlabs/helios.git"}
+common = { git = "https://github.com/succinctlabs/helios.git"}
 alloy-sol-types = "0.7.7"
 alloy-primitives = { version = "0.7.7", features = ["serde"] }
 

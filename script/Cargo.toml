@@ -23,7 +23,7 @@ dotenv = "0.15.0"
 eyre = "0.6.12"
 sp1-sdk = { git = "https://github.com/succinctlabs/sp1.git", tag = "v1.0.1"   }
 tokio = "1.38.0"
-helios = { git = "https://github.com/a16z/helios.git"}
+helios = { git = "https://github.com/succinctlabs/helios.git"}
 sp1-helios-primitives = { path = "../primitives" }
 tracing = "0.1.37"
 serde = "1.0.203"

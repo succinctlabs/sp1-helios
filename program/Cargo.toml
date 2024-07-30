@@ -6,8 +6,8 @@ edition = "2021"
 
 [dependencies]
 sp1-zkvm = { git = "https://github.com/succinctlabs/sp1.git", tag = "v1.0.1" }
-common = { git = "https://github.com/a16z/helios.git"}
-consensus-core = { git = "https://github.com/a16z/helios.git"}
+common = { git = "https://github.com/succinctlabs/helios.git"}
+consensus-core = { git = "https://github.com/succinctlabs/helios.git"}
 serde_cbor = "0.11.2"
 sp1-helios-primitives = { path = "../primitives" }
 alloy-sol-types = "0.7.7"
