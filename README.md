@@ -56,7 +56,7 @@ Continuously generate proofs & keep light client updated with chain
 4. `RUST_LOG=info cargo run --release --bin operator`
 
 ## Supported Networks
-Public light client RPCs are hard to come by - for convenience, here are some example values (as of July 29, 2024)
+Public light client RPCs are hard to come by - for convenience, here are some example values [courtesy of Nimbus](https://github.com/status-im/nimbus-eth2?tab=readme-ov-file#quickly-test-your-tooling-against-nimbus) (as of July 29, 2024)
 
 **Source (bridging from):**
 - Mainnet
@@ -67,7 +67,7 @@ Public light client RPCs are hard to come by - for convenience, here are some ex
    - `SOURCE_CONSENSUS_RPC_URL=http://unstable.sepolia.beacon-api.nimbus.team`
 - Holesky Testnet
    - `SOURCE_CHAIN_ID=17000`
-   - `SOURCE_CONSENSUS_RPC_URL=http://testing.holesky.beacon-api.nimbus.team/`
+   - `SOURCE_CONSENSUS_RPC_URL=http://testing.holesky.beacon-api.nimbus.team`
 
 **Destination (bridging to):**
 - Telepathy supports bridging to any arbitrary evm chain.
