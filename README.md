@@ -53,6 +53,23 @@ Continuously generate proofs & keep light client updated with chain
 2. `cp .env.example .env`
 3. Paste in the contract address in `.env` and fill out the other parameters.
 
-   `SOURCE_CONSENSUS_RPC_URL` is a consensus layer (beacon chain) rpc and must support the `light_client` route, which is not supported by all providers.
+   Set `SP1_PROVER` to `mock` for testing, or `network` to generate proofs on the SP1 Cluster
 
 4. `RUST_LOG=info cargo run --release --bin operator`
+
+## Supported Networks
+Public light client RPCs are hard to come by - for convenience, here are some example values (as of July 29, 2024)
+
+**Source (bridging from):**
+- Mainnet
+   - `SOURCE_CHAIN_ID=1`
+   - `SOURCE_CONSENSUS_RPC_URL=https://www.lightclientdata.org`
+- Sepolia Testnet
+   - `SOURCE_CHAIN_ID=11155111`
+   - `SOURCE_CONSENSUS_RPC_URL=http://unstable.sepolia.beacon-api.nimbus.team`
+- Holesky Testnet
+   - `SOURCE_CHAIN_ID=17000`
+   - `SOURCE_CONSENSUS_RPC_URL=http://testing.holesky.beacon-api.nimbus.team/`
+
+**Destination (bridging to):**
+- Telepathy supports bridging to any arbitrary evm chain.
