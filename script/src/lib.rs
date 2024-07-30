@@ -114,7 +114,7 @@ pub async fn get_client(checkpoint: Vec<u8>) -> Inner<NimbusRpc> {
         channel_send,
         Arc::new(config),
     );
-    println!("BOOTSTRAP: {:?}", hex::encode(&checkpoint));
+   
     client.bootstrap(&checkpoint).await.unwrap();
     client
 }

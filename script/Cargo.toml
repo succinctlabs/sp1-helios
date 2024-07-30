@@ -23,7 +23,7 @@ dotenv = "0.15.0"
 eyre = "0.6.12"
 sp1-sdk = { git = "https://github.com/succinctlabs/sp1.git", tag = "v1.0.1"   }
 tokio = "1.38.0"
-helios = { git = "https://github.com/succinctlabs/helios.git", branch= "patched"}
+helios = { git = "https://github.com/a16z/helios.git"}
 sp1-helios-primitives = { path = "../primitives" }
 tracing = "0.1.37"
 serde = "1.0.203"
@@ -43,9 +43,12 @@ anyhow = "1.0.86"
 reqwest = "0.12.5"
 
 [build-dependencies]
-sp1-helper = { git = "https://github.com/succinctlabs/sp1.git", branch = "ratan/add-ignore-rust-version-to-build-script" }
+sp1-helper = { git = "https://github.com/succinctlabs/sp1.git" }
 
 [patch.crates-io]
 sha2-v0-9-9 = { git = "https://github.com/sp1-patches/RustCrypto-hashes", package = "sha2", branch = "patch-sha2-v0.9.9" }
 sha2-v0-10-8 = { git = "https://github.com/sp1-patches/RustCrypto-hashes", package = "sha2", branch = "patch-sha2-v0.10.8" }
 tiny-keccak = { git = "https://github.com/sp1-patches/tiny-keccak", branch = "patch-v2.0.2" }
+
+[patch."https://github.com/bluealloy/revm"]
+revm = { git = "https://github.com/bluealloy//revm", rev = "23cbac479f616eba5ab11ddfe6d5814b9c492202"}
