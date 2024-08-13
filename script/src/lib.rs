@@ -36,9 +36,10 @@ pub async fn get_latest_checkpoint() -> H256 {
         .build()
         .await
         .unwrap();
-
+    
     let chain_id = std::env::var("SOURCE_CHAIN_ID").unwrap();
     let network = Network::from_chain_id(chain_id.parse().unwrap()).unwrap();
+
     cf.fetch_latest_checkpoint(&network)
         .await
         .unwrap()

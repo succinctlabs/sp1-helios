@@ -16,3 +16,6 @@ pgo-data.profdata
 **/proof-with-io.json
 
 .env
+
+# Generated inputs
+/script/examples/*
