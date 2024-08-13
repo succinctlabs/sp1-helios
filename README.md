@@ -24,10 +24,10 @@ Holesky -> Sepolia Bridge: [`0x1063143B3Cd291f14b562aB4E26E0bEc9aACe828`](https:
 
 ### 1. Generate genesis parameters
 
-2. `cd ./script`
-3. `cp .env.example .env`
-4. By default, we'll use parameters for mainent. You may modify `SOURCE_CHAIN_ID` and `SOURCE_CONSENSUS_RPC_URL` inside `.env` with the values under [Supported Networks](#supported-networks). The other .env values will be filled out at a later step.
-5. `RUST_LOG=info cargo run --release --bin genesis`
+1. `cd ./script`
+2. `cp .env.example .env`
+3. By default, we'll use parameters for mainent. You may modify `SOURCE_CHAIN_ID` and `SOURCE_CONSENSUS_RPC_URL` inside `.env` with the values under [Supported Networks](#supported-networks). The other .env values will be filled out at a later step.
+4. `RUST_LOG=info cargo run --release --bin genesis`
 
 For testing, the contract defaults to verifying mock proofs. If you want to verify real proofs, pass in the address of the verifier as an argument:
 
