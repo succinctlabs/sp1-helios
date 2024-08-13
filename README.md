@@ -11,7 +11,7 @@ On-chain Ethereum light client built with SP1.
 
 ## Deployments
 
-Holesky -> Sepolia Bridge: [`0x1063143B3Cd291f14b562aB4E26E0bEc9aACe828`](https://sepolia.etherscan.io/address/0x1063143B3Cd291f14b562aB4E26E0bEc9aACe828)
+Holesky -> Sepolia Bridge: [`0x67952E466B2C61FE7B323262b289C8A90B264e27`](https://sepolia.etherscan.io/address/0x67952E466B2C61FE7B323262b289C8A90B264e27)
 
 ## Deploy a light client
 
