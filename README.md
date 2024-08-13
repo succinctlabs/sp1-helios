@@ -1,3 +1,5 @@
+how do i link to supported networks
+
 # SP1 Telepathy
 
 ## Overview
@@ -22,8 +24,10 @@ Holesky -> Sepolia Bridge: [`0x1063143B3Cd291f14b562aB4E26E0bEc9aACe828`](https:
 
 ### 1. Generate genesis parameters
 
-1. `cd ./script`
-2. `RUST_LOG=info cargo run --release --bin genesis`
+2. `cd ./script`
+3. `cp .env.example .env`
+4. By default, we'll use parameters for mainent. You may modify `SOURCE_CHAIN_ID` and `SOURCE_CONSENSUS_RPC_URL` with the values under [Supported Networks](#supported-networks)
+5. `RUST_LOG=info cargo run --release --bin genesis`
 
 For testing, the contract defaults to verifying mock proofs. If you want to verify real proofs, pass in the address of the verifier as an argument:
 
@@ -48,12 +52,11 @@ You can find a list of [deployed verifiers here.](https://github.com/succinctlab
 Continuously generate proofs & keep light client updated with chain
 
 1. `cd ../script`
-2. `cp .env.example .env`
-3. Paste in the contract address in `.env` and fill out the other parameters.
+2. Paste in the contract address in `.env` and fill out the other parameters.
 
    Set `SP1_PROVER` to `mock` for testing, or `network` to generate proofs on the SP1 Cluster
 
-4. `RUST_LOG=info cargo run --release --bin operator`
+3. `RUST_LOG=info cargo run --release --bin operator`
 
 ## Supported Networks
 Public light client RPCs are hard to come by - for convenience, here are some example values [courtesy of Nimbus](https://github.com/status-im/nimbus-eth2?tab=readme-ov-file#quickly-test-your-tooling-against-nimbus) (as of July 29, 2024)
