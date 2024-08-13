@@ -73,6 +73,7 @@ Public light client RPCs are hard to come by - for convenience, here are some ex
 - Telepathy supports bridging to any arbitrary evm chain.
 
 ## Generating hardcoded test cases
+1. Make sure you've set the .env variables inside script (copy .env.example and rename to .env)
 1. `cd ./script`
 2. `cargo run --release --bin gen-inputs`
    - Pass in a specific slot by appending ` -- --slot your_slot_number`
