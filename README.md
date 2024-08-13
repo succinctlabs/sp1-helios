@@ -1,5 +1,3 @@
-how do i link to supported networks
-
 # SP1 Telepathy
 
 ## Overview
