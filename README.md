@@ -75,6 +75,6 @@ Public light client RPCs are hard to come by - for convenience, here are some ex
 ## Generating hardcoded test cases
 1. `cd ./script`
 2. `cargo run --release --bin gen-inputs`
-   - Pass in a specific slot by appending ` -- --slot your_slot_number`.
+   - Pass in a specific slot by appending ` -- --slot your_slot_number`
      
 This will output a cbor-encoded file inside `script/examples`. You can load these bytes inside a test and pass it as input to the program. Feel free to modify the script further to accomadate for your test case.
