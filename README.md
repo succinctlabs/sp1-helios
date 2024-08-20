@@ -24,14 +24,11 @@ Holesky -> Sepolia Bridge: [`0x67952E466B2C61FE7B323262b289C8A90B264e27`](https:
 
 1. `cd ./script`
 2. `cp .env.example .env`
-3. By default, we'll use parameters for mainnet. You may modify `SOURCE_CHAIN_ID` and `SOURCE_CONSENSUS_RPC_URL` inside `.env` with the values under [Supported Networks](#supported-networks). The other .env values will be filled out at a later step.
-4. `RUST_LOG=info cargo run --release --bin genesis`
-
-For testing, the contract defaults to verifying mock proofs. If you want to verify real proofs, pass in the address of the verifier as an argument:
-
-e.g `RUST_LOG=info cargo run --release --bin genesis -- --verifier 0x3B6041173B80E77f038f3F2C0f9744f04837185e`
-
-You can find a list of [deployed verifiers here.](https://github.com/succinctlabs/sp1/blob/main/book/onchain-verification/contract-addresses.md)
+3. By default, we'll use parameters for mainnet.
+      - You may modify `SOURCE_CHAIN_ID` and `SOURCE_CONSENSUS_RPC_URL` inside `.env` with the values under [Supported Networks](#supported-networks).
+      - For testing, the program defaults to mock proofs. If you want to generate proofs on the SP1 Cluster, set `SP1_PROVER` to `network`, `SP1_VERIFIER_ADDRESS` to a [deployed verifier found here]( https://docs.succinct.xyz/onchain-verification/contract-addresses.html), and `SP1_PRIVATE_KEY` to your whitelisted cluster private key.
+      - The other .env values will be filled out at a later step.
+7. `RUST_LOG=info cargo run --release --bin genesis`
 
 ### 2. Deploy contracts
 
@@ -51,13 +48,10 @@ Continuously generate proofs & keep light client updated with chain
 
 1. `cd ../script`
 2. Paste in the contract address in `.env` and fill out the rest of the parameters.
-
-   Set `SP1_PROVER` to `mock` for testing, or `network` to generate proofs on the SP1 Cluster
-
 3. `RUST_LOG=info cargo run --release --bin operator`
 
 ## Supported Networks
-Public light client RPCs are hard to come by - for convenience, here are some example values [courtesy of Nimbus](https://github.com/status-im/nimbus-eth2?tab=readme-ov-file#quickly-test-your-tooling-against-nimbus) (as of July 29, 2024)
+Public light client RPCs are hard to come by - for convenience, here are some example values [courtesy of Nimbus](https://github.com/status-im/nimbus-eth2?tab=readme-ov-file#quickly-test-your-tooling-against-nimbus) (as of Aug 20, 2024)
 
 **Source (bridging from):**
 - Mainnet
@@ -75,7 +69,7 @@ Public light client RPCs are hard to come by - for convenience, here are some ex
 
 ## Generating hardcoded test cases
 1. `cd ./script`
-2.  Make sure you've set the .env variables inside script (copy .env.example and rename to .env)
+2.  Make sure you've set all .env variables inside script (for more context, follow the other steps)
 3. `cargo run --release --bin gen-inputs`
    - Pass in a specific slot by appending ` -- --slot your_slot_number`
      
