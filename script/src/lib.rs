@@ -51,8 +51,19 @@ pub async fn get_checkpoint(slot: u64) -> H256 {
     let rpc: NimbusRpc = NimbusRpc::new(&rpc_url);
 
     let mut block = rpc.get_block(slot).await.unwrap();
+
     H256::from_slice(block.hash_tree_root().unwrap().as_ref())
 }
+
+// /// Fetch block hash from a slot number.
+// pub async fn get_block_hash(slot: u64) -> Bytes32 {
+//     let rpc_url = std::env::var("SOURCE_CONSENSUS_RPC_URL").unwrap();
+//     let rpc: NimbusRpc = NimbusRpc::new(&rpc_url);
+
+//     let block = rpc.get_block(slot).await.unwrap();
+
+//     block.body.eth1_data.block_hash
+// }
 
 #[derive(Deserialize)]
 struct ApiResponse {

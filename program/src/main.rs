@@ -43,6 +43,7 @@ pub fn main() {
         .unwrap();
     let prev_head = store.finalized_header.slot;
 
+
     println!("cycle-tracker-start: verify_and_apply_update");
 
     // 1. Apply sync committee updates, if any
@@ -108,6 +109,9 @@ pub fn main() {
         .as_ref()
         .try_into()
         .unwrap();
+
+    println!("new slot: {:?}", store.finalized_header.slot);
+
     let sync_committee_hash: B256 = store
         .current_sync_committee
         .hash_tree_root()

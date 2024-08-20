@@ -20,6 +20,3 @@ alloy-primitives = { version = "0.7.7", features = ["serde"] }
 sha2-v0-9-9 = { git = "https://github.com/sp1-patches/RustCrypto-hashes", package = "sha2", branch = "patch-sha2-v0.9.9" }
 sha2-v0-10-8 = { git = "https://github.com/sp1-patches/RustCrypto-hashes", package = "sha2", branch = "patch-sha2-v0.10.8" }
 tiny-keccak = { git = "https://github.com/sp1-patches/tiny-keccak", branch = "patch-v2.0.2" }
-
-[patch."https://github.com/bluealloy/revm"]
-revm = { git = "https://github.com/bluealloy//revm", rev = "23cbac479f616eba5ab11ddfe6d5814b9c492202"}

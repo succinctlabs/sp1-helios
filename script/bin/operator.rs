@@ -168,10 +168,10 @@ impl SP1LightClientOperator {
             contract_next_sync_committee,
         )
         .await;
-
         let finality_update = client.rpc.get_finality_update().await.unwrap();
+ 
         let latest_block = finality_update.finalized_header.slot;
-
+        println!("latest_block: {:?}", latest_block);
         if latest_block.as_u64() <= head {
             info!("Contract is up to date. Nothing to update.");
             return Ok(None);
@@ -258,6 +258,8 @@ impl SP1LightClientOperator {
 
             // Fetch the checkpoint at that slot
             let checkpoint = get_checkpoint(slot).await;
+            println!("Starting slot: {:?}", slot);
+            println!("Starting BLOCK ROOT/CHECKPOINT: {:?}", checkpoint);
 
             // Get the client from the checkpoint
             let client = get_client(checkpoint.as_bytes().to_vec()).await;
