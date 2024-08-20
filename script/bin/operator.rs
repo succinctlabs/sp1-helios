@@ -160,19 +160,20 @@ impl SP1LightClientOperator {
 
         // Setup client.
         let updates = get_updates(&client).await;
+
         let (client, updates) = sync_client(
             client,
             updates,
-            head,
             contract_current_sync_committee,
             contract_next_sync_committee,
         )
         .await;
         let finality_update = client.rpc.get_finality_update().await.unwrap();
- 
+
         let latest_block = finality_update.finalized_header.slot;
         println!("latest_block: {:?}", latest_block);
         let block_hash = get_block_hash(latest_block.as_u64()).await;
+
         println!("block_hash: {:?}", block_hash);
         if latest_block.as_u64() <= head {
             info!("Contract is up to date. Nothing to update.");
@@ -260,7 +261,7 @@ impl SP1LightClientOperator {
 
             // Fetch the checkpoint at that slot
             let checkpoint = get_checkpoint(slot).await;
-            println!("Starting slot: {:?}", slot);
+            println!("Contract read slot: {:?}", slot);
             println!("Starting BLOCK ROOT/CHECKPOINT: {:?}", checkpoint);
 
             // Get the client from the checkpoint

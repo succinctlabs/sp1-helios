@@ -10,6 +10,7 @@ use helios::{
     consensus_core::{types::Update, utils},
     prelude::*,
 };
+use log::info;
 use serde::Deserialize;
 use sp1_helios_primitives::types::ExecutionStateProof;
 use ssz_rs::prelude::*;
@@ -36,13 +37,11 @@ pub async fn get_latest_checkpoint() -> H256 {
         .build()
         .await
         .unwrap();
-    
+
     let chain_id = std::env::var("SOURCE_CHAIN_ID").unwrap();
     let network = Network::from_chain_id(chain_id.parse().unwrap()).unwrap();
 
-    cf.fetch_latest_checkpoint(&network)
-        .await
-        .unwrap()
+    cf.fetch_latest_checkpoint(&network).await.unwrap()
 }
 
 /// Fetch checkpoint from a slot number.
@@ -62,7 +61,7 @@ pub async fn get_block_hash(slot: u64) -> H256 {
 
     let url = format!("{}/eth/v2/beacon/blocks/{}", rpc_url, slot);
     let response = client.get(&url).send().await.unwrap();
-    
+
     if !response.status().is_success() {
         panic!("API request failed with status: {}", response.status());
     }
@@ -71,7 +70,7 @@ pub async fn get_block_hash(slot: u64) -> H256 {
     let block_hash = block_data["data"]["message"]["body"]["eth1_data"]["block_hash"]
         .as_str()
         .unwrap();
-    
+
     // Remove "0x" prefix if present, then decode
     let block_hash = block_hash.trim_start_matches("0x");
     H256::from_slice(&hex::decode(block_hash).unwrap())
@@ -88,12 +87,12 @@ pub async fn get_execution_state_root_proof(
     slot: u64,
 ) -> Result<ExecutionStateProof, Box<dyn std::error::Error>> {
     let client = reqwest::Client::new();
-    
+
     let chain_id = std::env::var("SOURCE_CHAIN_ID").unwrap();
     let url_suffix = match chain_id.as_str() {
-        "11155111" => "-sepolia",  // Sepolia chain ID
-        "17000" => "-holesky",     // Holesky chain ID
-        "1" => "",                 // Mainnet chain ID
+        "11155111" => "-sepolia", // Sepolia chain ID
+        "17000" => "-holesky",    // Holesky chain ID
+        "1" => "",                // Mainnet chain ID
         _ => return Err(format!("Unsupported chain ID: {}", chain_id).into()),
     };
 
@@ -138,20 +137,22 @@ pub async fn get_client(checkpoint: Vec<u8>) -> Inner<NimbusRpc> {
         channel_send,
         Arc::new(config),
     );
-   
+
     client.bootstrap(&checkpoint).await.unwrap();
     client
 }
 
 /// The client from get_client() may be an update behind,
 /// so this function catches up the local client to the on-chain contract.
+/// This is an optimization to reduce the number of updates applied inside the program, thereby reducing cycle count.
 pub async fn sync_client(
     mut client: Inner<NimbusRpc>,
     mut updates: Vec<Update>,
-    head: u64,
     contract_current_sync_committee: B256,
     contract_next_sync_committee: B256,
 ) -> (Inner<NimbusRpc>, Vec<Update>) {
+    info!("Syncing client with contract");
+
     // Sync client with contract
     if contract_current_sync_committee.to_vec()
         != client
@@ -164,50 +165,61 @@ pub async fn sync_client(
         panic!("Client not in sync with contract");
     }
 
+    // Only run if there are updates to sync
+    if updates.is_empty() {
+        info!("No updates to sync, skipping sync_client");
+        return (client, updates);
+    }
+
     // Helios' bootstrap does not set next_sync_committee (see implementation).
     // If the contract has this value, we need to catch up helios.
-    // The first update is the catch-up update.
+    // The first update is the catch-up update if these conditions are met:
+    // 1. The contract has a next sync committee
+    // 2. The client does not have a next sync committee
+    // 3. The update is for the same slot as the client's finalized slot
     let contract_has_next_sync_committee =
         contract_next_sync_committee.to_vec() != B256::ZERO.to_vec();
     let client_has_next_sync_committee = client.store.next_sync_committee.is_some();
-    if contract_has_next_sync_committee && !client_has_next_sync_committee {
-        if let Some(mut first_update) = updates.first().cloned() {
-            // Sanity check: update will catch-up client with contract
-            assert_eq!(
-                first_update
-                    .next_sync_committee
-                    .hash_tree_root()
-                    .unwrap()
-                    .as_ref(),
-                contract_next_sync_committee.to_vec()
-            );
+    // Verify that the first update is the catch-up update
+    let update_is_same_slot =
+        updates[0].finalized_header.slot == client.store.finalized_header.slot;
 
-            updates.remove(0);
-            match client.verify_update(&first_update) {
-                Ok(_) => {
-                    client.apply_update(&first_update);
+    // Apply the catch-up update if the conditions are met
+    if contract_has_next_sync_committee && !client_has_next_sync_committee && update_is_same_slot {
+        // Sanity check: update will catch-up client with contract
+        assert_eq!(
+            updates[0]
+                .next_sync_committee
+                .hash_tree_root()
+                .unwrap()
+                .as_ref(),
+            contract_next_sync_committee.to_vec()
+        );
 
-                    // Sanity check: client is caught up with contract
-                    assert_eq!(
-                        client
-                            .store
-                            .clone()
-                            .next_sync_committee
-                            .unwrap()
-                            .hash_tree_root()
-                            .unwrap()
-                            .as_ref(),
-                        contract_next_sync_committee.to_vec()
-                    );
-                }
-                Err(e) => {
-                    panic!("Failed to verify catch-up update: {:?}", e);
-                }
+        let first_update = updates.remove(0);
+        match client.verify_update(&first_update) {
+            Ok(_) => {
+                // Sanity check: client is caught up with contract
+                assert_eq!(
+                    client
+                        .store
+                        .clone()
+                        .next_sync_committee
+                        .unwrap()
+                        .hash_tree_root()
+                        .unwrap()
+                        .as_ref(),
+                    contract_next_sync_committee.to_vec()
+                );
+                info!("Client synced with contract, skipped first update inside program");
             }
-        } else {
-            panic!("No catch-up updates available");
+            Err(e) => {
+                panic!("Failed to verify catch-up update: {:?}", e);
+            }
         }
-    }
+    } else {
+        info!("No catch-up update found, skipping sync_client");
+    } 
 
     (client, updates)
 }

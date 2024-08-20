@@ -1,5 +1,3 @@
-//! A simple program to be proven inside the zkVM.
-
 #![no_main]
 sp1_zkvm::entrypoint!(main);
 
@@ -9,7 +7,7 @@ use consensus_core::{apply_finality_update, apply_update, verify_finality_update
 use sp1_helios_primitives::types::{ProofInputs, ProofOutputs};
 use ssz_rs::prelude::*;
 
-/// The merkle branch index & depth for the execution state root proof.
+/// The merkle branch index & depth for an Ethereum execution state root proof.
 const MERKLE_BRANCH_INDEX: usize = 802;
 const MERKLE_BRANCH_DEPTH: usize = 9;
 
@@ -17,11 +15,11 @@ const MERKLE_BRANCH_DEPTH: usize = 9;
 /// 1. Apply sync committee updates, if any
 /// 2. Apply finality update
 /// 3. Verify execution state root proof
-/// 4. Commit new state root, header, and sync committee for usage in the on-chain contract
+/// 4. Asset all updates are valid
+/// 5. Commit new state root, header, and sync committee for usage in the on-chain contract
 pub fn main() {
     let encoded_inputs = sp1_zkvm::io::read_vec();
 
-    println!("cycle-tracker-start: deserialize");
     let ProofInputs {
         updates,
         finality_update,
@@ -31,7 +29,6 @@ pub fn main() {
         forks,
         execution_state_proof,
     } = serde_cbor::from_slice(&encoded_inputs).unwrap();
-    println!("cycle-tracker-end: deserialize");
 
     let mut is_valid = true;
     let prev_header: B256 = store
@@ -43,13 +40,9 @@ pub fn main() {
         .unwrap();
     let prev_head = store.finalized_header.slot;
 
-
-    println!("cycle-tracker-start: verify_and_apply_update");
-
     // 1. Apply sync committee updates, if any
     for (index, update) in updates.iter().enumerate() {
         println!("Processing update {} of {}", index + 1, updates.len());
-        println!("cycle-tracker-start: verify_update");
         is_valid = is_valid
             && verify_update(
                 update,
@@ -59,15 +52,11 @@ pub fn main() {
                 &forks,
             )
             .is_ok();
-        println!("cycle-tracker-end: verify_update");
 
-        println!("cycle-tracker-start: apply_update");
         apply_update(&mut store, update);
-        println!("cycle-tracker-end: apply_update");
     }
 
     // 2. Apply finality update
-    println!("cycle-tracker-start: verify_finality_update");
     is_valid = is_valid
         && verify_finality_update(
             &finality_update,
@@ -78,12 +67,8 @@ pub fn main() {
         )
         .is_ok();
     apply_finality_update(&mut store, &finality_update);
-    println!("cycle-tracker-end: verify_finality_update");
-
-    println!("cycle-tracker-end: verify_and_apply_update");
 
     // 3. Verify execution state root proof
-    println!("cycle-tracker-start: verify_execution_state_proof");
     let execution_state_branch_nodes: Vec<Node> = execution_state_proof
         .execution_state_branch
         .iter()
@@ -98,10 +83,12 @@ pub fn main() {
             MERKLE_BRANCH_INDEX,
             &Node::try_from(store.finalized_header.body_root.as_ref()).unwrap(),
         );
-    println!("cycle-tracker-end: verify_execution_state_proof");
 
+
+    // 4. Asset all updates are valid
     assert!(is_valid);
 
+    // 5. Commit new state root, header, and sync committee for usage in the on-chain contract
     let header: B256 = store
         .finalized_header
         .hash_tree_root()
@@ -109,9 +96,6 @@ pub fn main() {
         .as_ref()
         .try_into()
         .unwrap();
-
-    println!("new slot: {:?}", store.finalized_header.slot);
-
     let sync_committee_hash: B256 = store
         .current_sync_committee
         .hash_tree_root()
@@ -130,7 +114,6 @@ pub fn main() {
     };
     let head = store.finalized_header.slot;
 
-    // 4. Commit new state root, header, and sync committee for usage in the on-chain contract
     let proof_outputs = ProofOutputs::abi_encode(&(
         prev_header,
         header,
