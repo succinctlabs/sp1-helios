@@ -55,15 +55,27 @@ pub async fn get_checkpoint(slot: u64) -> H256 {
     H256::from_slice(block.hash_tree_root().unwrap().as_ref())
 }
 
-// /// Fetch block hash from a slot number.
-// pub async fn get_block_hash(slot: u64) -> Bytes32 {
-//     let rpc_url = std::env::var("SOURCE_CONSENSUS_RPC_URL").unwrap();
-//     let rpc: NimbusRpc = NimbusRpc::new(&rpc_url);
+/// Fetch block hash from a slot number.
+pub async fn get_block_hash(slot: u64) -> H256 {
+    let rpc_url = std::env::var("SOURCE_CONSENSUS_RPC_URL").unwrap();
+    let client = reqwest::Client::new();
 
-//     let block = rpc.get_block(slot).await.unwrap();
+    let url = format!("{}/eth/v2/beacon/blocks/{}", rpc_url, slot);
+    let response = client.get(&url).send().await.unwrap();
+    
+    if !response.status().is_success() {
+        panic!("API request failed with status: {}", response.status());
+    }
 
-//     block.body.eth1_data.block_hash
-// }
+    let block_data: serde_json::Value = response.json().await.unwrap();
+    let block_hash = block_data["data"]["message"]["body"]["eth1_data"]["block_hash"]
+        .as_str()
+        .unwrap();
+    
+    // Remove "0x" prefix if present, then decode
+    let block_hash = block_hash.trim_start_matches("0x");
+    H256::from_slice(&hex::decode(block_hash).unwrap())
+}
 
 #[derive(Deserialize)]
 struct ApiResponse {

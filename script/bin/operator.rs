@@ -172,6 +172,8 @@ impl SP1LightClientOperator {
  
         let latest_block = finality_update.finalized_header.slot;
         println!("latest_block: {:?}", latest_block);
+        let block_hash = get_block_hash(latest_block.as_u64()).await;
+        println!("block_hash: {:?}", block_hash);
         if latest_block.as_u64() <= head {
             info!("Contract is up to date. Nothing to update.");
             return Ok(None);
