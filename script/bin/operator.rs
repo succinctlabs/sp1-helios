@@ -275,7 +275,7 @@ impl SP1LightClientOperator {
             };
 
             info!("Sleeping for {:?} minutes", loop_delay_mins);
-            tokio::time::sleep(tokio::time::Duration::from_secs(2 * loop_delay_mins)).await;
+            tokio::time::sleep(tokio::time::Duration::from_secs(60 * loop_delay_mins)).await;
         }
     }
 }
