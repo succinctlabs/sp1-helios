@@ -9,11 +9,6 @@ edition = "2021"
 name = "genesis"
 path = "./bin/genesis.rs"
 
-
-[[bin]]
-name = "run"
-path = "./bin/run.rs"
-
 [[bin]]
 name = "operator"
 path = "./bin/operator.rs"

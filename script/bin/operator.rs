@@ -10,7 +10,7 @@ use alloy::{
     sol,
     transports::http::{Client, Http},
 };
-use alloy_primitives::U256;
+use alloy_primitives::{B256, U256};
 use anyhow::Result;
 use helios::consensus::rpc::ConsensusRpc;
 use helios::consensus::{rpc::nimbus_rpc::NimbusRpc, Inner};
@@ -143,12 +143,6 @@ impl SP1LightClientOperator {
             ._0
             .try_into()
             .unwrap();
-        let contract_current_sync_committee = contract
-            .syncCommittees(U256::from(period))
-            .call()
-            .await
-            .unwrap()
-            ._0;
         let contract_next_sync_committee = contract
             .syncCommittees(U256::from(period + 1))
             .call()
@@ -159,31 +153,34 @@ impl SP1LightClientOperator {
         let mut stdin = SP1Stdin::new();
 
         // Setup client.
-        let updates = get_updates(&client).await;
-
-        let (client, updates) = sync_client(
-            client,
-            updates,
-            contract_current_sync_committee,
-            contract_next_sync_committee,
-        )
-        .await;
+        let mut updates = get_updates(&client).await;
         let finality_update = client.rpc.get_finality_update().await.unwrap();
 
+        // Check if contract is up to date
         let latest_block = finality_update.finalized_header.slot;
-        println!("latest_block: {:?}", latest_block);
-        let block_hash = get_block_hash(latest_block.as_u64()).await;
-
-        println!("block_hash: {:?}", block_hash);
         if latest_block.as_u64() <= head {
             info!("Contract is up to date. Nothing to update.");
             return Ok(None);
         }
 
+        // If next sync committee is already in contract, discard first update (no need to verify it again)
+        let next_sync_committee = B256::from_slice(
+            updates[0]
+                .next_sync_committee
+                .hash_tree_root()
+                .unwrap()
+                .as_ref(),
+        );
+        if contract_next_sync_committee == next_sync_committee {
+            updates.remove(0);
+        }
+
+        // Fetch execution state proof
         let execution_state_proof = get_execution_state_root_proof(latest_block.into())
             .await
             .unwrap();
 
+        // Create program inputs
         let expected_current_slot = client.expected_current_slot();
         let inputs = ProofInputs {
             updates,
@@ -194,7 +191,6 @@ impl SP1LightClientOperator {
             forks: client.config.forks.clone(),
             execution_state_proof,
         };
-
         let encoded_proof_inputs = serde_cbor::to_vec(&inputs)?;
         stdin.write_slice(&encoded_proof_inputs);
 
@@ -261,8 +257,6 @@ impl SP1LightClientOperator {
 
             // Fetch the checkpoint at that slot
             let checkpoint = get_checkpoint(slot).await;
-            println!("Contract read slot: {:?}", slot);
-            println!("Starting BLOCK ROOT/CHECKPOINT: {:?}", checkpoint);
 
             // Get the client from the checkpoint
             let client = get_client(checkpoint.as_bytes().to_vec()).await;
@@ -281,7 +275,7 @@ impl SP1LightClientOperator {
             };
 
             info!("Sleeping for {:?} minutes", loop_delay_mins);
-            tokio::time::sleep(tokio::time::Duration::from_secs(60 * loop_delay_mins)).await;
+            tokio::time::sleep(tokio::time::Duration::from_secs(2 * loop_delay_mins)).await;
         }
     }
 }

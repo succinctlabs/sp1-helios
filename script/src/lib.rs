@@ -1,4 +1,3 @@
-use alloy_primitives::B256;
 use ethers_core::types::H256;
 use helios::{
     config::networks::Network,
@@ -10,7 +9,6 @@ use helios::{
     consensus_core::{types::Update, utils},
     prelude::*,
 };
-use log::info;
 use serde::Deserialize;
 use sp1_helios_primitives::types::ExecutionStateProof;
 use ssz_rs::prelude::*;
@@ -140,86 +138,4 @@ pub async fn get_client(checkpoint: Vec<u8>) -> Inner<NimbusRpc> {
 
     client.bootstrap(&checkpoint).await.unwrap();
     client
-}
-
-/// The client from get_client() may be an update behind,
-/// so this function catches up the local client to the on-chain contract.
-/// This is an optimization to reduce the number of updates applied inside the program, thereby reducing cycle count.
-pub async fn sync_client(
-    mut client: Inner<NimbusRpc>,
-    mut updates: Vec<Update>,
-    contract_current_sync_committee: B256,
-    contract_next_sync_committee: B256,
-) -> (Inner<NimbusRpc>, Vec<Update>) {
-    info!("Syncing client with contract");
-
-    // Sync client with contract
-    if contract_current_sync_committee.to_vec()
-        != client
-            .store
-            .current_sync_committee
-            .hash_tree_root()
-            .unwrap()
-            .as_ref()
-    {
-        panic!("Client not in sync with contract");
-    }
-
-    // Only run if there are updates to sync
-    if updates.is_empty() {
-        info!("No updates to sync, skipping sync_client");
-        return (client, updates);
-    }
-
-    // Helios' bootstrap does not set next_sync_committee (see implementation).
-    // If the contract has this value, we need to catch up helios.
-    // The first update is the catch-up update if these conditions are met:
-    // 1. The contract has a next sync committee
-    // 2. The client does not have a next sync committee
-    // 3. The update is for the same slot as the client's finalized slot
-    let contract_has_next_sync_committee =
-        contract_next_sync_committee.to_vec() != B256::ZERO.to_vec();
-    let client_has_next_sync_committee = client.store.next_sync_committee.is_some();
-    // Verify that the first update is the catch-up update
-    let update_is_same_slot =
-        updates[0].finalized_header.slot == client.store.finalized_header.slot;
-
-    // Apply the catch-up update if the conditions are met
-    if contract_has_next_sync_committee && !client_has_next_sync_committee && update_is_same_slot {
-        // Sanity check: update will catch-up client with contract
-        assert_eq!(
-            updates[0]
-                .next_sync_committee
-                .hash_tree_root()
-                .unwrap()
-                .as_ref(),
-            contract_next_sync_committee.to_vec()
-        );
-
-        let first_update = updates.remove(0);
-        match client.verify_update(&first_update) {
-            Ok(_) => {
-                // Sanity check: client is caught up with contract
-                assert_eq!(
-                    client
-                        .store
-                        .clone()
-                        .next_sync_committee
-                        .unwrap()
-                        .hash_tree_root()
-                        .unwrap()
-                        .as_ref(),
-                    contract_next_sync_committee.to_vec()
-                );
-                info!("Client synced with contract, skipped first update inside program");
-            }
-            Err(e) => {
-                panic!("Failed to verify catch-up update: {:?}", e);
-            }
-        }
-    } else {
-        info!("No catch-up update found, skipping sync_client");
-    } 
-
-    (client, updates)
 }
