@@ -15,8 +15,6 @@ use ssz_rs::prelude::*;
 pub struct GenesisArgs {
     #[arg(long)]
     pub slot: Option<u64>,
-    #[arg(long)]
-    pub verifier: Option<String>,
 }
 
 #[tokio::main]
@@ -31,19 +29,15 @@ pub async fn main() {
     let (_pk, vk) = client.setup(TELEPATHY_ELF);
 
     let checkpoint;
-    let verifier;
-    let sp1_prover;
+    let mut verifier = String::new();
     if let Some(temp_slot) = args.slot {
         checkpoint = get_checkpoint(temp_slot).await;
     } else {
         checkpoint = get_latest_checkpoint().await;
     }
-    if let Some(temp_verifier) = args.verifier {
-        verifier = temp_verifier;
-        sp1_prover = "network".to_string();
-    } else {
-        verifier = String::new();
-        sp1_prover = "mock".to_string()
+    let sp1_prover = env::var("SP1_PROVER").unwrap();
+    if sp1_prover != "mock" {
+        verifier = env::var("SP1_VERIFIER_ADDRESS").unwrap();
     }
 
     let helios_client = get_client(checkpoint.as_bytes().to_vec()).await;
