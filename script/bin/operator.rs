@@ -12,8 +12,11 @@ use alloy::{
 };
 use alloy_primitives::{B256, U256};
 use anyhow::Result;
-use helios::consensus::rpc::ConsensusRpc;
 use helios::consensus::{rpc::nimbus_rpc::NimbusRpc, Inner};
+use helios::{
+    consensus::rpc::ConsensusRpc,
+    types::{Header, LightClientStore},
+};
 use log::{error, info};
 use sp1_helios_primitives::types::ProofInputs;
 use sp1_helios_script::*;
@@ -123,7 +126,7 @@ impl SP1LightClientOperator {
     /// Fetch values and generate an 'update' proof for the SP1 LightClient contract.
     async fn request_update(
         &self,
-        client: Inner<NimbusRpc>,
+        mut client: Inner<NimbusRpc>,
     ) -> Result<Option<SP1ProofWithPublicValues>> {
         // Fetch required values.
         let contract = SP1LightClient::new(self.contract_address, self.wallet_filler.clone());
@@ -135,11 +138,25 @@ impl SP1LightClientOperator {
             .head
             .try_into()
             .unwrap();
+        let period: u64 = contract
+            .getSyncCommitteePeriod(U256::from(head))
+            .call()
+            .await
+            .unwrap()
+            ._0
+            .try_into()
+            .unwrap();
+        let contract_next_sync_committee = contract
+            .syncCommittees(U256::from(period + 1))
+            .call()
+            .await
+            .unwrap()
+            ._0;
 
         let mut stdin = SP1Stdin::new();
 
         // Setup client.
-        let updates = get_updates(&client).await;
+        let mut updates = get_updates(&client).await;
         let finality_update = client.rpc.get_finality_update().await.unwrap();
 
         // Check if contract is up to date
@@ -148,6 +165,44 @@ impl SP1LightClientOperator {
             info!("Contract is up to date. Nothing to update.");
             return Ok(None);
         }
+
+        // Optimization:
+        // Skip processing update inside program if next_sync_committee is already stored in contract.
+        // We must still apply the update locally to "sync" the helios client, this is due to
+        // next_sync_committee not being stored when the helios client is bootstrapped.
+        let mut synced_store: Option<LightClientStore> = None;
+        if !updates.is_empty() {
+            let next_sync_committee = B256::from_slice(
+                updates[0]
+                    .next_sync_committee
+                    .hash_tree_root()
+                    .unwrap()
+                    .as_ref(),
+            );
+
+            let current_slot = client.store.finalized_header.slot;
+
+            if contract_next_sync_committee == next_sync_committee {
+                let temp_update = updates.remove(0);
+
+                client.verify_update(&temp_update).unwrap(); // Panics if not valid
+                client.apply_update(&temp_update);
+
+                // Due to helios's implementation, the sync committee update which was just applied
+                // may have changed the stored slot. The finality update will move the head, so we must
+                // set the slot back to the original slot before the update was applied.
+                let synced_header = Header {
+                    slot: current_slot,
+                    ..client.store.finalized_header.clone()
+                };
+
+                synced_store = Some(LightClientStore {
+                    finalized_header: synced_header,
+                    ..client.store.clone()
+                });
+            }
+        }
+        let store = synced_store.unwrap_or_else(|| client.store.clone());
 
         // Fetch execution state proof
         let execution_state_proof = get_execution_state_root_proof(latest_block.into())
@@ -160,7 +215,7 @@ impl SP1LightClientOperator {
             updates,
             finality_update,
             expected_current_slot,
-            store: client.store,
+            store,
             genesis_root: client.config.chain.genesis_root.clone().try_into().unwrap(),
             forks: client.config.forks.clone(),
             execution_state_proof,
@@ -249,7 +304,7 @@ impl SP1LightClientOperator {
             };
 
             info!("Sleeping for {:?} minutes", loop_delay_mins);
-            tokio::time::sleep(tokio::time::Duration::from_secs(2 * loop_delay_mins)).await;
+            tokio::time::sleep(tokio::time::Duration::from_secs(60 * loop_delay_mins)).await;
         }
     }
 }
