@@ -30,8 +30,8 @@ Holesky -> Sepolia Bridge: [`0x67952E466B2C61FE7B323262b289C8A90B264e27`](https:
           - `SOURCE_CONSENSUS_RPC_URL`
           - Use values under [Supported Networks](#supported-networks).
       - **Proofs:**
-          - Mock by default
-          - Generate real proofs on cluster:
+          - Mock by default for testing
+          - Generate real proofs on cluster (for prod):
               - `SP1_PROVER`: `network`
               - `SP1_VERIFIER_ADDRESS`: [use a deployed verifier found here]( https://docs.succinct.xyz/onchain-verification/contract-addresses.html)
               - `SP1_PRIVATE_KEY`: your whitelisted cluster private key.
