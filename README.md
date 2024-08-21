@@ -25,12 +25,12 @@ Holesky -> Sepolia Bridge: [`0x67952E466B2C61FE7B323262b289C8A90B264e27`](https:
   2. `cp .env.example .env`
   3. Modify .env if needed.
       - **Source chain:**
-          - Mainnet by default     
+          - **Mainnet by default**     
           - `SOURCE_CHAIN_ID`
           - `SOURCE_CONSENSUS_RPC_URL`
           - Use values under [Supported Networks](#supported-networks).
       - **Proofs:**
-          - Mock by default for testing
+          - **Mock by default** for testing
           - Generate real proofs on cluster (for prod):
               - `SP1_PROVER`: `network`
               - `SP1_VERIFIER_ADDRESS`: [use a deployed verifier found here]( https://docs.succinct.xyz/onchain-verification/contract-addresses.html)
