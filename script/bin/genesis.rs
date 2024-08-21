@@ -40,7 +40,7 @@ pub async fn main() {
         verifier = env::var("SP1_VERIFIER_ADDRESS").unwrap();
     }
 
-    let helios_client = get_client(checkpoint.as_bytes().to_vec()).await;
+    let helios_client = get_client(checkpoint.to_vec()).await;
     let finalized_header = helios_client
         .store
         .finalized_header

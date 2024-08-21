@@ -259,7 +259,7 @@ impl SP1LightClientOperator {
             let checkpoint = get_checkpoint(slot).await;
 
             // Get the client from the checkpoint
-            let client = get_client(checkpoint.as_bytes().to_vec()).await;
+            let client = get_client(checkpoint.to_vec()).await;
 
             // Request an update
             match self.request_update(client).await {

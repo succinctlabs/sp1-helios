@@ -1,4 +1,4 @@
-use ethers_core::types::H256;
+use alloy_primitives::B256;
 use helios::{
     config::networks::Network,
     consensus::{
@@ -30,7 +30,7 @@ pub async fn get_updates(client: &Inner<NimbusRpc>) -> Vec<Update> {
 }
 
 /// Fetch latest checkpoint from chain to bootstrap client to the latest state.
-pub async fn get_latest_checkpoint() -> H256 {
+pub async fn get_latest_checkpoint() -> B256 {
     let cf = checkpoints::CheckpointFallback::new()
         .build()
         .await
@@ -43,17 +43,17 @@ pub async fn get_latest_checkpoint() -> H256 {
 }
 
 /// Fetch checkpoint from a slot number.
-pub async fn get_checkpoint(slot: u64) -> H256 {
+pub async fn get_checkpoint(slot: u64) -> B256 {
     let rpc_url = std::env::var("SOURCE_CONSENSUS_RPC_URL").unwrap();
     let rpc: NimbusRpc = NimbusRpc::new(&rpc_url);
 
     let mut block = rpc.get_block(slot).await.unwrap();
 
-    H256::from_slice(block.hash_tree_root().unwrap().as_ref())
+    B256::from_slice(block.hash_tree_root().unwrap().as_ref())
 }
 
 /// Fetch block hash from a slot number.
-pub async fn get_block_hash(slot: u64) -> H256 {
+pub async fn get_block_hash(slot: u64) -> B256 {
     let rpc_url = std::env::var("SOURCE_CONSENSUS_RPC_URL").unwrap();
     let client = reqwest::Client::new();
 
@@ -71,7 +71,7 @@ pub async fn get_block_hash(slot: u64) -> H256 {
 
     // Remove "0x" prefix if present, then decode
     let block_hash = block_hash.trim_start_matches("0x");
-    H256::from_slice(&hex::decode(block_hash).unwrap())
+    B256::from_slice(&hex::decode(block_hash).unwrap())
 }
 
 #[derive(Deserialize)]

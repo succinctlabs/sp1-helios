@@ -32,7 +32,7 @@ async fn main() -> Result<()> {
     };
 
     // Setup client.
-    let helios_client = get_client(checkpoint.as_bytes().to_vec()).await;
+    let helios_client = get_client(checkpoint.to_vec()).await;
     let updates = get_updates(&helios_client).await;
     let finality_update = helios_client.rpc.get_finality_update().await.unwrap();
     let latest_block = finality_update.finalized_header.slot;
