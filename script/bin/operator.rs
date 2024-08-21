@@ -14,9 +14,9 @@ use alloy_primitives::{B256, U256};
 use anyhow::Result;
 use helios::consensus::rpc::ConsensusRpc;
 use helios::consensus::{rpc::nimbus_rpc::NimbusRpc, Inner};
-use sp1_helios_script::*;
 use log::{error, info};
 use sp1_helios_primitives::types::ProofInputs;
+use sp1_helios_script::*;
 use sp1_sdk::{ProverClient, SP1ProofWithPublicValues, SP1ProvingKey, SP1Stdin};
 use ssz_rs::prelude::*;
 use std::env;
@@ -123,7 +123,7 @@ impl SP1LightClientOperator {
     /// Fetch values and generate an 'update' proof for the SP1 LightClient contract.
     async fn request_update(
         &self,
-        client: Inner<NimbusRpc>,
+        mut client: Inner<NimbusRpc>,
     ) -> Result<Option<SP1ProofWithPublicValues>> {
         // Fetch required values.
         let contract = SP1LightClient::new(self.contract_address, self.wallet_filler.clone());
@@ -163,16 +163,26 @@ impl SP1LightClientOperator {
             return Ok(None);
         }
 
-        // If next sync committee is already in contract, discard first update (no need to verify it again)
-        let next_sync_committee = B256::from_slice(
-            updates[0]
-                .next_sync_committee
-                .hash_tree_root()
-                .unwrap()
-                .as_ref(),
-        );
-        if contract_next_sync_committee == next_sync_committee {
-            updates.remove(0);
+        // Optimization:
+        // If next sync committee is already in contract & update is for current slot, apply update outside
+        // of program to save cycles. This may happen when the local helios client is not fully synced with the contract.
+        if !updates.is_empty() {
+            let next_sync_committee = B256::from_slice(
+                updates[0]
+                    .next_sync_committee
+                    .hash_tree_root()
+                    .unwrap()
+                    .as_ref(),
+            );
+            let update_slot = updates[0].finalized_header.slot.as_u64();
+            let current_slot = client.store.finalized_header.slot.as_u64();
+
+            if contract_next_sync_committee == next_sync_committee && update_slot == current_slot {
+                let temp_update = updates.remove(0);
+
+                client.verify_update(&temp_update).unwrap(); // panics if not valid
+                client.apply_update(&temp_update);
+            }
         }
 
         // Fetch execution state proof

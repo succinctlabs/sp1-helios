@@ -43,6 +43,7 @@ pub fn main() {
     // 1. Apply sync committee updates, if any
     for (index, update) in updates.iter().enumerate() {
         println!("Processing update {} of {}", index + 1, updates.len());
+        println!("Before verify update: {}", is_valid);
         is_valid = is_valid
             && verify_update(
                 update,
@@ -54,7 +55,9 @@ pub fn main() {
             .is_ok();
 
         apply_update(&mut store, update);
+        println!("Valid updates: {}", is_valid);
     }
+
 
     // 2. Apply finality update
     is_valid = is_valid
@@ -67,6 +70,7 @@ pub fn main() {
         )
         .is_ok();
     apply_finality_update(&mut store, &finality_update);
+    println!("Valid finality update: {}", is_valid);
 
     // 3. Verify execution state root proof
     let execution_state_branch_nodes: Vec<Node> = execution_state_proof
@@ -75,6 +79,7 @@ pub fn main() {
         .map(|b| Node::try_from(b.as_ref()).unwrap())
         .collect();
 
+    
     is_valid = is_valid
         && is_valid_merkle_branch(
             &Node::try_from(execution_state_proof.execution_state_root.as_ref()).unwrap(),
@@ -83,7 +88,7 @@ pub fn main() {
             MERKLE_BRANCH_INDEX,
             &Node::try_from(store.finalized_header.body_root.as_ref()).unwrap(),
         );
-
+    println!("Valid merkle branch: {}", is_valid);
 
     // 4. Asset all updates are valid
     assert!(is_valid);
