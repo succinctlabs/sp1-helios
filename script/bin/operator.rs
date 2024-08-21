@@ -135,14 +135,6 @@ impl SP1LightClientOperator {
             .head
             .try_into()
             .unwrap();
-        let period: u64 = contract
-            .getSyncCommitteePeriod(U256::from(head))
-            .call()
-            .await
-            .unwrap()
-            ._0
-            .try_into()
-            .unwrap();
 
         let mut stdin = SP1Stdin::new();
 
