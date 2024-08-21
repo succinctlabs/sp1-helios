@@ -3417,36 +3417,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "helios-2-script"
-version = "0.1.0"
-dependencies = [
- "alloy 0.1.4",
- "alloy-primitives",
- "alloy-sol-types",
- "anyhow",
- "clap",
- "dotenv",
- "env_logger",
- "ethers-core",
- "eyre",
- "helios",
- "hex",
- "log",
- "reqwest 0.12.7",
- "serde",
- "serde_cbor",
- "serde_json",
- "sp1-helios-primitives",
- "sp1-helper",
- "sp1-sdk",
- "ssz_rs",
- "thiserror",
- "tokio",
- "tracing",
- "zduny-wasm-timer",
-]
-
-[[package]]
 name = "hermit-abi"
 version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6831,6 +6801,36 @@ dependencies = [
  "serde_json",
  "serde_with",
  "ssz_rs",
+]
+
+[[package]]
+name = "sp1-helios-script"
+version = "0.1.0"
+dependencies = [
+ "alloy 0.1.4",
+ "alloy-primitives",
+ "alloy-sol-types",
+ "anyhow",
+ "clap",
+ "dotenv",
+ "env_logger",
+ "ethers-core",
+ "eyre",
+ "helios",
+ "hex",
+ "log",
+ "reqwest 0.12.7",
+ "serde",
+ "serde_cbor",
+ "serde_json",
+ "sp1-helios-primitives",
+ "sp1-helper",
+ "sp1-sdk",
+ "ssz_rs",
+ "thiserror",
+ "tokio",
+ "tracing",
+ "zduny-wasm-timer",
 ]
 
 [[package]]

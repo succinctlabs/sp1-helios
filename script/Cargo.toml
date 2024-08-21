@@ -1,7 +1,7 @@
 [workspace]
 [package]
 version = "0.1.0"
-name = "helios-2-script"
+name = "sp1-helios-script"
 edition = "2021"
 
 

@@ -30,8 +30,8 @@ contract SP1LightClient {
     /// @notice Maps from a period to the hash for the sync committee.
     mapping(uint256 => bytes32) public syncCommittees;
 
-    /// @notice The verification key for the SP1Telepathy program.
-    bytes32 public telepathyProgramVkey;
+    /// @notice The verification key for the SP1 Helios program.
+    bytes32 public heliosProgramVkey;
 
     /// @notice The deployed SP1 verifier contract.
     ISP1Verifier public verifier;
@@ -70,7 +70,7 @@ contract SP1LightClient {
         bytes32 _header,
         bytes32 _executionStateRoot,
         uint256 _head,
-        bytes32 _telepathyProgramVkey,
+        bytes32 _heliosProgramVkey,
         address _verifier,
         address _guardian
     ) {
@@ -81,7 +81,7 @@ contract SP1LightClient {
         SLOTS_PER_EPOCH = _slotsPerEpoch;
         SOURCE_CHAIN_ID = _sourceChainId;
         syncCommittees[getSyncCommitteePeriod(_head)] = _syncCommitteeHash;
-        telepathyProgramVkey = _telepathyProgramVkey;
+        heliosProgramVkey = _heliosProgramVkey;
         headers[_head] = _header;
         executionStateRoots[_head] = _executionStateRoot;
         head = _head;
@@ -109,7 +109,7 @@ contract SP1LightClient {
         }
 
         // Verify the proof with the associated public values. This will revert if proof invalid.
-        verifier.verifyProof(telepathyProgramVkey, publicValues, proof);
+        verifier.verifyProof(heliosProgramVkey, publicValues, proof);
 
         head = po.newHead;
         if (headers[po.newHead] != bytes32(0)) {
@@ -160,8 +160,8 @@ contract SP1LightClient {
         return head / SLOTS_PER_EPOCH;
     }
 
-    /// @notice Updates the telepathy program vKey. Call when changing the telepathy program (e.g. adding a new constraint or updating a dependency)
-    function updateTelepathyProgramVkey(bytes32 newVkey) external onlyGuardian {
-        telepathyProgramVkey = newVkey;
+    /// @notice Updates the helios program vKey. Call when changing the helios program (e.g. adding a new constraint or updating a dependency)
+    function updateHeliosProgramVkey(bytes32 newVkey) external onlyGuardian {
+        heliosProgramVkey = newVkey;
     }
 }

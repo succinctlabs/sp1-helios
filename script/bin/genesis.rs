@@ -1,12 +1,12 @@
 /// Generate genesis parameters for light client contract
 use clap::Parser;
-use helios_2_script::{
+use sp1_helios_script::{
     get_checkpoint, get_client, get_execution_state_root_proof, get_latest_checkpoint,
 };
 use log::info;
 use sp1_sdk::{HashableKey, ProverClient};
 use std::env;
-const TELEPATHY_ELF: &[u8] = include_bytes!("../../program/elf/riscv32im-succinct-zkvm-elf");
+const HELIOS_ELF: &[u8] = include_bytes!("../../program/elf/riscv32im-succinct-zkvm-elf");
 use alloy_primitives::B256;
 use ssz_rs::prelude::*;
 
@@ -26,7 +26,7 @@ pub async fn main() {
     let args = GenesisArgs::parse();
 
     let client = ProverClient::new();
-    let (_pk, vk) = client.setup(TELEPATHY_ELF);
+    let (_pk, vk) = client.setup(HELIOS_ELF);
 
     let checkpoint;
     let mut verifier = String::new();
@@ -70,7 +70,7 @@ pub async fn main() {
 
     info!(
         "\nSP1_PROVER={}\n\
-        SP1_TELEPATHY_PROGRAM_VKEY={}\n\
+        SP1_HELIOS_PROGRAM_VKEY={}\n\
         SP1_VERIFIER_ADDRESS={}\n\
         CREATE2_SALT={}\n\
         GENESIS_VALIDATORS_ROOT={}\n\

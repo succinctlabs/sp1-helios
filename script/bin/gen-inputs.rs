@@ -1,9 +1,9 @@
-/// Generate cbor-encoded inputs for the program. For external use, not used in sp1-telepathy itsef.
+/// Generate cbor-encoded inputs for the program. For external use, not used in sp1-helios itsef.
 use anyhow::Result;
 use clap::Parser;
 use helios::consensus::rpc::ConsensusRpc;
-use helios_2_script::*;
-use helios_2_script::{get_execution_state_root_proof, get_updates};
+use sp1_helios_script::*;
+use sp1_helios_script::{get_execution_state_root_proof, get_updates};
 use sp1_helios_primitives::types::ProofInputs;
 use sp1_sdk::utils::setup_logger;
 use ssz_rs::prelude::*;

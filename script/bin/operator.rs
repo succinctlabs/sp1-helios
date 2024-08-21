@@ -14,7 +14,7 @@ use alloy_primitives::{B256, U256};
 use anyhow::Result;
 use helios::consensus::rpc::ConsensusRpc;
 use helios::consensus::{rpc::nimbus_rpc::NimbusRpc, Inner};
-use helios_2_script::*;
+use sp1_helios_script::*;
 use log::{error, info};
 use sp1_helios_primitives::types::ProofInputs;
 use sp1_sdk::{ProverClient, SP1ProofWithPublicValues, SP1ProvingKey, SP1Stdin};
@@ -59,7 +59,7 @@ sol! {
         mapping(uint256 => bytes32) public syncCommittees;
         mapping(uint256 => bytes32) public executionStateRoots;
         mapping(uint256 => bytes32) public headers;
-        bytes32 public telepathyProgramVkey;
+        bytes32 public heliosProgramVkey;
         address public verifier;
 
         struct ProofOutputs {
@@ -247,7 +247,7 @@ impl SP1LightClientOperator {
 
     /// Start the operator.
     async fn run(&mut self, loop_delay_mins: u64) -> Result<()> {
-        info!("Starting SP1 Telepathy operator");
+        info!("Starting SP1 Helios operator");
 
         loop {
             let contract = SP1LightClient::new(self.contract_address, self.wallet_filler.clone());
