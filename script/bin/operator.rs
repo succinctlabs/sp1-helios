@@ -123,7 +123,7 @@ impl SP1LightClientOperator {
     /// Fetch values and generate an 'update' proof for the SP1 LightClient contract.
     async fn request_update(
         &self,
-        mut client: Inner<NimbusRpc>,
+        client: Inner<NimbusRpc>,
     ) -> Result<Option<SP1ProofWithPublicValues>> {
         // Fetch required values.
         let contract = SP1LightClient::new(self.contract_address, self.wallet_filler.clone());
@@ -143,17 +143,11 @@ impl SP1LightClientOperator {
             ._0
             .try_into()
             .unwrap();
-        let contract_next_sync_committee = contract
-            .syncCommittees(U256::from(period + 1))
-            .call()
-            .await
-            .unwrap()
-            ._0;
 
         let mut stdin = SP1Stdin::new();
 
         // Setup client.
-        let mut updates = get_updates(&client).await;
+        let updates = get_updates(&client).await;
         let finality_update = client.rpc.get_finality_update().await.unwrap();
 
         // Check if contract is up to date
