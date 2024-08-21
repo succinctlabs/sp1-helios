@@ -21,14 +21,22 @@ Holesky -> Sepolia Bridge: [`0x67952E466B2C61FE7B323262b289C8A90B264e27`](https:
 - [SP1](https://docs.succinct.xyz/getting-started/install.html)
 
 ### 1. Generate genesis parameters
-
-1. `cd ./script`
-2. `cp .env.example .env`
-3. By default, we'll use parameters for mainnet.
-      - You may modify `SOURCE_CHAIN_ID` and `SOURCE_CONSENSUS_RPC_URL` inside `.env` with the values under [Supported Networks](#supported-networks).
-      - For testing, the program defaults to mock proofs. If you want to generate proofs on the SP1 Cluster, set `SP1_PROVER` to `network`, `SP1_VERIFIER_ADDRESS` to a [deployed verifier found here]( https://docs.succinct.xyz/onchain-verification/contract-addresses.html), and `SP1_PRIVATE_KEY` to your whitelisted cluster private key.
+  1. `cd ./script`
+  2. `cp .env.example .env`
+  3. Modify .env if needed.
+      - **Source chain:**
+          - Mainnet by default     
+          - `SOURCE_CHAIN_ID`
+          - `SOURCE_CONSENSUS_RPC_URL`
+          - Use values under [Supported Networks](#supported-networks).
+      - **Proofs:**
+          - Mock by default
+          - Generate real proofs on cluster:
+              - `SP1_PROVER`: `network`
+              - `SP1_VERIFIER_ADDRESS`: [use a deployed verifier found here]( https://docs.succinct.xyz/onchain-verification/contract-addresses.html)
+              - `SP1_PRIVATE_KEY`: your whitelisted cluster private key.
       - The other .env values will be filled out at a later step.
-7. `RUST_LOG=info cargo run --release --bin genesis`
+  7. `RUST_LOG=info cargo run --release --bin genesis`
 
 ### 2. Deploy contracts
 
