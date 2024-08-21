@@ -1,11 +1,11 @@
-# SP1 Telepathy
+# SP1 Helios
 
 ## Overview
 
 On-chain Ethereum light client built with SP1.
 
-- `/program`: The SP1 Telepathy program
-- `/contracts`: Contracts for the Telepathy light client
+- `/program`: The SP1 Helios program
+- `/contracts`: Contracts for the Helios light client
 - `/primitives`: Common types shared between the program, contract, and script
 - `/script`: Scripts for getting the contract's genesis parameters and generating proofs
 
@@ -65,7 +65,7 @@ Public light client RPCs are hard to come by - for convenience, here are some ex
    - `SOURCE_CONSENSUS_RPC_URL=http://testing.holesky.beacon-api.nimbus.team`
 
 **Destination (bridging to):**
-- Telepathy supports bridging to any arbitrary evm chain.
+- Helios supports bridging to any arbitrary evm chain.
 
 ## Generating hardcoded test cases
 1. `cd ./script`
