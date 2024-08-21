@@ -163,28 +163,6 @@ impl SP1LightClientOperator {
             return Ok(None);
         }
 
-        // Optimization:
-        // If next sync committee is already in contract & update is for current slot, apply update outside
-        // of program to save cycles. This may happen when the local helios client is not fully synced with the contract.
-        if !updates.is_empty() {
-            let next_sync_committee = B256::from_slice(
-                updates[0]
-                    .next_sync_committee
-                    .hash_tree_root()
-                    .unwrap()
-                    .as_ref(),
-            );
-            let update_slot = updates[0].finalized_header.slot.as_u64();
-            let current_slot = client.store.finalized_header.slot.as_u64();
-
-            if contract_next_sync_committee == next_sync_committee && update_slot == current_slot {
-                let temp_update = updates.remove(0);
-
-                client.verify_update(&temp_update).unwrap(); // panics if not valid
-                client.apply_update(&temp_update);
-            }
-        }
-
         // Fetch execution state proof
         let execution_state_proof = get_execution_state_root_proof(latest_block.into())
             .await
@@ -285,7 +263,7 @@ impl SP1LightClientOperator {
             };
 
             info!("Sleeping for {:?} minutes", loop_delay_mins);
-            tokio::time::sleep(tokio::time::Duration::from_secs(60 * loop_delay_mins)).await;
+            tokio::time::sleep(tokio::time::Duration::from_secs(2 * loop_delay_mins)).await;
         }
     }
 }
