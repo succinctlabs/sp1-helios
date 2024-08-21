@@ -30,7 +30,7 @@ contract DeployScript is Script {
         // Read trusted initialization parameters from environment.
         address guardian = vm.envOr("GUARDIAN_ADDRESS", msg.sender);
 
-        // Deploy the SP1Telepathy contract.
+        // Deploy the SP1 Helios contract.
         SP1LightClient lightClient =
             new SP1LightClient{salt: bytes32(vm.envBytes("CREATE2_SALT"))}(
                 vm.envBytes32("GENESIS_VALIDATORS_ROOT"),
@@ -43,7 +43,7 @@ contract DeployScript is Script {
                 vm.envBytes32("FINALIZED_HEADER"),
                 vm.envBytes32("EXECUTION_STATE_ROOT"),
                 vm.envUint("HEAD"),
-                vm.envBytes32("SP1_TELEPATHY_PROGRAM_VKEY"),
+                vm.envBytes32("SP1_HELIOS_PROGRAM_VKEY"),
                 address(verifier),
                 guardian
             );
