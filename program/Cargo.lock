@@ -792,7 +792,7 @@ dependencies = [
 [[package]]
 name = "bls12_381"
 version = "0.8.0"
-source = "git+https://github.com/xavierdmello/bls12_381.git?branch=bhargav/experiment#50523d08e6c334620eb381481a56c1a02e65db4a"
+source = "git+https://github.com/xavierdmello/bls12_381.git?branch=patch-v0.8.0#9daf4d1056d0b33a1784812028cf3e5be5716351"
 dependencies = [
  "cfg-if",
  "digest 0.9.0",
@@ -802,7 +802,7 @@ dependencies = [
  "pairing",
  "rand_core",
  "sha2 0.9.9",
- "sp1-lib 1.1.1 (git+https://github.com/succinctlabs/sp1.git?branch=experimental)",
+ "sp1-lib",
  "subtle",
 ]
 
@@ -890,7 +890,7 @@ dependencies = [
 [[package]]
 name = "common"
 version = "0.5.5"
-source = "git+https://github.com/succinctlabs/helios.git#f994ca0964b61692f1503fc341ffdc8acb0be5fe"
+source = "git+https://github.com/succinctlabs/helios.git#1f7943b1f0268343af7c0f0c4d12f3d9012ba995"
 dependencies = [
  "alloy",
  "bls12_381",
@@ -909,7 +909,7 @@ dependencies = [
 [[package]]
 name = "consensus-core"
 version = "0.1.0"
-source = "git+https://github.com/succinctlabs/helios.git#f994ca0964b61692f1503fc341ffdc8acb0be5fe"
+source = "git+https://github.com/succinctlabs/helios.git#1f7943b1f0268343af7c0f0c4d12f3d9012ba995"
 dependencies = [
  "alloy",
  "bls12_381",
@@ -2860,20 +2860,7 @@ dependencies = [
 [[package]]
 name = "sp1-lib"
 version = "1.1.1"
-source = "git+https://github.com/succinctlabs/sp1.git?branch=dev#e5aba0ce59b06fed34b033a282fd8c2dec6e0c43"
-dependencies = [
- "anyhow",
- "bincode",
- "cfg-if",
- "hex",
- "serde",
- "snowbridge-amcl",
-]
-
-[[package]]
-name = "sp1-lib"
-version = "1.1.1"
-source = "git+https://github.com/succinctlabs/sp1.git?branch=experimental#232d0fb2913f86e31383c8116379c51798ef7d78"
+source = "git+https://github.com/succinctlabs/sp1.git?branch=dev#ee07e3443559c42a6837de318d7be7a5a75acb69"
 dependencies = [
  "anyhow",
  "bincode",
@@ -2886,7 +2873,7 @@ dependencies = [
 [[package]]
 name = "sp1-zkvm"
 version = "1.1.1"
-source = "git+https://github.com/succinctlabs/sp1.git?branch=dev#e5aba0ce59b06fed34b033a282fd8c2dec6e0c43"
+source = "git+https://github.com/succinctlabs/sp1.git?branch=dev#ee07e3443559c42a6837de318d7be7a5a75acb69"
 dependencies = [
  "bincode",
  "cfg-if",
@@ -2897,7 +2884,7 @@ dependencies = [
  "rand",
  "serde",
  "sha2 0.10.8",
- "sp1-lib 1.1.1 (git+https://github.com/succinctlabs/sp1.git?branch=dev)",
+ "sp1-lib",
 ]
 
 [[package]]
