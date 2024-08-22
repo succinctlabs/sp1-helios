@@ -183,6 +183,7 @@ impl SP1LightClientOperator {
             let current_slot = client.store.finalized_header.slot;
 
             if contract_next_sync_committee == next_sync_committee {
+                println!("Applying optimization, skipping update");
                 let temp_update = updates.remove(0);
 
                 client.verify_update(&temp_update).unwrap(); // Panics if not valid
@@ -224,7 +225,7 @@ impl SP1LightClientOperator {
         stdin.write_slice(&encoded_proof_inputs);
 
         // Generate proof.
-        let proof = self.client.prove(&self.pk, stdin).plonk().run().unwrap();
+        let proof = self.client.prove(&self.pk, stdin).plonk().run()?;
 
         info!("New head: {:?}", latest_block.as_u64());
         Ok(Some(proof))

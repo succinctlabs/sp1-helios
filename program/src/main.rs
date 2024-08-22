@@ -52,7 +52,7 @@ pub fn main() {
                 &forks,
             )
             .is_ok();
-
+        println!("Update is valid: {}", is_valid);
         apply_update(&mut store, update);
     }
 
@@ -66,6 +66,7 @@ pub fn main() {
             &forks,
         )
         .is_ok();
+    println!("Finality update is valid: {}", is_valid);
     apply_finality_update(&mut store, &finality_update);
 
     // 3. Verify execution state root proof
@@ -84,9 +85,11 @@ pub fn main() {
             MERKLE_BRANCH_INDEX,
             &Node::try_from(store.finalized_header.body_root.as_ref()).unwrap(),
         );
+    println!("Execution state root proof is valid: {}", is_valid);
 
-    // 4. Asset all updates are valid
+    // 4. Asset all constraints are valid
     assert!(is_valid);
+    println!("All constraints are valid");
 
     // 5. Commit new state root, header, and sync committee for usage in the on-chain contract
     let header: B256 = store
