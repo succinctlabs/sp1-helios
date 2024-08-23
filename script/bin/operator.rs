@@ -170,7 +170,6 @@ impl SP1LightClientOperator {
         // Skip processing update inside program if next_sync_committee is already stored in contract.
         // We must still apply the update locally to "sync" the helios client, this is due to
         // next_sync_committee not being stored when the helios client is bootstrapped.
-        let mut synced_store: Option<LightClientStore> = None;
         if !updates.is_empty() {
             let next_sync_committee = B256::from_slice(
                 updates[0]
@@ -180,30 +179,14 @@ impl SP1LightClientOperator {
                     .as_ref(),
             );
 
-            let current_slot = client.store.finalized_header.slot;
-
             if contract_next_sync_committee == next_sync_committee {
                 println!("Applying optimization, skipping update");
                 let temp_update = updates.remove(0);
 
                 client.verify_update(&temp_update).unwrap(); // Panics if not valid
                 client.apply_update(&temp_update);
-
-                // Due to helios's implementation, the sync committee update which was just applied
-                // may have changed the stored slot. The finality update will move the head, so we must
-                // set the slot back to the original slot before the update was applied.
-                let synced_header = Header {
-                    slot: current_slot,
-                    ..client.store.finalized_header.clone()
-                };
-
-                synced_store = Some(LightClientStore {
-                    finalized_header: synced_header,
-                    ..client.store.clone()
-                });
             }
         }
-        let store = synced_store.unwrap_or_else(|| client.store.clone());
 
         // Fetch execution state proof
         let execution_state_proof = get_execution_state_root_proof(latest_block.into())
@@ -216,7 +199,7 @@ impl SP1LightClientOperator {
             updates,
             finality_update,
             expected_current_slot,
-            store,
+            store: client.store.clone(),
             genesis_root: client.config.chain.genesis_root.clone().try_into().unwrap(),
             forks: client.config.forks.clone(),
             execution_state_proof,

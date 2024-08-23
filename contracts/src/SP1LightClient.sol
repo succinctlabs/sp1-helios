@@ -52,9 +52,7 @@ contract SP1LightClient {
     event HeadUpdate(uint256 indexed slot, bytes32 indexed root);
     event SyncCommitteeUpdate(uint256 indexed period, bytes32 indexed root);
 
-    error HeaderRootNotConnected(bytes32 header);
     error SlotBehindHead(uint256 slot);
-    error SlotNotConnected(uint256 slot);
     error SyncCommitteeAlreadySet(uint256 period);
     error HeaderRootAlreadySet(uint256 slot);
     error StateRootAlreadySet(uint256 slot);
@@ -88,7 +86,6 @@ contract SP1LightClient {
         verifier = ISP1Verifier(_verifier);
         guardian = _guardian;
     }
-
    
     /// @notice Updates the light client with a new header, execution state root, and sync committee (if changed)
     /// @param proof The proof bytes for the SP1 proof.
@@ -98,14 +95,6 @@ contract SP1LightClient {
         ProofOutputs memory po = abi.decode(publicValues, (ProofOutputs));
         if (po.newHead <= head) {
             revert SlotBehindHead(po.newHead);
-        }
-
-        if (po.prevHead != head) {
-            revert SlotNotConnected(po.prevHead);
-        }
-
-        if (po.prevHeader != headers[po.prevHead]) {
-            revert HeaderRootNotConnected(po.prevHeader);
         }
 
         // Verify the proof with the associated public values. This will revert if proof invalid.
