@@ -802,7 +802,7 @@ dependencies = [
  "pairing",
  "rand_core",
  "sha2 0.9.9",
- "sp1-lib",
+ "sp1-lib 1.1.1",
  "subtle",
 ]
 
@@ -2871,9 +2871,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "sp1-lib"
+version = "1.2.0-rc1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2f600a97b145e66f0f5e56595527c359f5cc8cb1f9dc8a6da1ba34bb845c9d1e"
+dependencies = [
+ "anyhow",
+ "bincode",
+ "cfg-if",
+ "hex",
+ "serde",
+ "snowbridge-amcl",
+]
+
+[[package]]
 name = "sp1-zkvm"
-version = "1.1.1"
-source = "git+https://github.com/succinctlabs/sp1.git?branch=dev#ee07e3443559c42a6837de318d7be7a5a75acb69"
+version = "1.2.0-rc1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "080e2045ac8427c677bd1285b1d9eeccc29a54ee952bb38eff83151894376097"
 dependencies = [
  "bincode",
  "cfg-if",
@@ -2884,7 +2899,7 @@ dependencies = [
  "rand",
  "serde",
  "sha2 0.10.8",
- "sp1-lib",
+ "sp1-lib 1.2.0-rc1",
 ]
 
 [[package]]
