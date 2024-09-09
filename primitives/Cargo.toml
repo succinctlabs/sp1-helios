@@ -11,8 +11,8 @@ hex = "0.4.3"
 serde_with = { version = "3.4.0", features = ["hex"] }
 serde = { version = "1.0.195", features = ["derive"] }
 serde_json = "1.0.11"
-consensus-core = { git = "https://github.com/succinctlabs/helios.git"}
-common = { git = "https://github.com/succinctlabs/helios.git"}
+consensus-core = { git = "https://github.com/a16z/helios.git" }
+common = { git = "https://github.com/a16z/helios.git" }
 alloy-sol-types = "0.7.7"
 alloy-primitives = { version = "0.7.7", features = ["serde"] }
 
@@ -20,3 +20,4 @@ alloy-primitives = { version = "0.7.7", features = ["serde"] }
 sha2-v0-9-9 = { git = "https://github.com/sp1-patches/RustCrypto-hashes", package = "sha2", branch = "patch-sha2-v0.9.9" }
 sha2-v0-10-8 = { git = "https://github.com/sp1-patches/RustCrypto-hashes", package = "sha2", branch = "patch-sha2-v0.10.8" }
 tiny-keccak = { git = "https://github.com/sp1-patches/tiny-keccak", branch = "patch-v2.0.2" }
+bls12_381 = { version = "0.8.0", package = "sp1_bls12_381" }

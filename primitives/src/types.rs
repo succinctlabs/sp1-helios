@@ -1,17 +1,18 @@
 use alloy_primitives::B256;
 use alloy_sol_types::sol;
 use common::config::types::Forks;
-use consensus_core::types::{Bytes32, FinalityUpdate, LightClientStore, Update};
+use consensus_core::types::{FinalityUpdate, LightClientStore, Update};
+use serde::{Deserialize, Serialize};
 use ssz_rs::prelude::*;
 pub use ssz_rs::prelude::{Bitvector, Vector};
 
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct ProofInputs {
     pub updates: Vec<Update>,
     pub finality_update: FinalityUpdate,
     pub expected_current_slot: u64,
     pub store: LightClientStore,
-    pub genesis_root: Bytes32,
+    pub genesis_root: B256,
     pub forks: Forks,
     pub execution_state_proof: ExecutionStateProof,
 }
