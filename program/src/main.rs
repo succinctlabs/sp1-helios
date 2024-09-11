@@ -39,14 +39,7 @@ pub fn main() {
     for (index, update) in updates.iter().enumerate() {
         println!("Processing update {} of {}", index + 1, updates.len());
         is_valid = is_valid
-            && verify_update(
-                update,
-                expected_current_slot,
-                &store,
-                genesis_root.clone(),
-                &forks,
-            )
-            .is_ok();
+            && verify_update(update, expected_current_slot, &store, genesis_root, &forks).is_ok();
         println!("Update is valid: {}", is_valid);
         apply_update(&mut store, update);
     }
