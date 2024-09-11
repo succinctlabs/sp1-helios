@@ -6,6 +6,7 @@ use alloy_sol_types::SolType;
 use consensus_core::{apply_finality_update, apply_update, verify_finality_update, verify_update};
 use sp1_helios_primitives::types::{ProofInputs, ProofOutputs};
 use ssz_rs::prelude::*;
+use tree_hash::TreeHash;
 
 /// The merkle branch index & depth for an Ethereum execution state root proof.
 const MERKLE_BRANCH_INDEX: usize = 802;
@@ -31,13 +32,7 @@ pub fn main() {
     } = serde_cbor::from_slice(&encoded_inputs).unwrap();
 
     let mut is_valid = true;
-    let prev_header: B256 = store
-        .finalized_header
-        .hash_tree_root()
-        .unwrap()
-        .as_ref()
-        .try_into()
-        .unwrap();
+    let prev_header: B256 = store.finalized_header.tree_hash_root();
     let prev_head = store.finalized_header.slot;
 
     // 1. Apply sync committee updates, if any
@@ -76,7 +71,6 @@ pub fn main() {
         .map(|b| Node::try_from(b.as_ref()).unwrap())
         .collect();
 
-    
     is_valid = is_valid
         && is_valid_merkle_branch(
             &Node::try_from(execution_state_proof.execution_state_root.as_ref()).unwrap(),
@@ -92,27 +86,10 @@ pub fn main() {
     println!("All constraints are valid");
 
     // 5. Commit new state root, header, and sync committee for usage in the on-chain contract
-    let header: B256 = store
-        .finalized_header
-        .hash_tree_root()
-        .unwrap()
-        .as_ref()
-        .try_into()
-        .unwrap();
-    let sync_committee_hash: B256 = store
-        .current_sync_committee
-        .hash_tree_root()
-        .unwrap()
-        .as_ref()
-        .try_into()
-        .unwrap();
+    let header: B256 = store.finalized_header.tree_hash_root();
+    let sync_committee_hash: B256 = store.current_sync_committee.tree_hash_root();
     let next_sync_committee_hash: B256 = match &mut store.next_sync_committee {
-        Some(next_sync_committee) => next_sync_committee
-            .hash_tree_root()
-            .unwrap()
-            .as_ref()
-            .try_into()
-            .unwrap(),
+        Some(next_sync_committee) => next_sync_committee.tree_hash_root(),
         None => B256::ZERO,
     };
     let head = store.finalized_header.slot;
@@ -122,8 +99,8 @@ pub fn main() {
         header,
         sync_committee_hash,
         next_sync_committee_hash,
-        U256::from(prev_head.as_u64()),
-        U256::from(head.as_u64()),
+        U256::from(prev_head),
+        U256::from(head),
         execution_state_proof.execution_state_root,
     ));
     sp1_zkvm::io::commit_slice(&proof_outputs);

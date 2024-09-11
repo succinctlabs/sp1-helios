@@ -2,9 +2,9 @@
 use anyhow::Result;
 use clap::Parser;
 use helios::consensus::rpc::ConsensusRpc;
+use sp1_helios_primitives::types::ProofInputs;
 use sp1_helios_script::*;
 use sp1_helios_script::{get_execution_state_root_proof, get_updates};
-use sp1_helios_primitives::types::ProofInputs;
 use sp1_sdk::utils::setup_logger;
 use ssz_rs::prelude::*;
 use std::fs::File;
@@ -32,14 +32,12 @@ async fn main() -> Result<()> {
     };
 
     // Setup client.
-    let helios_client = get_client(checkpoint.to_vec()).await;
+    let helios_client = get_client(checkpoint).await;
     let updates = get_updates(&helios_client).await;
     let finality_update = helios_client.rpc.get_finality_update().await.unwrap();
     let latest_block = finality_update.finalized_header.slot;
 
-    let execution_state_root_proof = get_execution_state_root_proof(latest_block.into())
-        .await
-        .unwrap();
+    let execution_state_root_proof = get_execution_state_root_proof(latest_block).await.unwrap();
 
     let expected_current_slot = helios_client.expected_current_slot();
     let inputs = ProofInputs {
@@ -47,13 +45,7 @@ async fn main() -> Result<()> {
         finality_update,
         expected_current_slot,
         store: helios_client.store.clone(),
-        genesis_root: helios_client
-            .config
-            .chain
-            .genesis_root
-            .clone()
-            .try_into()
-            .unwrap(),
+        genesis_root: helios_client.config.chain.genesis_root,
         forks: helios_client.config.forks.clone(),
         execution_state_proof: execution_state_root_proof,
     };

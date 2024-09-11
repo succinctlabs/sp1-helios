@@ -1722,7 +1722,6 @@ checksum = "1462739cb27611015575c0c11df5df7601141071f07518d56fcc1be504cbec97"
 [[package]]
 name = "client"
 version = "0.5.5"
-source = "git+https://github.com/a16z/helios.git#16e4b2c76697f8c72c2716ce6341c5dbce63d14b"
 dependencies = [
  "alloy 0.2.1",
  "common",
@@ -1810,7 +1809,6 @@ checksum = "d3fd119d74b830634cea2a0f58bbd0d54540518a14397557951e79340abc28c0"
 [[package]]
 name = "common"
 version = "0.5.5"
-source = "git+https://github.com/a16z/helios.git#16e4b2c76697f8c72c2716ce6341c5dbce63d14b"
 dependencies = [
  "alloy 0.2.1",
  "eyre",
@@ -1826,7 +1824,6 @@ dependencies = [
 [[package]]
 name = "config"
 version = "0.5.5"
-source = "git+https://github.com/a16z/helios.git#16e4b2c76697f8c72c2716ce6341c5dbce63d14b"
 dependencies = [
  "alloy 0.2.1",
  "common",
@@ -1849,7 +1846,6 @@ dependencies = [
 [[package]]
 name = "consensus"
 version = "0.5.5"
-source = "git+https://github.com/a16z/helios.git#16e4b2c76697f8c72c2716ce6341c5dbce63d14b"
 dependencies = [
  "alloy 0.2.1",
  "async-trait",
@@ -1879,11 +1875,9 @@ dependencies = [
 [[package]]
 name = "consensus-core"
 version = "0.1.0"
-source = "git+https://github.com/a16z/helios.git#16e4b2c76697f8c72c2716ce6341c5dbce63d14b"
 dependencies = [
  "alloy 0.2.1",
  "bls12_381 0.8.0",
- "common",
  "ethereum_ssz 0.6.0",
  "ethereum_ssz_derive 0.6.0",
  "eyre",
@@ -2859,7 +2853,6 @@ checksum = "0206175f82b8d6bf6652ff7d71a1e27fd2e4efde587fd368662814d6ec1d9ce0"
 [[package]]
 name = "execution"
 version = "0.5.5"
-source = "git+https://github.com/a16z/helios.git#16e4b2c76697f8c72c2716ce6341c5dbce63d14b"
 dependencies = [
  "alloy 0.2.1",
  "async-trait",
@@ -3229,9 +3222,9 @@ checksum = "d2fabcfbdc87f4758337ca535fb41a6d701b65693ce38287d856d1674551ec9b"
 
 [[package]]
 name = "globset"
-version = "0.4.14"
+version = "0.4.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "57da3b9b5b85bd66f31093f8c408b90a74431672542466497dcbdfdc02034be1"
+checksum = "15f1ce686646e7f1e19bf7d5533fe443a45dbfb990e00629110797578b42fb19"
 dependencies = [
  "aho-corasick",
  "bstr",
@@ -3432,7 +3425,6 @@ checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 [[package]]
 name = "helios"
 version = "0.5.5"
-source = "git+https://github.com/a16z/helios.git#16e4b2c76697f8c72c2716ce6341c5dbce63d14b"
 dependencies = [
  "client",
  "common",
@@ -4669,9 +4661,9 @@ checksum = "ff011a302c396a5197692431fc1948019154afc178baf7d8e37367442a4601cf"
 
 [[package]]
 name = "openssl-src"
-version = "300.3.1+3.3.1"
+version = "300.3.2+3.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7259953d42a81bf137fbbd73bd30a8e1914d6dce43c2b90ed575783a22608b91"
+checksum = "a211a18d945ef7e648cc6e0058f4c548ee46aab922ea203e0d30e966ea23647b"
 dependencies = [
  "cc",
 ]
@@ -6261,9 +6253,9 @@ dependencies = [
 
 [[package]]
 name = "secp256k1"
-version = "0.29.0"
+version = "0.29.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0e0cc0f1cf93f4969faf3ea1c7d8a9faed25918d96affa959720823dfe86d4f3"
+checksum = "9465315bc9d4566e1724f0fffcbcc446268cb522e60f9a27bcded6b19c108113"
 dependencies = [
  "rand 0.8.5",
  "secp256k1-sys",
@@ -6271,9 +6263,9 @@ dependencies = [
 
 [[package]]
 name = "secp256k1-sys"
-version = "0.10.0"
+version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1433bd67156263443f14d603720b082dd3121779323fce20cba2aa07b874bc1b"
+checksum = "d4387882333d3aa8cb20530a17c69a3752e97837832f34f6dccc760e715001d9"
 dependencies = [
  "cc",
 ]
@@ -6861,6 +6853,7 @@ dependencies = [
  "thiserror",
  "tokio",
  "tracing",
+ "tree_hash",
  "zduny-wasm-timer",
 ]
 

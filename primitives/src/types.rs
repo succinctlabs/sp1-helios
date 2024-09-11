@@ -1,6 +1,6 @@
 use alloy_primitives::B256;
 use alloy_sol_types::sol;
-use common::config::types::Forks;
+use consensus_core::types::Forks;
 use consensus_core::types::{FinalityUpdate, LightClientStore, Update};
 use serde::{Deserialize, Serialize};
 use ssz_rs::prelude::*;

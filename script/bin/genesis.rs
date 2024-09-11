@@ -1,13 +1,13 @@
 /// Generate genesis parameters for light client contract
 use clap::Parser;
+use log::info;
 use sp1_helios_script::{
     get_checkpoint, get_client, get_execution_state_root_proof, get_latest_checkpoint,
 };
-use log::info;
 use sp1_sdk::{HashableKey, ProverClient};
 use std::env;
+use tree_hash::TreeHash;
 const HELIOS_ELF: &[u8] = include_bytes!("../../program/elf/riscv32im-succinct-zkvm-elf");
-use alloy_primitives::B256;
 use ssz_rs::prelude::*;
 
 #[derive(Parser, Debug, Clone)]
@@ -40,23 +40,21 @@ pub async fn main() {
         verifier = env::var("SP1_VERIFIER_ADDRESS").unwrap();
     }
 
-    let helios_client = get_client(checkpoint.to_vec()).await;
+    let helios_client = get_client(checkpoint).await;
     let finalized_header = helios_client
         .store
         .finalized_header
         .clone()
-        .hash_tree_root()
-        .unwrap();
-    let head = helios_client.store.finalized_header.clone().slot.as_u64();
+        .tree_hash_root();
+    let head = helios_client.store.finalized_header.clone().slot;
     let sync_committee_hash = helios_client
         .store
         .current_sync_committee
         .clone()
-        .hash_tree_root()
-        .unwrap();
+        .tree_hash_root();
     let genesis_time = helios_client.config.chain.genesis_time;
     let execution_state_root_proof = get_execution_state_root_proof(head).await.unwrap();
-    let genesis_root = B256::from_slice(&helios_client.config.chain.genesis_root);
+    let genesis_root = helios_client.config.chain.genesis_root;
     const SECONDS_PER_SLOT: u64 = 12;
     const SLOTS_PER_EPOCH: u64 = 32;
     const SLOTS_PER_PERIOD: u64 = SLOTS_PER_EPOCH * 256;
