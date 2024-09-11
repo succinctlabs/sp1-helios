@@ -50,7 +50,7 @@ pub fn main() {
             &finality_update,
             expected_current_slot,
             &store,
-            genesis_root.clone(),
+            genesis_root,
             &forks,
         )
         .is_ok();

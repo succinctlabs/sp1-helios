@@ -64,7 +64,7 @@ Public light client RPCs are hard to come by - for convenience, here are some ex
 **Source (bridging from):**
 - Mainnet
    - `SOURCE_CHAIN_ID=1`
-   - `SOURCE_CONSENSUS_RPC_URL=https://www.lightclientdata.org`
+   - `SOURCE_CONSENSUS_RPC_URL=http://unstable.mainnet.beacon-api.nimbus.team/`
 - Sepolia Testnet
    - `SOURCE_CHAIN_ID=11155111`
    - `SOURCE_CONSENSUS_RPC_URL=http://unstable.sepolia.beacon-api.nimbus.team`
