@@ -1483,14 +1483,15 @@ dependencies = [
 [[package]]
 name = "bls12_381"
 version = "0.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d7bc6d6292be3a19e6379786dac800f551e5865a5bb51ebbe3064ab80433f403"
+source = "git+https://github.com/sp1-patches/bls12_381?branch=patch-v0.8.0#dc4ee81f60ac5a9a993872e0a471e00c5849016c"
 dependencies = [
+ "cfg-if",
  "digest 0.9.0",
  "ff 0.13.0",
  "group 0.13.0",
  "pairing 0.23.0",
  "rand_core 0.6.4",
+ "sp1-lib",
  "subtle",
 ]
 
@@ -8649,8 +8650,3 @@ dependencies = [
  "sha3",
  "subtle",
 ]
-
-[[patch.unused]]
-name = "sp1_bls12_381"
-version = "0.8.0"
-source = "git+https://github.com/sp1-patches/bls12_381?branch=patch-v0.8.0#25631a4b0426d7b166586ec583e3c40f52dcac0b"
