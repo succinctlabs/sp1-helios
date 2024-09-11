@@ -37,7 +37,7 @@ pub async fn get_latest_checkpoint() -> B256 {
         .await
         .unwrap();
 
-    let chain_id = std::env::var("SOURCE_CHAIN_ID").unwrap();
+    let chain_id = std::env::var("SOURCE_CHAIN_ID").expect("SOURCE_CHAIN_ID not set");
     let network = Network::from_chain_id(chain_id.parse().unwrap()).unwrap();
 
     cf.fetch_latest_checkpoint(&network).await.unwrap()
@@ -45,7 +45,7 @@ pub async fn get_latest_checkpoint() -> B256 {
 
 /// Fetch checkpoint from a slot number.
 pub async fn get_checkpoint(slot: u64) -> B256 {
-    let rpc_url = std::env::var("SOURCE_CONSENSUS_RPC_URL").unwrap();
+    let rpc_url = std::env::var("SOURCE_CONSENSUS_RPC_URL").expect("SOURCE_CONSENSUS_RPC_URL not set");
     let rpc: NimbusRpc = NimbusRpc::new(&rpc_url);
 
     let block = rpc.get_block(slot).await.unwrap();
@@ -65,7 +65,7 @@ pub async fn get_execution_state_root_proof(
 ) -> Result<ExecutionStateProof, Box<dyn std::error::Error>> {
     let client = reqwest::Client::new();
 
-    let chain_id = std::env::var("SOURCE_CHAIN_ID").unwrap();
+    let chain_id = std::env::var("SOURCE_CHAIN_ID").expect("SOURCE_CHAIN_ID not set");
     let url_suffix = match chain_id.as_str() {
         "11155111" => "-sepolia", // Sepolia chain ID
         "17000" => "-holesky",    // Holesky chain ID

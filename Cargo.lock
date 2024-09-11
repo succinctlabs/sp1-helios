@@ -1717,6 +1717,7 @@ checksum = "1462739cb27611015575c0c11df5df7601141071f07518d56fcc1be504cbec97"
 [[package]]
 name = "client"
 version = "0.5.5"
+source = "git+https://github.com/ratankaliani/helios?branch=ratan/serialize-lc-store#7b6947b337acb77a55dd165923e3188abdb94c2a"
 dependencies = [
  "alloy 0.2.1",
  "common",
@@ -1804,6 +1805,7 @@ checksum = "d3fd119d74b830634cea2a0f58bbd0d54540518a14397557951e79340abc28c0"
 [[package]]
 name = "common"
 version = "0.5.5"
+source = "git+https://github.com/ratankaliani/helios?branch=ratan/serialize-lc-store#7b6947b337acb77a55dd165923e3188abdb94c2a"
 dependencies = [
  "alloy 0.2.1",
  "eyre",
@@ -1819,6 +1821,7 @@ dependencies = [
 [[package]]
 name = "config"
 version = "0.5.5"
+source = "git+https://github.com/ratankaliani/helios?branch=ratan/serialize-lc-store#7b6947b337acb77a55dd165923e3188abdb94c2a"
 dependencies = [
  "alloy 0.2.1",
  "common",
@@ -1841,6 +1844,7 @@ dependencies = [
 [[package]]
 name = "consensus"
 version = "0.5.5"
+source = "git+https://github.com/ratankaliani/helios?branch=ratan/serialize-lc-store#7b6947b337acb77a55dd165923e3188abdb94c2a"
 dependencies = [
  "alloy 0.2.1",
  "async-trait",
@@ -1870,6 +1874,7 @@ dependencies = [
 [[package]]
 name = "consensus-core"
 version = "0.1.0"
+source = "git+https://github.com/ratankaliani/helios?branch=ratan/serialize-lc-store#7b6947b337acb77a55dd165923e3188abdb94c2a"
 dependencies = [
  "alloy 0.2.1",
  "bls12_381 0.8.0",
@@ -2568,6 +2573,7 @@ dependencies = [
 [[package]]
 name = "ethereum_hashing"
 version = "0.7.0"
+source = "git+https://github.com/ratankaliani/ethereum_hashing?branch=main#6296fdaa25953a08704b47589786b630c7cb8a08"
 dependencies = [
  "cpufeatures",
  "sha2 0.10.8",
@@ -2835,6 +2841,7 @@ checksum = "0206175f82b8d6bf6652ff7d71a1e27fd2e4efde587fd368662814d6ec1d9ce0"
 [[package]]
 name = "execution"
 version = "0.5.5"
+source = "git+https://github.com/ratankaliani/helios?branch=ratan/serialize-lc-store#7b6947b337acb77a55dd165923e3188abdb94c2a"
 dependencies = [
  "alloy 0.2.1",
  "async-trait",
@@ -3407,6 +3414,7 @@ checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 [[package]]
 name = "helios"
 version = "0.5.5"
+source = "git+https://github.com/ratankaliani/helios?branch=ratan/serialize-lc-store#7b6947b337acb77a55dd165923e3188abdb94c2a"
 dependencies = [
  "client",
  "common",
@@ -8641,3 +8649,8 @@ dependencies = [
  "sha3",
  "subtle",
 ]
+
+[[patch.unused]]
+name = "sp1_bls12_381"
+version = "0.8.0"
+source = "git+https://github.com/sp1-patches/bls12_381?branch=patch-v0.8.0#25631a4b0426d7b166586ec583e3c40f52dcac0b"
