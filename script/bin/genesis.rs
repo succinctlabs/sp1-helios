@@ -7,7 +7,7 @@ use sp1_helios_script::{
 use sp1_sdk::{HashableKey, ProverClient};
 use std::env;
 use tree_hash::TreeHash;
-const HELIOS_ELF: &[u8] = include_bytes!("../../program/elf/riscv32im-succinct-zkvm-elf");
+const HELIOS_ELF: &[u8] = include_bytes!("../../elf/riscv32im-succinct-zkvm-elf");
 use ssz_rs::prelude::*;
 
 #[derive(Parser, Debug, Clone)]

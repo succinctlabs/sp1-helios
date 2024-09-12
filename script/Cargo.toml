@@ -17,6 +17,10 @@ path = "./bin/operator.rs"
 name = "gen-inputs"
 path = "./bin/gen-inputs.rs"
 
+[[bin]]
+name = "test"
+path = "./bin/test.rs"
+
 [dependencies]
 dotenv = { workspace = true }
 eyre = { workspace = true }

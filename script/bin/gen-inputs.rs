@@ -7,8 +7,9 @@ use sp1_helios_script::*;
 use sp1_helios_script::{get_execution_state_root_proof, get_updates};
 use sp1_sdk::utils::setup_logger;
 use ssz_rs::prelude::*;
-use std::fs::File;
+use std::fs::{self, File};
 use std::io::Write;
+use std::path::Path;
 use tracing::error;
 
 #[derive(Parser, Debug, Clone)]
@@ -62,6 +63,11 @@ async fn main() -> Result<()> {
     };
 
     // Write the CBOR-encoded vector to a file
+    // Create the examples directory if it doesn't exist
+    let examples_dir = "examples";
+    if !Path::new(examples_dir).exists() {
+        fs::create_dir(examples_dir)?;
+    }
     let mut file = File::create(file_path)?;
     file.write_all(&cbor_data)?;
 
