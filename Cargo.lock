@@ -3426,22 +3426,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "helios-2-program"
-version = "0.1.0"
-dependencies = [
- "alloy-primitives",
- "alloy-sol-types",
- "common",
- "consensus-core",
- "hex",
- "serde_cbor",
- "sp1-helios-primitives",
- "sp1-zkvm",
- "ssz_rs",
- "tree_hash",
-]
-
-[[package]]
 name = "hermit-abi"
 version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6790,6 +6774,22 @@ dependencies = [
  "serde_json",
  "serde_with",
  "ssz_rs",
+]
+
+[[package]]
+name = "sp1-helios-program"
+version = "0.1.0"
+dependencies = [
+ "alloy-primitives",
+ "alloy-sol-types",
+ "common",
+ "consensus-core",
+ "hex",
+ "serde_cbor",
+ "sp1-helios-primitives",
+ "sp1-zkvm",
+ "ssz_rs",
+ "tree_hash",
 ]
 
 [[package]]

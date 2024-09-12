@@ -1,6 +1,6 @@
 [package]
 version = "0.1.0"
-name = "helios-2-program"
+name = "sp1-helios-program"
 edition.workspace = true
 license.workspace = true
 authors.workspace = true
