@@ -16,10 +16,9 @@ sp1-helios-program = { path = "program" }
 sp1-helios-primitives = { path = "primitives" }
 
 # helios
-# TODO: Once https://github.com/a16z/helios/pull/369 is merged, switch back to a16z/helios.
-helios = { git = "https://github.com/ratankaliani/helios", branch = "ratan/serialize-lc-store" }
-consensus-core = { git = "https://github.com/ratankaliani/helios", branch = "ratan/serialize-lc-store" }
-common = { git = "https://github.com/ratankaliani/helios", branch = "ratan/serialize-lc-store" }
+helios = { git = "https://github.com/a16z/helios"}
+consensus-core = { git = "https://github.com/a16z/helios" }
+common = { git = "https://github.com/a16z/helios" }
 
 # general
 dotenv = "0.15.0"
