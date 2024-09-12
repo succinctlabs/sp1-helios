@@ -1,22 +1,18 @@
-[workspace]
 [package]
 version = "0.1.0"
 name = "sp1-helios-primitives"
-edition = "2021"
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
 
 [dependencies]
-eyre = "0.6.8"
-ssz-rs = { package = "ssz_rs", version = "0.9.0" }
-hex = "0.4.3"
-serde_with = { version = "3.4.0", features = ["hex"] }
-serde = { version = "1.0.195", features = ["derive"] }
-serde_json = "1.0.11"
-consensus-core = { git = "https://github.com/succinctlabs/helios.git"}
-common = { git = "https://github.com/succinctlabs/helios.git"}
-alloy-sol-types = "0.7.7"
-alloy-primitives = { version = "0.7.7", features = ["serde"] }
-
-[patch.crates-io]
-sha2-v0-9-9 = { git = "https://github.com/sp1-patches/RustCrypto-hashes", package = "sha2", branch = "patch-sha2-v0.9.9" }
-sha2-v0-10-8 = { git = "https://github.com/sp1-patches/RustCrypto-hashes", package = "sha2", branch = "patch-sha2-v0.10.8" }
-tiny-keccak = { git = "https://github.com/sp1-patches/tiny-keccak", branch = "patch-v2.0.2" }
+eyre = { workspace = true }
+ssz-rs = { workspace = true }
+hex = { workspace = true }
+serde_with = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+consensus-core = { workspace = true }
+common = { workspace = true }
+alloy-sol-types = { workspace = true }
+alloy-primitives = { workspace = true }

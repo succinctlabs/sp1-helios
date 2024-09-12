@@ -12,11 +12,8 @@ use alloy::{
 };
 use alloy_primitives::{B256, U256};
 use anyhow::Result;
+use helios::consensus::rpc::ConsensusRpc;
 use helios::consensus::{rpc::nimbus_rpc::NimbusRpc, Inner};
-use helios::{
-    consensus::rpc::ConsensusRpc,
-    types::{Header, LightClientStore},
-};
 use log::{error, info};
 use sp1_helios_primitives::types::ProofInputs;
 use sp1_helios_script::*;
@@ -25,8 +22,9 @@ use ssz_rs::prelude::*;
 use std::env;
 use std::sync::Arc;
 use std::time::Duration;
+use tree_hash::TreeHash;
 
-const ELF: &[u8] = include_bytes!("../../program/elf/riscv32im-succinct-zkvm-elf");
+const ELF: &[u8] = include_bytes!("../../elf/riscv32im-succinct-zkvm-elf");
 
 /// Alias the fill provider for the Ethereum network. Retrieved from the instantiation of the
 /// ProviderBuilder. Recommended method for passing around a ProviderBuilder.
@@ -161,7 +159,7 @@ impl SP1LightClientOperator {
 
         // Check if contract is up to date
         let latest_block = finality_update.finalized_header.slot;
-        if latest_block.as_u64() <= head {
+        if latest_block <= head {
             info!("Contract is up to date. Nothing to update.");
             return Ok(None);
         }
@@ -171,13 +169,8 @@ impl SP1LightClientOperator {
         // We must still apply the update locally to "sync" the helios client, this is due to
         // next_sync_committee not being stored when the helios client is bootstrapped.
         if !updates.is_empty() {
-            let next_sync_committee = B256::from_slice(
-                updates[0]
-                    .next_sync_committee
-                    .hash_tree_root()
-                    .unwrap()
-                    .as_ref(),
-            );
+            let next_sync_committee =
+                B256::from_slice(updates[0].next_sync_committee.tree_hash_root().as_ref());
 
             if contract_next_sync_committee == next_sync_committee {
                 println!("Applying optimization, skipping update");
@@ -189,9 +182,7 @@ impl SP1LightClientOperator {
         }
 
         // Fetch execution state proof
-        let execution_state_proof = get_execution_state_root_proof(latest_block.into())
-            .await
-            .unwrap();
+        let execution_state_proof = get_execution_state_root_proof(latest_block).await.unwrap();
 
         // Create program inputs
         let expected_current_slot = client.expected_current_slot();
@@ -200,7 +191,7 @@ impl SP1LightClientOperator {
             finality_update,
             expected_current_slot,
             store: client.store.clone(),
-            genesis_root: client.config.chain.genesis_root.clone().try_into().unwrap(),
+            genesis_root: client.config.chain.genesis_root,
             forks: client.config.forks.clone(),
             execution_state_proof,
         };
@@ -210,7 +201,7 @@ impl SP1LightClientOperator {
         // Generate proof.
         let proof = self.client.prove(&self.pk, stdin).plonk().run()?;
 
-        info!("New head: {:?}", latest_block.as_u64());
+        info!("New head: {:?}", latest_block);
         Ok(Some(proof))
     }
 
@@ -272,7 +263,7 @@ impl SP1LightClientOperator {
             let checkpoint = get_checkpoint(slot).await;
 
             // Get the client from the checkpoint
-            let client = get_client(checkpoint.to_vec()).await;
+            let client = get_client(checkpoint).await;
 
             // Request an update
             match self.request_update(client).await {

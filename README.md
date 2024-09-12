@@ -21,9 +21,8 @@ Holesky -> Sepolia Bridge: [`0x53544ba8e5504Df8569E1F2fEd8b39af9e7F5B71`](https:
 - [SP1](https://docs.succinct.xyz/getting-started/install.html)
 
 ### 1. Generate genesis parameters
-  1. `cd ./script`
-  2. `cp .env.example .env`
-  3. Modify .env if needed.
+  1. `cp .env.example .env`
+  2. Modify .env if needed.
       - **Source chain:**
           - **Mainnet by default**     
           - `SOURCE_CHAIN_ID`
@@ -36,7 +35,7 @@ Holesky -> Sepolia Bridge: [`0x53544ba8e5504Df8569E1F2fEd8b39af9e7F5B71`](https:
               - `SP1_VERIFIER_ADDRESS`: [use a deployed verifier found here]( https://docs.succinct.xyz/onchain-verification/contract-addresses.html)
               - `SP1_PRIVATE_KEY`: your whitelisted cluster private key.
       - The other .env values will be filled out at a later step.
-  7. `RUST_LOG=info cargo run --release --bin genesis`
+  3. `RUST_LOG=info cargo run --release --bin genesis`
 
 ### 2. Deploy contracts
 
@@ -54,9 +53,8 @@ Holesky -> Sepolia Bridge: [`0x53544ba8e5504Df8569E1F2fEd8b39af9e7F5B71`](https:
 
 Continuously generate proofs & keep light client updated with chain
 
-1. `cd ../script`
-2. Paste in the contract address in `.env` and fill out the rest of the parameters.
-3. `RUST_LOG=info cargo run --release --bin operator`
+1. Paste in the contract address in `.env` and fill out the rest of the parameters.
+2. `RUST_LOG=info cargo run --release --bin operator`
 
 ## Supported Networks
 Public light client RPCs are hard to come by - for convenience, here are some example values [courtesy of Nimbus](https://github.com/status-im/nimbus-eth2?tab=readme-ov-file#quickly-test-your-tooling-against-nimbus) (as of Aug 20, 2024)
@@ -64,7 +62,7 @@ Public light client RPCs are hard to come by - for convenience, here are some ex
 **Source (bridging from):**
 - Mainnet
    - `SOURCE_CHAIN_ID=1`
-   - `SOURCE_CONSENSUS_RPC_URL=https://www.lightclientdata.org`
+   - `SOURCE_CONSENSUS_RPC_URL=http://unstable.mainnet.beacon-api.nimbus.team/`
 - Sepolia Testnet
    - `SOURCE_CHAIN_ID=11155111`
    - `SOURCE_CONSENSUS_RPC_URL=http://unstable.sepolia.beacon-api.nimbus.team`
@@ -73,12 +71,19 @@ Public light client RPCs are hard to come by - for convenience, here are some ex
    - `SOURCE_CONSENSUS_RPC_URL=http://testing.holesky.beacon-api.nimbus.team`
 
 **Destination (bridging to):**
-- Helios supports bridging to any arbitrary evm chain.
+- Helios supports bridging to any arbitrary EVM chain.
 
-## Generating hardcoded test cases
-1. `cd ./script`
-2.  Make sure you've set all .env variables inside script (for more context, follow the other steps)
-3. `cargo run --release --bin gen-inputs`
-   - Pass in a specific slot by appending ` -- --slot your_slot_number`
-     
-This will output a cbor-encoded file inside `script/examples`. You can load these bytes inside a test and pass it as input to the program. Feel free to modify the script further to accomadate for your test case.
+## Testing `sp1-helios`
+Once you've configured your environment, you can test that the light client program can update to a new consensus state by running:
+
+```bash
+RUST_LOG=info cargo run --bin test --release
+```
+
+or to test a specific slot:
+
+```bash
+RUST_LOG=info cargo run --bin test --release -- --slot your_slot_number
+```
+
+This will fetch the relevant data from the source chain and execute the program with the generated inputs. If this runs successfully, the program can update to a new consensus state.
