@@ -73,12 +73,19 @@ Public light client RPCs are hard to come by - for convenience, here are some ex
    - `SOURCE_CONSENSUS_RPC_URL=http://testing.holesky.beacon-api.nimbus.team`
 
 **Destination (bridging to):**
-- Helios supports bridging to any arbitrary evm chain.
+- Helios supports bridging to any arbitrary EVM chain.
 
-## Generating hardcoded test cases
-1. `cd ./script`
-2.  Make sure you've set all .env variables inside script (for more context, follow the other steps)
-3. `cargo run --release --bin gen-inputs`
-   - Pass in a specific slot by appending ` -- --slot your_slot_number`
-     
-This will output a cbor-encoded file inside `script/examples`. You can load these bytes inside a test and pass it as input to the program. Feel free to modify the script further to accomadate for your test case.
+## Testing `sp1-helios`
+Once you've configured your environment, you can test that the light client program can update to a new consensus state by running:
+
+```bash
+RUST_LOG=infocargo run --bin test --release
+```
+
+or to test a specific slot:
+
+```bash
+RUST_LOG=infocargo run --bin test --release -- --slot your_slot_number
+```
+
+This will fetch the relevant data from the source chain and execute the program with the generated inputs. If this runs successfully, the program can update to a new consensus state.

@@ -1,21 +1,51 @@
 use anyhow::Result;
+use clap::{command, Parser};
+use helios::consensus::rpc::ConsensusRpc;
 use sp1_helios_primitives::types::ProofInputs;
+use sp1_helios_script::{
+    get_checkpoint, get_client, get_execution_state_root_proof, get_latest_checkpoint, get_updates,
+};
 use sp1_sdk::{utils::setup_logger, ProverClient, SP1Stdin};
-use std::fs::File;
-use std::io::Read;
 
 const ELF: &[u8] = include_bytes!("../../elf/riscv32im-succinct-zkvm-elf");
+#[derive(Parser, Debug, Clone)]
+#[command(about = "Get the genesis parameters from a block.")]
+pub struct GenesisArgs {
+    #[arg(long)]
+    pub slot: Option<u64>,
+}
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
     dotenv::dotenv().ok();
     setup_logger();
-    // Read CBOR data from file
-    let mut file = File::open("examples/input.cbor")?;
-    let mut cbor_data = Vec::new();
-    file.read_to_end(&mut cbor_data)?;
+    let args = GenesisArgs::parse();
 
-    // Deserialize the data into the ProofInputs struct
-    let inputs: ProofInputs = serde_cbor::from_slice(&cbor_data)?;
+    // Get the current slot from the contract or fetch the latest checkpoint
+    let checkpoint = if let Some(slot) = args.slot {
+        get_checkpoint(slot).await
+    } else {
+        get_latest_checkpoint().await
+    };
+
+    // Setup client.
+    let helios_client = get_client(checkpoint).await;
+    let updates = get_updates(&helios_client).await;
+    let finality_update = helios_client.rpc.get_finality_update().await.unwrap();
+    let latest_block = finality_update.finalized_header.slot;
+
+    let execution_state_root_proof = get_execution_state_root_proof(latest_block).await.unwrap();
+
+    let expected_current_slot = helios_client.expected_current_slot();
+    let inputs = ProofInputs {
+        updates,
+        finality_update,
+        expected_current_slot,
+        store: helios_client.store.clone(),
+        genesis_root: helios_client.config.chain.genesis_root,
+        forks: helios_client.config.forks.clone(),
+        execution_state_proof: execution_state_root_proof,
+    };
 
     // Write the inputs to the VM
     let mut stdin = SP1Stdin::new();
