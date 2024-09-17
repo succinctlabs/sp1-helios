@@ -24,6 +24,7 @@ sp1-sdk = { workspace = true }
 tokio = { workspace = true }
 helios = { workspace = true }
 sp1-helios-primitives = { workspace = true }
+consensus-core = { workspace = true }
 tracing = { workspace = true }
 serde = { workspace = true }
 ssz-rs = { workspace = true }

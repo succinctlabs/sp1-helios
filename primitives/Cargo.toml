@@ -13,6 +13,5 @@ serde_with = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 consensus-core = { workspace = true }
-common = { workspace = true }
 alloy-sol-types = { workspace = true }
 alloy-primitives = { workspace = true }

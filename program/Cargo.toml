@@ -8,7 +8,6 @@ authors.workspace = true
 [dependencies]
 sp1-zkvm = "1.2.0"
 consensus-core = { workspace = true }
-common = { workspace = true }
 serde_cbor = { workspace = true }
 sp1-helios-primitives = { workspace = true }
 alloy-sol-types = { workspace = true }
