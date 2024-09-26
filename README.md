@@ -57,11 +57,7 @@ Continuously generate proofs & keep light client updated with chain
 2. `RUST_LOG=info cargo run --release --bin operator`
 
 ## Supported Networks
-To run `sp1-helios` we recommend getting a Beacon Chain node from Quicknode, or one of the providers on this list of [L1 Ethereum beacon chain RPC providers](https://docs.arbitrum.io/run-arbitrum-node/l1-ethereum-beacon-chain-rpc-providers#list-of-ethereum-beacon-chain-rpc-providers).
-
-> [!CAUTION]
->
-> These RPC's are not guaranteed to work. If you see 404 errors, use a Beacon Chain RPC from one of the providers above, or set up your own.
+To run `sp1-helios` we recommend getting a Beacon Chain node from Quicknode, or one of the providers from this list of [L1 Ethereum beacon chain RPC providers](https://docs.arbitrum.io/run-arbitrum-node/l1-ethereum-beacon-chain-rpc-providers#list-of-ethereum-beacon-chain-rpc-providers).
 
 **Source (bridging from):**
 - Mainnet
