@@ -57,18 +57,22 @@ Continuously generate proofs & keep light client updated with chain
 2. `RUST_LOG=info cargo run --release --bin operator`
 
 ## Supported Networks
-Public light client RPCs are hard to come by - for convenience, here are some example values [courtesy of Nimbus](https://github.com/status-im/nimbus-eth2?tab=readme-ov-file#quickly-test-your-tooling-against-nimbus) (as of Aug 20, 2024)
+To run `sp1-helios` we recommend getting a Beacon Chain node from Quicknode, or one of the providers on this list of [L1 Ethereum beacon chain RPC providers](https://docs.arbitrum.io/run-arbitrum-node/l1-ethereum-beacon-chain-rpc-providers#list-of-ethereum-beacon-chain-rpc-providers).
+
+> [!CAUTION]
+>
+> These RPC's are not guaranteed to work. If you see 404 errors, use a Beacon Chain RPC from one of the providers above, or set up your own.
 
 **Source (bridging from):**
 - Mainnet
    - `SOURCE_CHAIN_ID=1`
-   - `SOURCE_CONSENSUS_RPC_URL=http://unstable.mainnet.beacon-api.nimbus.team/`
+   - `SOURCE_CONSENSUS_RPC_URL=<ETHEREUM_BEACON_CHAIN_RPC_URL>`
 - Sepolia Testnet
    - `SOURCE_CHAIN_ID=11155111`
-   - `SOURCE_CONSENSUS_RPC_URL=http://unstable.sepolia.beacon-api.nimbus.team`
+   - `SOURCE_CONSENSUS_RPC_URL=<SEPOLIA_BEACON_CHAIN_RPC_URL>`
 - Holesky Testnet
    - `SOURCE_CHAIN_ID=17000`
-   - `SOURCE_CONSENSUS_RPC_URL=http://testing.holesky.beacon-api.nimbus.team`
+   - `SOURCE_CONSENSUS_RPC_URL=<HOLESKY_BEACON_CHAIN_RPC_URL>`
 
 **Destination (bridging to):**
 - Helios supports bridging to any arbitrary EVM chain.
