@@ -6,7 +6,7 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
-sp1-zkvm = "1.2.0"
+sp1-zkvm = "2.0.0"
 consensus-core = { workspace = true }
 common = { workspace = true }
 serde_cbor = { workspace = true }
