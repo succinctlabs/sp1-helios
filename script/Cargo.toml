@@ -19,20 +19,13 @@ path = "./bin/test.rs"
 
 [dependencies]
 dotenv = { workspace = true }
-eyre = { workspace = true }
 sp1-sdk = { workspace = true }
 tokio = { workspace = true }
 helios = { workspace = true }
 sp1-helios-primitives = { workspace = true }
-tracing = { workspace = true }
 serde = { workspace = true }
 ssz-rs = { workspace = true }
-thiserror = { workspace = true }
-zduny-wasm-timer = { workspace = true }
 serde_cbor = { workspace = true }
-hex = { workspace = true }
-serde_json = { workspace = true }
-alloy-sol-types = { workspace = true }
 clap = { workspace = true }
 log = { workspace = true }
 env_logger = { workspace = true }

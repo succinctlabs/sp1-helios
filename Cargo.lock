@@ -6789,13 +6789,8 @@ version = "0.1.0"
 dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
- "common",
  "consensus-core",
- "eyre",
- "hex",
  "serde",
- "serde_json",
- "serde_with",
  "ssz_rs",
 ]
 
@@ -6805,9 +6800,7 @@ version = "0.1.0"
 dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
- "common",
  "consensus-core",
- "hex",
  "serde_cbor",
  "sp1-helios-primitives",
  "sp1-zkvm",
@@ -6821,28 +6814,21 @@ version = "0.1.0"
 dependencies = [
  "alloy 0.1.4",
  "alloy-primitives",
- "alloy-sol-types",
  "anyhow",
  "clap",
  "dotenv",
  "env_logger",
- "eyre",
  "helios",
- "hex",
  "log",
  "reqwest 0.12.7",
  "serde",
  "serde_cbor",
- "serde_json",
  "sp1-build",
  "sp1-helios-primitives",
  "sp1-sdk",
  "ssz_rs",
- "thiserror",
  "tokio",
- "tracing",
  "tree_hash",
- "zduny-wasm-timer",
 ]
 
 [[package]]
