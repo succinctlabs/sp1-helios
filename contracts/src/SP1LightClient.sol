@@ -51,9 +51,9 @@ contract SP1LightClient {
 
     struct InitParams {
         bytes32 executionStateRoot;
-        address guardian;
-        bytes32 genesisValidatorsRoot;
         uint256 genesisTime;
+        bytes32 genesisValidatorsRoot;
+        address guardian;
         uint256 head;
         bytes32 header;
         bytes32 heliosProgramVkey;

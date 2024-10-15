@@ -2,7 +2,7 @@
 sp1_zkvm::entrypoint!(main);
 
 use alloy_primitives::{B256, U256};
-use alloy_sol_types::SolType;
+use alloy_sol_types::SolValue;
 use consensus_core::{apply_finality_update, apply_update, verify_finality_update, verify_update};
 use sp1_helios_primitives::types::{ProofInputs, ProofOutputs};
 use ssz_rs::prelude::*;
@@ -91,14 +91,14 @@ pub fn main() {
     };
     let head = store.finalized_header.beacon.slot;
 
-    let proof_outputs = ProofOutputs::abi_encode(&(
-        prev_header,
-        header,
-        sync_committee_hash,
-        next_sync_committee_hash,
-        U256::from(prev_head),
-        U256::from(head),
-        execution_state_proof.execution_state_root,
-    ));
-    sp1_zkvm::io::commit_slice(&proof_outputs);
+    let proof_outputs = ProofOutputs {
+        executionStateRoot: execution_state_proof.execution_state_root,
+        newHeader: header,
+        nextSyncCommitteeHash: next_sync_committee_hash,
+        newHead: U256::from(head),
+        prevHeader: prev_header,
+        prevHead: U256::from(prev_head),
+        syncCommitteeHash: sync_committee_hash,
+    };
+    sp1_zkvm::io::commit_slice(&proof_outputs.abi_encode());
 }

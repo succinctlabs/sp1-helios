@@ -26,13 +26,14 @@ pub struct ExecutionStateProof {
     pub gindex: String,
 }
 
-/// bytes32 prevHeader;
-/// bytes32 newHeader;
-/// bytes32 syncCommitteeHash;
-/// bytes32 nextSyncCommitteeHash;
-/// uint256 prevHead;
-/// uint256 newHead;
-/// bytes32 executionStateRoot;
-pub type ProofOutputs = sol! {
-    tuple(bytes32, bytes32, bytes32, bytes32, uint256, uint256, bytes32)
-};
+sol! {
+    struct ProofOutputs {
+        bytes32 executionStateRoot;
+        bytes32 newHeader;
+        bytes32 nextSyncCommitteeHash;
+        uint256 newHead;
+        bytes32 prevHeader;
+        uint256 prevHead;
+        bytes32 syncCommitteeHash;
+    }
+}

@@ -20,12 +20,8 @@ contract DeployScript is Script {
 
         SP1LightClient.InitParams memory params = readGenesisConfig();
 
-        // Detect if the SP1_VERIFIER_ADDRESS is set to mock, and pick the correct verifier.
-        string memory emptyStr = "";
-        if (
-            keccak256(abi.encodePacked(params.verifier)) ==
-            keccak256(abi.encodePacked(emptyStr))
-        ) {
+        // If the verifier address is set to 0, set it to the address of the mock verifier.
+        if (params.verifier == address(0)) {
             params.verifier = address(new SP1MockVerifier());
         }
 
