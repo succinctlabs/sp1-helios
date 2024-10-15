@@ -1,10 +1,10 @@
 {
-  "executionStateRoot": "0x096646fcea05b5075b8e967b4c3c38c4104353adaa2e716759a454a5cd31e0f1",
+  "executionStateRoot": "0x822eb489da4777c08d276f7d1ca8b89ca9c6f807959d0efc22bedaafaaf85495",
   "genesisTime": 1655733600,
   "genesisValidatorsRoot": "0xd8ea171f3c94aea21ebc42a1ed61052acf3f9209c00e4efbaaddac09ed9b8078",
   "guardian": "0xded0000e32f8f40414d3ab3a830f735a3553e18e",
-  "head": 6107872,
-  "header": "0xfc22f7f2e86c72ba068af84fe861276b6d95f7c7cd16b1ad92b5f17da672432b",
+  "head": 6108448,
+  "header": "0xac3596a8c94ea4029b59495f37b45398a6a2ca735379b54239e625ab9c95e5f4",
   "heliosProgramVkey": "0x0045a4708ac27a6e55aa8ac0269955904326abce5a5828d2ad91f5f3c0d89cdd",
   "secondsPerSlot": 12,
   "slotsPerEpoch": 32,

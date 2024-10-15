@@ -31,10 +31,7 @@ contract DeployScript is Script {
         return address(lightClient);
     }
 
-    function readGenesisConfig()
-        public
-        returns (SP1LightClient.InitParams memory)
-    {
+    function readGenesisConfig() public returns (SP1LightClient.InitParams memory) {
         string memory root = vm.projectRoot();
         string memory path = string.concat(root, "/", "genesis.json");
         string memory json = vm.readFile(path);
