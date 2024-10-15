@@ -43,10 +43,10 @@ contract DeployScript is Script {
     }
 
     function updateGenesisConfig() public {
-        // If ENV_FILE is set, pass it to the fetch-rollup-config binary.
+        // If ENV_FILE is set, pass it to the genesis binary.
         string memory envFile = vm.envOr("ENV_FILE", string(".env"));
 
-        // Build the fetch-rollup-config binary. Use the quiet flag to suppress build output.
+        // Build the genesis binary. Use the quiet flag to suppress build output.
         string[] memory inputs = new string[](6);
         inputs[0] = "cargo";
         inputs[1] = "build";
@@ -56,7 +56,7 @@ contract DeployScript is Script {
         inputs[5] = "--quiet";
         vm.ffi(inputs);
 
-        // Run the fetch-rollup-config binary which updates the rollup config hash and the block number in the config.
+        // Run the genesis binary which updates the genesis config.
         // Use the quiet flag to suppress build output.
         string[] memory inputs2 = new string[](9);
         inputs2[0] = "cargo";
