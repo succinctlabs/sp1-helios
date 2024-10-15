@@ -44,7 +44,7 @@ Holesky -> Sepolia Bridge: [`0x53544ba8e5504Df8569E1F2fEd8b39af9e7F5B71`](https:
 3. Paste the genesis parameters into `.env` and manually fill in the other parameters
 4. `forge install`
 5. `source .env`
-6. `forge script script/Deploy.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --etherscan-api-key $ETHERSCAN_API_KEY --broadcast --verify --via-ir`
+6. `forge script script/Deploy.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --etherscan-api-key $ETHERSCAN_API_KEY --broadcast --verify`
 7. Take note of the light client contract address printed by the script
 
    ![alt text](./return-image.png)
@@ -57,7 +57,7 @@ Continuously generate proofs & keep light client updated with chain
 2. `RUST_LOG=info cargo run --release --bin operator`
 
 ## Supported Networks
-To run `sp1-helios` we recommend getting a Beacon Chain node from Quicknode, or one of the providers from this list of [L1 Ethereum beacon chain RPC providers](https://docs.arbitrum.io/run-arbitrum-node/l1-ethereum-beacon-chain-rpc-providers#list-of-ethereum-beacon-chain-rpc-providers).
+To run `sp1-helios` we recommend getting a Beacon Chain node from Quicknode, or one of the providers from this list of [L1 Ethereum beacon chain RPC providers](https://github.com/a16z/helios/blob/master/README.md#configuration-files-).
 
 **Source (bridging from):**
 - Mainnet
@@ -73,17 +73,7 @@ To run `sp1-helios` we recommend getting a Beacon Chain node from Quicknode, or 
 **Destination (bridging to):**
 - Helios supports bridging to any arbitrary EVM chain.
 
+**Warning:** Sepolia and Holesky networks are currently not functioning as expected. Use with caution.
+
 ## Testing `sp1-helios`
 Once you've configured your environment, you can test that the light client program can update to a new consensus state by running:
-
-```bash
-RUST_LOG=info cargo run --bin test --release
-```
-
-or to test a specific slot:
-
-```bash
-RUST_LOG=info cargo run --bin test --release -- --slot your_slot_number
-```
-
-This will fetch the relevant data from the source chain and execute the program with the generated inputs. If this runs successfully, the program can update to a new consensus state.

@@ -19,7 +19,7 @@ pub mod relay;
 
 /// Fetch updates for client
 pub async fn get_updates(client: &Inner<NimbusRpc>) -> Vec<Update> {
-    let period = calc_sync_period(client.store.finalized_header.slot);
+    let period = calc_sync_period(client.store.finalized_header.beacon.slot);
 
     let updates = client
         .rpc

@@ -158,7 +158,7 @@ impl SP1LightClientOperator {
         let finality_update = client.rpc.get_finality_update().await.unwrap();
 
         // Check if contract is up to date
-        let latest_block = finality_update.finalized_header.slot;
+        let latest_block = finality_update.finalized_header.beacon.slot;
         if latest_block <= head {
             info!("Contract is up to date. Nothing to update.");
             return Ok(None);

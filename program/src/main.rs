@@ -31,8 +31,8 @@ pub fn main() {
         execution_state_proof,
     } = serde_cbor::from_slice(&encoded_inputs).unwrap();
 
-    let prev_header: B256 = store.finalized_header.tree_hash_root();
-    let prev_head = store.finalized_header.slot;
+    let prev_header: B256 = store.finalized_header.beacon.tree_hash_root();
+    let prev_head = store.finalized_header.beacon.slot;
 
     // 1. Apply sync committee updates, if any
     for (index, update) in updates.iter().enumerate() {
@@ -75,7 +75,7 @@ pub fn main() {
         execution_state_branch_nodes.iter(),
         MERKLE_BRANCH_DEPTH,
         MERKLE_BRANCH_INDEX,
-        &Node::try_from(store.finalized_header.body_root.as_ref()).unwrap(),
+        &Node::try_from(store.finalized_header.beacon.body_root.as_ref()).unwrap(),
     );
     if !execution_state_proof_is_valid {
         panic!("Execution state root proof is invalid!");
@@ -83,13 +83,13 @@ pub fn main() {
     println!("Execution state root proof is valid.");
 
     // 4. Commit new state root, header, and sync committee for usage in the on-chain contract
-    let header: B256 = store.finalized_header.tree_hash_root();
+    let header: B256 = store.finalized_header.beacon.tree_hash_root();
     let sync_committee_hash: B256 = store.current_sync_committee.tree_hash_root();
     let next_sync_committee_hash: B256 = match &mut store.next_sync_committee {
         Some(next_sync_committee) => next_sync_committee.tree_hash_root(),
         None => B256::ZERO,
     };
-    let head = store.finalized_header.slot;
+    let head = store.finalized_header.beacon.slot;
 
     let proof_outputs = ProofOutputs::abi_encode(&(
         prev_header,

@@ -19,34 +19,39 @@ contract DeployScript is Script {
         // Detect if the SP1_PROVER is set to mock, and pick the correct verifier.
         string memory mockStr = "mock";
         if (
-            keccak256(abi.encodePacked(vm.envString("SP1_PROVER")))
-                == keccak256(abi.encodePacked(mockStr))
+            keccak256(abi.encodePacked(vm.envString("SP1_PROVER"))) ==
+            keccak256(abi.encodePacked(mockStr))
         ) {
             verifier = ISP1Verifier(address(new SP1MockVerifier()));
         } else {
-            verifier = ISP1Verifier(address(vm.envAddress("SP1_VERIFIER_ADDRESS")));
+            verifier = ISP1Verifier(
+                address(vm.envAddress("SP1_VERIFIER_ADDRESS"))
+            );
         }
 
         // Read trusted initialization parameters from environment.
         address guardian = vm.envOr("GUARDIAN_ADDRESS", msg.sender);
 
+        SP1LightClient.InitParams memory params = SP1LightClient.InitParams({
+            genesisValidatorsRoot: vm.envBytes32("GENESIS_VALIDATORS_ROOT"),
+            genesisTime: vm.envUint("GENESIS_TIME"),
+            secondsPerSlot: vm.envUint("SECONDS_PER_SLOT"),
+            slotsPerPeriod: vm.envUint("SLOTS_PER_PERIOD"),
+            slotsPerEpoch: vm.envUint("SLOTS_PER_EPOCH"),
+            sourceChainId: vm.envUint("SOURCE_CHAIN_ID"),
+            syncCommitteeHash: vm.envBytes32("SYNC_COMMITTEE_HASH"),
+            header: vm.envBytes32("FINALIZED_HEADER"),
+            executionStateRoot: vm.envBytes32("EXECUTION_STATE_ROOT"),
+            head: vm.envUint("HEAD"),
+            heliosProgramVkey: vm.envBytes32("SP1_HELIOS_PROGRAM_VKEY"),
+            verifier: address(verifier),
+            guardian: guardian
+        });
+
         // Deploy the SP1 Helios contract.
-        SP1LightClient lightClient =
-            new SP1LightClient{salt: bytes32(vm.envBytes("CREATE2_SALT"))}(
-                vm.envBytes32("GENESIS_VALIDATORS_ROOT"),
-                vm.envUint("GENESIS_TIME"),
-                vm.envUint("SECONDS_PER_SLOT"),
-                vm.envUint("SLOTS_PER_PERIOD"),
-                vm.envUint("SLOTS_PER_EPOCH"),
-                vm.envUint("SOURCE_CHAIN_ID"),
-                vm.envBytes32("SYNC_COMMITTEE_HASH"),
-                vm.envBytes32("FINALIZED_HEADER"),
-                vm.envBytes32("EXECUTION_STATE_ROOT"),
-                vm.envUint("HEAD"),
-                vm.envBytes32("SP1_HELIOS_PROGRAM_VKEY"),
-                address(verifier),
-                guardian
-            );
+        SP1LightClient lightClient = new SP1LightClient{
+            salt: bytes32(vm.envBytes("CREATE2_SALT"))
+        }(params);
 
         return address(lightClient);
     }
