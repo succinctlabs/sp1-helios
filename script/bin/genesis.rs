@@ -132,10 +132,15 @@ pub async fn main() -> Result<()> {
     // Get the account associated with the private key.
     let private_key = env::var("PRIVATE_KEY").unwrap();
     let signer: PrivateKeySigner = private_key.parse().expect("Failed to parse private key");
-    let address = signer.address();
+    let deployer_address = signer.address();
 
     // Attempt using the GUARDIAN_ADDRESS, otherwise default to the address derived from the private key.
-    let guardian = env::var("GUARDIAN_ADDRESS").unwrap_or(format!("0x{:x}", address));
+    // If the GUARDIAN_ADDRESS is not set, or is empty, the deployer address is used as the guardian address.
+    let guardian = match env::var("GUARDIAN_ADDRESS") {
+        Ok(guardian_addr) if !guardian_addr.is_empty() => guardian_addr,
+        _ => format!("0x{:x}", deployer_address),
+    };
+
     genesis_config.guardian = guardian;
 
     write_genesis_config(&workspace_root, &genesis_config)?;

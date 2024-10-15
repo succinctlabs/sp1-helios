@@ -61,7 +61,7 @@ cd contracts
 # Install dependencies
 forge install
 
-# Deploy contract
+# Deploy contract. The forge script determines the initial genesis state based on your .env
 forge script script/Deploy.s.sol --ffi --rpc-url $DEST_RPC_URL --private-key $PRIVATE_KEY --etherscan-api-key $ETHERSCAN_API_KEY --broadcast --verify
 ```
 
