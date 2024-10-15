@@ -1,0 +1,15 @@
+{
+  "executionStateRoot": "0x502962a29ba289a9916db4954539e89875e90eeb6df072b5d73a59022fff6975",
+  "genesisTime": 1606824023,
+  "genesisValidatorsRoot": "0x4b363db94e286120d76eb905340fdd4e54bfe9f06bf33ff6cf5ad27f511bfe95",
+  "guardian": "0xded0000e32f8f40414d3ab3a830f735a3553e18e",
+  "head": 10183328,
+  "header": "0x8e7e05c029bc45ed8dd83d671369980487dc9526d2b9fc9a878fabbc70a19c02",
+  "heliosProgramVkey": "0x00c3300553dad615978489fbd0b46dc2e7c37280cca1fe6e892b01ad82583271",
+  "secondsPerSlot": 12,
+  "slotsPerEpoch": 32,
+  "slotsPerPeriod": 8192,
+  "sourceChainId": 1,
+  "syncCommitteeHash": "0x6f8fdbfec13e138a4430e0c853ef8cdede0f8cd2b0f7c9760a5435d9ec5eadb8",
+  "verifier": "0x0000000000000000000000000000000000000000"
+}

@@ -40,29 +40,29 @@ contract SP1LightClient {
     address public guardian;
 
     struct ProofOutputs {
-        bytes32 prevHeader;
-        bytes32 newHeader;
-        bytes32 syncCommitteeHash;
-        bytes32 nextSyncCommitteeHash;
-        uint256 prevHead;
-        uint256 newHead;
         bytes32 executionStateRoot;
+        bytes32 newHeader;
+        bytes32 nextSyncCommitteeHash;
+        uint256 newHead;
+        bytes32 prevHeader;
+        uint256 prevHead;
+        bytes32 syncCommitteeHash;
     }
 
     struct InitParams {
+        bytes32 executionStateRoot;
+        address guardian;
         bytes32 genesisValidatorsRoot;
         uint256 genesisTime;
+        uint256 head;
+        bytes32 header;
+        bytes32 heliosProgramVkey;
         uint256 secondsPerSlot;
-        uint256 slotsPerPeriod;
         uint256 slotsPerEpoch;
+        uint256 slotsPerPeriod;
         uint256 sourceChainId;
         bytes32 syncCommitteeHash;
-        bytes32 header;
-        bytes32 executionStateRoot;
-        uint256 head;
-        bytes32 heliosProgramVkey;
         address verifier;
-        address guardian;
     }
 
     event HeadUpdate(uint256 indexed slot, bytes32 indexed root);

@@ -44,6 +44,7 @@ anyhow = "1.0.86"
 reqwest = "0.12.5"
 tree_hash = "0.7.0"
 serde_with = { version = "3.4.0", features = ["hex"] }
+cargo_metadata = "0.18"
 
 [patch.crates-io]
 sha2-v0-9-9 = { git = "https://github.com/sp1-patches/RustCrypto-hashes", package = "sha2", branch = "patch-sha2-v0.9.9" }

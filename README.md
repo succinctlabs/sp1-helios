@@ -9,11 +9,7 @@ On-chain Ethereum light client built with SP1.
 - `/primitives`: Common types shared between the program, contract, and script
 - `/script`: Scripts for getting the contract's genesis parameters and generating proofs
 
-## Deployments
-
-Holesky -> Sepolia Bridge: [`0x53544ba8e5504Df8569E1F2fEd8b39af9e7F5B71`](https://sepolia.etherscan.io/address/0x53544ba8e5504Df8569E1F2fEd8b39af9e7F5B71)
-
-## Deploy a light client
+## Deploy an SP1 Helios Light Client
 
 ### Prerequisites
 
@@ -37,14 +33,16 @@ Holesky -> Sepolia Bridge: [`0x53544ba8e5504Df8569E1F2fEd8b39af9e7F5B71`](https:
       - The other .env values will be filled out at a later step.
   3. `RUST_LOG=info cargo run --release --bin genesis`
 
-### 2. Deploy contracts
+### 2. Deploy SP1 Helios Contract
+
+To deploy the SP1 Helios contract, you need to fill out the following variables in your 
 
 1. `cd ../contracts`
 2. `cp .env.example .env`
 3. Paste the genesis parameters into `.env` and manually fill in the other parameters
 4. `forge install`
 5. `source .env`
-6. `forge script script/Deploy.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --etherscan-api-key $ETHERSCAN_API_KEY --broadcast --verify`
+6. `forge script script/Deploy.s.sol --ffi --rpc-url $RPC_URL --private-key $PRIVATE_KEY --etherscan-api-key $ETHERSCAN_API_KEY --broadcast --verify`
 7. Take note of the light client contract address printed by the script
 
    ![alt text](./return-image.png)
