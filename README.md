@@ -25,7 +25,7 @@ There are two options for getting a consensus RPC that works for SP1 Helios:
 
 The RPC you just set up will be used as the `SOURCE_CONSENSUS_RPC_URL` in the next step.
 
-### 2) Set up Environment
+### 2) Environment Setup
 
 In the root directory, create a file called `.env` (mirroring `.env.example`) and set the following environment variables:
 
