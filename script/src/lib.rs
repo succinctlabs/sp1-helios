@@ -45,7 +45,8 @@ pub async fn get_latest_checkpoint() -> B256 {
 
 /// Fetch checkpoint from a slot number.
 pub async fn get_checkpoint(slot: u64) -> B256 {
-    let rpc_url = std::env::var("SOURCE_CONSENSUS_RPC_URL").expect("SOURCE_CONSENSUS_RPC_URL not set");
+    let rpc_url =
+        std::env::var("SOURCE_CONSENSUS_RPC_URL").expect("SOURCE_CONSENSUS_RPC_URL not set");
     let rpc: NimbusRpc = NimbusRpc::new(&rpc_url);
 
     let block = rpc.get_block(slot).await.unwrap();

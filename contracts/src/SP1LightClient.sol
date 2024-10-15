@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.16;
+pragma solidity ^0.8.22;
 
 import {ISP1Verifier} from "@sp1-contracts/ISP1Verifier.sol";
 
