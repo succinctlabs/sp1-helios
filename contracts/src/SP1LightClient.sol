@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.16;
+pragma solidity ^0.8.22;
 
 import {ISP1Verifier} from "@sp1-contracts/ISP1Verifier.sol";
 
@@ -40,13 +40,29 @@ contract SP1LightClient {
     address public guardian;
 
     struct ProofOutputs {
-        bytes32 prevHeader;
-        bytes32 newHeader;
-        bytes32 syncCommitteeHash;
-        bytes32 nextSyncCommitteeHash;
-        uint256 prevHead;
-        uint256 newHead;
         bytes32 executionStateRoot;
+        bytes32 newHeader;
+        bytes32 nextSyncCommitteeHash;
+        uint256 newHead;
+        bytes32 prevHeader;
+        uint256 prevHead;
+        bytes32 syncCommitteeHash;
+    }
+
+    struct InitParams {
+        bytes32 executionStateRoot;
+        uint256 genesisTime;
+        bytes32 genesisValidatorsRoot;
+        address guardian;
+        uint256 head;
+        bytes32 header;
+        bytes32 heliosProgramVkey;
+        uint256 secondsPerSlot;
+        uint256 slotsPerEpoch;
+        uint256 slotsPerPeriod;
+        uint256 sourceChainId;
+        bytes32 syncCommitteeHash;
+        address verifier;
     }
 
     event HeadUpdate(uint256 indexed slot, bytes32 indexed root);
@@ -57,40 +73,29 @@ contract SP1LightClient {
     error HeaderRootAlreadySet(uint256 slot);
     error StateRootAlreadySet(uint256 slot);
 
-    constructor(
-        bytes32 _genesisValidatorsRoot,
-        uint256 _genesisTime,
-        uint256 _secondsPerSlot,
-        uint256 _slotsPerPeriod,
-        uint256 _slotsPerEpoch,
-        uint256 _sourceChainId,
-        bytes32 _syncCommitteeHash,
-        bytes32 _header,
-        bytes32 _executionStateRoot,
-        uint256 _head,
-        bytes32 _heliosProgramVkey,
-        address _verifier,
-        address _guardian
-    ) {
-        GENESIS_VALIDATORS_ROOT = _genesisValidatorsRoot;
-        GENESIS_TIME = _genesisTime;
-        SECONDS_PER_SLOT = _secondsPerSlot;
-        SLOTS_PER_PERIOD = _slotsPerPeriod;
-        SLOTS_PER_EPOCH = _slotsPerEpoch;
-        SOURCE_CHAIN_ID = _sourceChainId;
-        syncCommittees[getSyncCommitteePeriod(_head)] = _syncCommitteeHash;
-        heliosProgramVkey = _heliosProgramVkey;
-        headers[_head] = _header;
-        executionStateRoots[_head] = _executionStateRoot;
-        head = _head;
-        verifier = ISP1Verifier(_verifier);
-        guardian = _guardian;
+    constructor(InitParams memory params) {
+        GENESIS_VALIDATORS_ROOT = params.genesisValidatorsRoot;
+        GENESIS_TIME = params.genesisTime;
+        SECONDS_PER_SLOT = params.secondsPerSlot;
+        SLOTS_PER_PERIOD = params.slotsPerPeriod;
+        SLOTS_PER_EPOCH = params.slotsPerEpoch;
+        SOURCE_CHAIN_ID = params.sourceChainId;
+        syncCommittees[getSyncCommitteePeriod(params.head)] = params.syncCommitteeHash;
+        heliosProgramVkey = params.heliosProgramVkey;
+        headers[params.head] = params.header;
+        executionStateRoots[params.head] = params.executionStateRoot;
+        head = params.head;
+        verifier = ISP1Verifier(params.verifier);
+        guardian = params.guardian;
     }
-   
+
     /// @notice Updates the light client with a new header, execution state root, and sync committee (if changed)
     /// @param proof The proof bytes for the SP1 proof.
     /// @param publicValues The public commitments from the SP1 proof.
-    function update(bytes calldata proof, bytes calldata publicValues) external {
+    function update(
+        bytes calldata proof,
+        bytes calldata publicValues
+    ) external {
         // Parse the outputs from the committed public values associated with the proof.
         ProofOutputs memory po = abi.decode(publicValues, (ProofOutputs));
         if (po.newHead <= head) {
@@ -124,13 +129,13 @@ contract SP1LightClient {
         // Set next peroid's sync committee hash if value exists.
         if (po.nextSyncCommitteeHash != bytes32(0)) {
             uint256 nextPeriod = period + 1;
-            
+
             // If the next sync committee is already correct, we don't need to update it.
             if (syncCommittees[nextPeriod] != po.nextSyncCommitteeHash) {
                 if (syncCommittees[nextPeriod] != bytes32(0)) {
                     revert SyncCommitteeAlreadySet(nextPeriod);
                 }
-            
+
                 syncCommittees[nextPeriod] = po.nextSyncCommitteeHash;
                 emit SyncCommitteeUpdate(nextPeriod, po.nextSyncCommitteeHash);
             }

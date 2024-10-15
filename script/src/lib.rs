@@ -19,7 +19,7 @@ pub mod relay;
 
 /// Fetch updates for client
 pub async fn get_updates(client: &Inner<NimbusRpc>) -> Vec<Update> {
-    let period = calc_sync_period(client.store.finalized_header.slot);
+    let period = calc_sync_period(client.store.finalized_header.beacon.slot);
 
     let updates = client
         .rpc
@@ -45,7 +45,8 @@ pub async fn get_latest_checkpoint() -> B256 {
 
 /// Fetch checkpoint from a slot number.
 pub async fn get_checkpoint(slot: u64) -> B256 {
-    let rpc_url = std::env::var("SOURCE_CONSENSUS_RPC_URL").expect("SOURCE_CONSENSUS_RPC_URL not set");
+    let rpc_url =
+        std::env::var("SOURCE_CONSENSUS_RPC_URL").expect("SOURCE_CONSENSUS_RPC_URL not set");
     let rpc: NimbusRpc = NimbusRpc::new(&rpc_url);
 
     let block = rpc.get_block(slot).await.unwrap();

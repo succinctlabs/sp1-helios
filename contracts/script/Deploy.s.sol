@@ -15,39 +15,60 @@ contract DeployScript is Script {
     function run() public returns (address) {
         vm.startBroadcast();
 
-        ISP1Verifier verifier;
-        // Detect if the SP1_PROVER is set to mock, and pick the correct verifier.
-        string memory mockStr = "mock";
-        if (
-            keccak256(abi.encodePacked(vm.envString("SP1_PROVER")))
-                == keccak256(abi.encodePacked(mockStr))
-        ) {
-            verifier = ISP1Verifier(address(new SP1MockVerifier()));
-        } else {
-            verifier = ISP1Verifier(address(vm.envAddress("SP1_VERIFIER_ADDRESS")));
+        // Update the rollup config to match the current chain. If the starting block number is 0, the latest block number and starting output root will be fetched.
+        updateGenesisConfig();
+
+        SP1LightClient.InitParams memory params = readGenesisConfig();
+
+        // If the verifier address is set to 0, set it to the address of the mock verifier.
+        if (params.verifier == address(0)) {
+            params.verifier = address(new SP1MockVerifier());
         }
 
-        // Read trusted initialization parameters from environment.
-        address guardian = vm.envOr("GUARDIAN_ADDRESS", msg.sender);
-
         // Deploy the SP1 Helios contract.
-        SP1LightClient lightClient =
-            new SP1LightClient{salt: bytes32(vm.envBytes("CREATE2_SALT"))}(
-                vm.envBytes32("GENESIS_VALIDATORS_ROOT"),
-                vm.envUint("GENESIS_TIME"),
-                vm.envUint("SECONDS_PER_SLOT"),
-                vm.envUint("SLOTS_PER_PERIOD"),
-                vm.envUint("SLOTS_PER_EPOCH"),
-                vm.envUint("SOURCE_CHAIN_ID"),
-                vm.envBytes32("SYNC_COMMITTEE_HASH"),
-                vm.envBytes32("FINALIZED_HEADER"),
-                vm.envBytes32("EXECUTION_STATE_ROOT"),
-                vm.envUint("HEAD"),
-                vm.envBytes32("SP1_HELIOS_PROGRAM_VKEY"),
-                address(verifier),
-                guardian
-            );
+        SP1LightClient lightClient = new SP1LightClient(params);
 
         return address(lightClient);
+    }
+
+    function readGenesisConfig()
+        public
+        returns (SP1LightClient.InitParams memory)
+    {
+        string memory root = vm.projectRoot();
+        string memory path = string.concat(root, "/", "genesis.json");
+        string memory json = vm.readFile(path);
+        bytes memory data = vm.parseJson(json);
+        return abi.decode(data, (SP1LightClient.InitParams));
+    }
+
+    function updateGenesisConfig() public {
+        // If ENV_FILE is set, pass it to the genesis binary.
+        string memory envFile = vm.envOr("ENV_FILE", string(".env"));
+
+        // Build the genesis binary. Use the quiet flag to suppress build output.
+        string[] memory inputs = new string[](6);
+        inputs[0] = "cargo";
+        inputs[1] = "build";
+        inputs[2] = "--bin";
+        inputs[3] = "genesis";
+        inputs[4] = "--release";
+        inputs[5] = "--quiet";
+        vm.ffi(inputs);
+
+        // Run the genesis binary which updates the genesis config.
+        // Use the quiet flag to suppress build output.
+        string[] memory inputs2 = new string[](9);
+        inputs2[0] = "cargo";
+        inputs2[1] = "run";
+        inputs2[2] = "--bin";
+        inputs2[3] = "genesis";
+        inputs2[4] = "--release";
+        inputs2[5] = "--quiet";
+        inputs2[6] = "--";
+        inputs2[7] = "--env-file";
+        inputs2[8] = envFile;
+
+        vm.ffi(inputs2);
     }
 }

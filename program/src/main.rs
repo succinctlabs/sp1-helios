@@ -2,7 +2,7 @@
 sp1_zkvm::entrypoint!(main);
 
 use alloy_primitives::{B256, U256};
-use alloy_sol_types::SolType;
+use alloy_sol_types::SolValue;
 use consensus_core::{apply_finality_update, apply_update, verify_finality_update, verify_update};
 use sp1_helios_primitives::types::{ProofInputs, ProofOutputs};
 use ssz_rs::prelude::*;
@@ -31,8 +31,8 @@ pub fn main() {
         execution_state_proof,
     } = serde_cbor::from_slice(&encoded_inputs).unwrap();
 
-    let prev_header: B256 = store.finalized_header.tree_hash_root();
-    let prev_head = store.finalized_header.slot;
+    let prev_header: B256 = store.finalized_header.beacon.tree_hash_root();
+    let prev_head = store.finalized_header.beacon.slot;
 
     // 1. Apply sync committee updates, if any
     for (index, update) in updates.iter().enumerate() {
@@ -75,7 +75,7 @@ pub fn main() {
         execution_state_branch_nodes.iter(),
         MERKLE_BRANCH_DEPTH,
         MERKLE_BRANCH_INDEX,
-        &Node::try_from(store.finalized_header.body_root.as_ref()).unwrap(),
+        &Node::try_from(store.finalized_header.beacon.body_root.as_ref()).unwrap(),
     );
     if !execution_state_proof_is_valid {
         panic!("Execution state root proof is invalid!");
@@ -83,22 +83,22 @@ pub fn main() {
     println!("Execution state root proof is valid.");
 
     // 4. Commit new state root, header, and sync committee for usage in the on-chain contract
-    let header: B256 = store.finalized_header.tree_hash_root();
+    let header: B256 = store.finalized_header.beacon.tree_hash_root();
     let sync_committee_hash: B256 = store.current_sync_committee.tree_hash_root();
     let next_sync_committee_hash: B256 = match &mut store.next_sync_committee {
         Some(next_sync_committee) => next_sync_committee.tree_hash_root(),
         None => B256::ZERO,
     };
-    let head = store.finalized_header.slot;
+    let head = store.finalized_header.beacon.slot;
 
-    let proof_outputs = ProofOutputs::abi_encode(&(
-        prev_header,
-        header,
-        sync_committee_hash,
-        next_sync_committee_hash,
-        U256::from(prev_head),
-        U256::from(head),
-        execution_state_proof.execution_state_root,
-    ));
-    sp1_zkvm::io::commit_slice(&proof_outputs);
+    let proof_outputs = ProofOutputs {
+        executionStateRoot: execution_state_proof.execution_state_root,
+        newHeader: header,
+        nextSyncCommitteeHash: next_sync_committee_hash,
+        newHead: U256::from(head),
+        prevHeader: prev_header,
+        prevHead: U256::from(prev_head),
+        syncCommitteeHash: sync_committee_hash,
+    };
+    sp1_zkvm::io::commit_slice(&proof_outputs.abi_encode());
 }

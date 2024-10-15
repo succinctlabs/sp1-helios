@@ -64,13 +64,13 @@ sol! {
         address public verifier;
 
         struct ProofOutputs {
-            bytes32 prevHeader;
-            bytes32 newHeader;
-            bytes32 syncCommitteeHash;
-            bytes32 nextSyncCommitteeHash;
-            uint256 prevHead;
-            uint256 newHead;
             bytes32 executionStateRoot;
+            bytes32 newHeader;
+            bytes32 nextSyncCommitteeHash;
+            uint256 newHead;
+            bytes32 prevHeader;
+            uint256 prevHead;
+            bytes32 syncCommitteeHash;
         }
 
         event HeadUpdate(uint256 indexed slot, bytes32 indexed root);
@@ -158,7 +158,7 @@ impl SP1LightClientOperator {
         let finality_update = client.rpc.get_finality_update().await.unwrap();
 
         // Check if contract is up to date
-        let latest_block = finality_update.finalized_header.slot;
+        let latest_block = finality_update.finalized_header.beacon.slot;
         if latest_block <= head {
             info!("Contract is up to date. Nothing to update.");
             return Ok(None);
@@ -201,7 +201,7 @@ impl SP1LightClientOperator {
         // Generate proof.
         let proof = self.client.prove(&self.pk, stdin).plonk().run()?;
 
-        info!("New head: {:?}", latest_block);
+        info!("Attempting to update to new head block: {:?}", latest_block);
         Ok(Some(proof))
     }
 
@@ -244,7 +244,10 @@ impl SP1LightClientOperator {
             error!("Transaction reverted!");
         }
 
-        info!("Transaction hash: {:?}", receipt.transaction_hash);
+        info!(
+            "Successfully updated to new head block! Tx hash: {:?}",
+            receipt.transaction_hash
+        );
 
         Ok(())
     }
@@ -285,16 +288,14 @@ impl SP1LightClientOperator {
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<()> {
     env::set_var("RUST_LOG", "info");
     dotenv::dotenv().ok();
     env_logger::init();
 
-    let loop_delay_mins = match env::var("LOOP_DELAY_MINS") {
-        Ok(value) if value.is_empty() => 5, // Use default if empty
-        Ok(value) => value.parse().expect("Invalid LOOP_DELAY_MINS"),
-        Err(_) => 5, // Use default if not set
-    };
+    let loop_delay_mins = env::var("LOOP_DELAY_MINS")
+        .unwrap_or("5".to_string())
+        .parse()?;
 
     let mut operator = SP1LightClientOperator::new().await;
     loop {
