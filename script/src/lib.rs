@@ -6,8 +6,9 @@ use helios::{
         rpc::{nimbus_rpc::NimbusRpc, ConsensusRpc},
         Inner,
     },
-    consensus_core::{calc_sync_period, types::Update},
+    consensus_core::calc_sync_period,
     prelude::*,
+    types::Update,
 };
 use serde::Deserialize;
 use sp1_helios_primitives::types::ExecutionStateProof;
