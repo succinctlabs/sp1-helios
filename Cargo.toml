@@ -16,10 +16,9 @@ sp1-helios-program = { path = "program" }
 sp1-helios-primitives = { path = "primitives" }
 
 # helios
-# TODO: Set this to the stable audit tag once it's available.
-helios = { git = "https://github.com/a16z/helios", rev = "2d592d7c36c571af009b81759d9c4d34466af15d" }
-consensus-core = { git = "https://github.com/a16z/helios", rev = "2d592d7c36c571af009b81759d9c4d34466af15d" }
-common = { git = "https://github.com/a16z/helios", rev = "2d592d7c36c571af009b81759d9c4d34466af15d" }
+helios = { git = "https://github.com/a16z/helios", version = "0.6.1" }
+consensus-core = { git = "https://github.com/a16z/helios", version = "0.6.1" }
+common = { git = "https://github.com/a16z/helios", version = "0.6.1" }
 
 # general
 dotenv = "0.15.0"

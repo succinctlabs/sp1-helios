@@ -1735,8 +1735,8 @@ checksum = "1462739cb27611015575c0c11df5df7601141071f07518d56fcc1be504cbec97"
 
 [[package]]
 name = "client"
-version = "0.6.0"
-source = "git+https://github.com/a16z/helios?rev=2d592d7c36c571af009b81759d9c4d34466af15d#2d592d7c36c571af009b81759d9c4d34466af15d"
+version = "0.6.1"
+source = "git+https://github.com/a16z/helios#545d809be0f135f69a8e6f613bb6bdd0fb4b22d1"
 dependencies = [
  "alloy 0.2.1",
  "common",
@@ -1823,8 +1823,8 @@ checksum = "d3fd119d74b830634cea2a0f58bbd0d54540518a14397557951e79340abc28c0"
 
 [[package]]
 name = "common"
-version = "0.6.0"
-source = "git+https://github.com/a16z/helios?rev=2d592d7c36c571af009b81759d9c4d34466af15d#2d592d7c36c571af009b81759d9c4d34466af15d"
+version = "0.6.1"
+source = "git+https://github.com/a16z/helios#545d809be0f135f69a8e6f613bb6bdd0fb4b22d1"
 dependencies = [
  "alloy 0.2.1",
  "eyre",
@@ -1839,8 +1839,8 @@ dependencies = [
 
 [[package]]
 name = "config"
-version = "0.6.0"
-source = "git+https://github.com/a16z/helios?rev=2d592d7c36c571af009b81759d9c4d34466af15d#2d592d7c36c571af009b81759d9c4d34466af15d"
+version = "0.6.1"
+source = "git+https://github.com/a16z/helios#545d809be0f135f69a8e6f613bb6bdd0fb4b22d1"
 dependencies = [
  "alloy 0.2.1",
  "common",
@@ -1862,8 +1862,8 @@ dependencies = [
 
 [[package]]
 name = "consensus"
-version = "0.6.0"
-source = "git+https://github.com/a16z/helios?rev=2d592d7c36c571af009b81759d9c4d34466af15d#2d592d7c36c571af009b81759d9c4d34466af15d"
+version = "0.6.1"
+source = "git+https://github.com/a16z/helios#545d809be0f135f69a8e6f613bb6bdd0fb4b22d1"
 dependencies = [
  "alloy 0.2.1",
  "async-trait",
@@ -1892,8 +1892,8 @@ dependencies = [
 
 [[package]]
 name = "consensus-core"
-version = "0.6.0"
-source = "git+https://github.com/a16z/helios?rev=2d592d7c36c571af009b81759d9c4d34466af15d#2d592d7c36c571af009b81759d9c4d34466af15d"
+version = "0.6.1"
+source = "git+https://github.com/a16z/helios#545d809be0f135f69a8e6f613bb6bdd0fb4b22d1"
 dependencies = [
  "alloy 0.2.1",
  "bls12_381 0.8.0",
@@ -2902,8 +2902,8 @@ checksum = "0206175f82b8d6bf6652ff7d71a1e27fd2e4efde587fd368662814d6ec1d9ce0"
 
 [[package]]
 name = "execution"
-version = "0.6.0"
-source = "git+https://github.com/a16z/helios?rev=2d592d7c36c571af009b81759d9c4d34466af15d#2d592d7c36c571af009b81759d9c4d34466af15d"
+version = "0.6.1"
+source = "git+https://github.com/a16z/helios#545d809be0f135f69a8e6f613bb6bdd0fb4b22d1"
 dependencies = [
  "alloy 0.2.1",
  "async-trait",
@@ -3493,8 +3493,8 @@ checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 
 [[package]]
 name = "helios"
-version = "0.6.0"
-source = "git+https://github.com/a16z/helios?rev=2d592d7c36c571af009b81759d9c4d34466af15d#2d592d7c36c571af009b81759d9c4d34466af15d"
+version = "0.6.1"
+source = "git+https://github.com/a16z/helios#545d809be0f135f69a8e6f613bb6bdd0fb4b22d1"
 dependencies = [
  "client",
  "common",
