@@ -94,7 +94,7 @@ You should now have the following environment variables set in the `.env` file i
 | Parameter | Description |
 |-----------|-------------|
 | `SOURCE_CHAIN_ID` | Chain ID for the source chain. |
-| `SOURCE_CONSENSUS_RPC_URL` | RPC URL for the source chain. See how to get this in the [Supported Networks](#supported-networks) section |
+| `SOURCE_CONSENSUS_RPC_URL` | RPC URL for the source chain. See how to get this in the [Consensus RPC Setup](#1-consensus-rpc-setup)) section |
 | `DEST_RPC_URL` | RPC URL for the destination chain (where the light client contract will be deployed). |
 | `DEST_CHAIN_ID` | Chain ID for the destination chain (where the light client contract will be deployed). |
 | `PRIVATE_KEY` | Private key for the account that will be deploying the contract. |
