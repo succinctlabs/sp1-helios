@@ -14,7 +14,7 @@ use tree_hash::TreeHash;
 const MERKLE_BRANCH_INDEX: usize = 802;
 const MERKLE_BRANCH_DEPTH: usize = 9;
 
-/// Program flow:
+/// Program flow:w
 /// 1. Apply sync committee updates, if any
 /// 2. Apply finality update
 /// 3. Verify execution state root proof
