@@ -10,10 +10,12 @@ use alloy::{
     sol,
     transports::http::{Client, Http},
 };
+use helios_ethereum::consensus::Inner;
+use helios_ethereum::rpc::http_rpc::HttpRpc;
+use helios_consensus_core::consensus_spec::MainnetConsensusSpec;
+use helios_ethereum::rpc::ConsensusRpc;
 use alloy_primitives::{B256, U256};
 use anyhow::Result;
-use helios::consensus::rpc::ConsensusRpc;
-use helios::consensus::{rpc::nimbus_rpc::NimbusRpc, Inner};
 use log::{error, info};
 use sp1_helios_primitives::types::ProofInputs;
 use sp1_helios_script::*;
@@ -124,7 +126,7 @@ impl SP1LightClientOperator {
     /// Fetch values and generate an 'update' proof for the SP1 LightClient contract.
     async fn request_update(
         &self,
-        mut client: Inner<NimbusRpc>,
+        mut client: Inner<MainnetConsensusSpec, HttpRpc>,
     ) -> Result<Option<SP1ProofWithPublicValues>> {
         // Fetch required values.
         let contract = SP1LightClient::new(self.contract_address, self.wallet_filler.clone());
@@ -199,7 +201,7 @@ impl SP1LightClientOperator {
         stdin.write_slice(&encoded_proof_inputs);
 
         // Generate proof.
-        let proof = self.client.prove(&self.pk, stdin).plonk().run()?;
+        let proof = self.client.prove(&self.pk, stdin).groth16().run()?;
 
         info!("Attempting to update to new head block: {:?}", latest_block);
         Ok(Some(proof))

@@ -1,11 +1,11 @@
 use alloy_primitives::B256;
-use helios_consensus_core::{calc_sync_period, consensus_spec::MainnetConsensusSpec};
+use helios_consensus_core::{calc_sync_period, consensus_spec::MainnetConsensusSpec, types::{Update, BeaconBlock}};
 use helios_ethereum::{
     config::{checkpoints, networks::Network, Config},
-    consensus::{ConsensusClient, Inner},
+    consensus::Inner,
     rpc::http_rpc::HttpRpc,
-    types::Update,
 };
+use helios_ethereum::rpc::ConsensusRpc;
 use serde::Deserialize;
 use sp1_helios_primitives::types::ExecutionStateProof;
 use ssz_rs::prelude::*;
@@ -18,8 +18,8 @@ pub mod relay;
 pub const MAX_REQUEST_LIGHT_CLIENT_UPDATES: u8 = 128;
 
 /// Fetch updates for client
-pub async fn get_updates(client: &Inner<MainnetConsensusSpec, HttpRpc>) -> Vec<Update> {
-    let period = calc_sync_period(client.store.finalized_header.beacon().slot);
+pub async fn get_updates(client: &Inner<MainnetConsensusSpec, HttpRpc>) -> Vec<Update<MainnetConsensusSpec>> {
+    let period = calc_sync_period::<MainnetConsensusSpec>(client.store.finalized_header.beacon().slot);
 
     let updates = client
         .rpc
@@ -45,11 +45,32 @@ pub async fn get_latest_checkpoint() -> B256 {
 
 /// Fetch checkpoint from a slot number.
 pub async fn get_checkpoint(slot: u64) -> B256 {
-    let rpc_url =
-        std::env::var("SOURCE_CONSENSUS_RPC_URL").expect("SOURCE_CONSENSUS_RPC_URL not set");
-    let rpc: HttpRpc = HttpRpc::new(&rpc_url);
+    let consensus_rpc = std::env::var("SOURCE_CONSENSUS_RPC_URL").unwrap();
+    let chain_id = std::env::var("SOURCE_CHAIN_ID").unwrap();
+    let network = Network::from_chain_id(chain_id.parse().unwrap()).unwrap();
+    let base_config = network.to_base_config();
 
-    let block = rpc.get_block(slot).await.unwrap();
+    let config = Config {
+        consensus_rpc: consensus_rpc.to_string(),
+        execution_rpc: String::new(),
+        chain: base_config.chain,
+        forks: base_config.forks,
+        strict_checkpoint_age: false,
+        ..Default::default()
+    };
+
+    let (block_send, _) = channel(256);
+    let (finalized_block_send, _) = watch::channel(None);
+    let (channel_send, _) = watch::channel(None);
+    let client = Inner::<MainnetConsensusSpec, HttpRpc>::new(
+        &consensus_rpc,
+        block_send,
+        finalized_block_send,
+        channel_send,
+        Arc::new(config),
+    );
+
+    let block: BeaconBlock<MainnetConsensusSpec> = client.rpc.get_block(slot).await.unwrap();
 
     B256::from_slice(block.tree_hash_root().as_ref())
 }

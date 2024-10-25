@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::{command, Parser};
-use helios::consensus::rpc::ConsensusRpc;
+use helios_ethereum::rpc::ConsensusRpc;
 use sp1_helios_primitives::types::ProofInputs;
 use sp1_helios_script::{
     get_checkpoint, get_client, get_execution_state_root_proof, get_latest_checkpoint, get_updates,
