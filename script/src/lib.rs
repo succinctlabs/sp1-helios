@@ -1,13 +1,9 @@
 use alloy_primitives::B256;
-use helios::{
-    config::networks::Network,
-    consensus::{
-        constants,
-        rpc::{nimbus_rpc::NimbusRpc, ConsensusRpc},
-        Inner,
-    },
-    consensus_core::calc_sync_period,
-    prelude::*,
+use helios_consensus_core::{calc_sync_period, consensus_spec::MainnetConsensusSpec};
+use helios_ethereum::{
+    config::{checkpoints, networks::Network, Config},
+    consensus::{ConsensusClient, Inner},
+    rpc::http_rpc::HttpRpc,
     types::Update,
 };
 use serde::Deserialize;
@@ -18,13 +14,16 @@ use tokio::sync::{mpsc::channel, watch};
 use tree_hash::TreeHash;
 pub mod relay;
 
+/// TODO: Expose this from helios-ethereum
+pub const MAX_REQUEST_LIGHT_CLIENT_UPDATES: u8 = 128;
+
 /// Fetch updates for client
-pub async fn get_updates(client: &Inner<NimbusRpc>) -> Vec<Update> {
-    let period = calc_sync_period(client.store.finalized_header.beacon.slot);
+pub async fn get_updates(client: &Inner<MainnetConsensusSpec, HttpRpc>) -> Vec<Update> {
+    let period = calc_sync_period(client.store.finalized_header.beacon().slot);
 
     let updates = client
         .rpc
-        .get_updates(period, constants::MAX_REQUEST_LIGHT_CLIENT_UPDATES)
+        .get_updates(period, MAX_REQUEST_LIGHT_CLIENT_UPDATES)
         .await
         .unwrap();
 
@@ -48,7 +47,7 @@ pub async fn get_latest_checkpoint() -> B256 {
 pub async fn get_checkpoint(slot: u64) -> B256 {
     let rpc_url =
         std::env::var("SOURCE_CONSENSUS_RPC_URL").expect("SOURCE_CONSENSUS_RPC_URL not set");
-    let rpc: NimbusRpc = NimbusRpc::new(&rpc_url);
+    let rpc: HttpRpc = HttpRpc::new(&rpc_url);
 
     let block = rpc.get_block(slot).await.unwrap();
 
@@ -90,7 +89,7 @@ pub async fn get_execution_state_root_proof(
 }
 
 /// Setup a client from a checkpoint.
-pub async fn get_client(checkpoint: B256) -> Inner<NimbusRpc> {
+pub async fn get_client(checkpoint: B256) -> Inner<MainnetConsensusSpec, HttpRpc> {
     let consensus_rpc = std::env::var("SOURCE_CONSENSUS_RPC_URL").unwrap();
     let chain_id = std::env::var("SOURCE_CHAIN_ID").unwrap();
     let network = Network::from_chain_id(chain_id.parse().unwrap()).unwrap();
@@ -109,7 +108,7 @@ pub async fn get_client(checkpoint: B256) -> Inner<NimbusRpc> {
     let (finalized_block_send, _) = watch::channel(None);
     let (channel_send, _) = watch::channel(None);
 
-    let mut client = Inner::<NimbusRpc>::new(
+    let mut client = Inner::new(
         &consensus_rpc,
         block_send,
         finalized_block_send,

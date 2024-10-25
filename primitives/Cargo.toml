@@ -8,6 +8,6 @@ authors.workspace = true
 [dependencies]
 ssz-rs = { workspace = true }
 serde = { workspace = true }
-consensus-core = { workspace = true }
+helios-consensus-core = { workspace = true }
 alloy-sol-types = { workspace = true }
 alloy-primitives = { workspace = true }

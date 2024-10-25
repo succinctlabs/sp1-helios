@@ -111,11 +111,13 @@ dependencies = [
  "alloy-core",
  "alloy-eips 0.2.1",
  "alloy-genesis 0.2.1",
+ "alloy-json-rpc 0.2.1",
  "alloy-network 0.2.1",
  "alloy-provider 0.2.1",
  "alloy-rpc-client 0.2.1",
  "alloy-rpc-types 0.2.1",
  "alloy-serde 0.2.1",
+ "alloy-signer 0.2.1",
  "alloy-transport 0.2.1",
  "alloy-transport-http 0.2.1",
 ]
@@ -1734,30 +1736,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1462739cb27611015575c0c11df5df7601141071f07518d56fcc1be504cbec97"
 
 [[package]]
-name = "client"
-version = "0.6.1"
-source = "git+https://github.com/a16z/helios#545d809be0f135f69a8e6f613bb6bdd0fb4b22d1"
-dependencies = [
- "alloy 0.2.1",
- "common",
- "config",
- "consensus",
- "execution",
- "eyre",
- "futures",
- "gloo-timers 0.3.0",
- "hex",
- "jsonrpsee",
- "parking_lot",
- "serde",
- "thiserror",
- "tokio",
- "tracing",
- "wasm-bindgen-futures",
- "zduny-wasm-timer",
-]
-
-[[package]]
 name = "cobs"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1820,98 +1798,6 @@ name = "colorchoice"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d3fd119d74b830634cea2a0f58bbd0d54540518a14397557951e79340abc28c0"
-
-[[package]]
-name = "common"
-version = "0.6.1"
-source = "git+https://github.com/a16z/helios#545d809be0f135f69a8e6f613bb6bdd0fb4b22d1"
-dependencies = [
- "alloy 0.2.1",
- "eyre",
- "hex",
- "serde",
- "serde_json",
- "superstruct",
- "thiserror",
- "tracing",
- "zduny-wasm-timer",
-]
-
-[[package]]
-name = "config"
-version = "0.6.1"
-source = "git+https://github.com/a16z/helios#545d809be0f135f69a8e6f613bb6bdd0fb4b22d1"
-dependencies = [
- "alloy 0.2.1",
- "common",
- "consensus-core",
- "dirs",
- "eyre",
- "figment",
- "futures",
- "hex",
- "reqwest 0.12.8",
- "retri",
- "serde",
- "serde_yaml",
- "strum",
- "thiserror",
- "tokio",
- "tracing",
-]
-
-[[package]]
-name = "consensus"
-version = "0.6.1"
-source = "git+https://github.com/a16z/helios#545d809be0f135f69a8e6f613bb6bdd0fb4b22d1"
-dependencies = [
- "alloy 0.2.1",
- "async-trait",
- "chrono",
- "common",
- "config",
- "consensus-core",
- "eyre",
- "futures",
- "getrandom 0.2.15",
- "hex",
- "openssl",
- "parking_lot",
- "reqwest 0.12.8",
- "retri",
- "serde",
- "serde_json",
- "superstruct",
- "thiserror",
- "tokio",
- "tracing",
- "tree_hash",
- "wasm-bindgen-futures",
- "zduny-wasm-timer",
-]
-
-[[package]]
-name = "consensus-core"
-version = "0.6.1"
-source = "git+https://github.com/a16z/helios#545d809be0f135f69a8e6f613bb6bdd0fb4b22d1"
-dependencies = [
- "alloy 0.2.1",
- "bls12_381 0.8.0",
- "ethereum_ssz 0.6.0",
- "ethereum_ssz_derive 0.6.0",
- "eyre",
- "getrandom 0.2.15",
- "serde",
- "sha2 0.9.9",
- "ssz_types",
- "superstruct",
- "thiserror",
- "tracing",
- "tree_hash",
- "tree_hash_derive",
- "typenum",
- "zduny-wasm-timer",
-]
 
 [[package]]
 name = "console"
@@ -2901,30 +2787,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0206175f82b8d6bf6652ff7d71a1e27fd2e4efde587fd368662814d6ec1d9ce0"
 
 [[package]]
-name = "execution"
-version = "0.6.1"
-source = "git+https://github.com/a16z/helios#545d809be0f135f69a8e6f613bb6bdd0fb4b22d1"
-dependencies = [
- "alloy 0.2.1",
- "async-trait",
- "common",
- "consensus",
- "eyre",
- "futures",
- "hex",
- "openssl",
- "reqwest 0.12.8",
- "revm",
- "serde",
- "serde_json",
- "thiserror",
- "tokio",
- "tracing",
- "triehash-ethereum",
- "wasm-bindgen-futures",
-]
-
-[[package]]
 name = "eyre"
 version = "0.6.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3492,16 +3354,89 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 
 [[package]]
-name = "helios"
-version = "0.6.1"
-source = "git+https://github.com/a16z/helios#545d809be0f135f69a8e6f613bb6bdd0fb4b22d1"
+name = "helios-consensus-core"
+version = "0.7.0"
+source = "git+https://github.com/a16z/helios#4f14e16391cedffe9d937d1dc129f5a9b0fd72a5"
 dependencies = [
- "client",
- "common",
- "config",
- "consensus",
- "consensus-core",
- "execution",
+ "alloy 0.2.1",
+ "alloy-rlp",
+ "bls12_381 0.8.0",
+ "ethereum_ssz 0.6.0",
+ "ethereum_ssz_derive 0.6.0",
+ "eyre",
+ "getrandom 0.2.15",
+ "serde",
+ "sha2 0.9.9",
+ "ssz_types",
+ "superstruct",
+ "thiserror",
+ "tracing",
+ "tree_hash",
+ "tree_hash_derive",
+ "typenum",
+ "wasmtimer",
+ "zduny-wasm-timer",
+]
+
+[[package]]
+name = "helios-core"
+version = "0.7.0"
+source = "git+https://github.com/a16z/helios#4f14e16391cedffe9d937d1dc129f5a9b0fd72a5"
+dependencies = [
+ "alloy 0.2.1",
+ "async-trait",
+ "eyre",
+ "futures",
+ "gloo-timers 0.3.0",
+ "hex",
+ "jsonrpsee",
+ "openssl",
+ "parking_lot",
+ "reqwest 0.12.8",
+ "revm",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tokio",
+ "tracing",
+ "triehash-ethereum",
+ "wasm-bindgen-futures",
+ "wasmtimer",
+]
+
+[[package]]
+name = "helios-ethereum"
+version = "0.7.0"
+source = "git+https://github.com/a16z/helios#4f14e16391cedffe9d937d1dc129f5a9b0fd72a5"
+dependencies = [
+ "alloy 0.2.1",
+ "async-trait",
+ "chrono",
+ "dirs",
+ "eyre",
+ "figment",
+ "futures",
+ "getrandom 0.2.15",
+ "helios-consensus-core",
+ "helios-core",
+ "hex",
+ "openssl",
+ "parking_lot",
+ "reqwest 0.12.8",
+ "retri",
+ "revm",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "strum",
+ "superstruct",
+ "thiserror",
+ "tokio",
+ "tracing",
+ "tree_hash",
+ "triehash-ethereum",
+ "typenum",
+ "wasm-bindgen-futures",
 ]
 
 [[package]]
@@ -4285,7 +4220,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4979f22fdb869068da03c9f7528f8297c6fd2606bc3a4affe42e6a823fdb8da4"
 dependencies = [
  "cfg-if",
- "windows-targets 0.52.6",
+ "windows-targets 0.48.5",
 ]
 
 [[package]]
@@ -4611,7 +4546,7 @@ version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "af1844ef2428cc3e1cb900be36181049ef3d3193c63e43026cfe202983b27a56"
 dependencies = [
- "proc-macro-crate 3.2.0",
+ "proc-macro-crate 1.3.1",
  "proc-macro2",
  "quote",
  "syn 2.0.79",
@@ -4718,9 +4653,9 @@ checksum = "ff011a302c396a5197692431fc1948019154afc178baf7d8e37367442a4601cf"
 
 [[package]]
 name = "openssl-src"
-version = "300.3.2+3.3.2"
+version = "300.4.0+3.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a211a18d945ef7e648cc6e0058f4c548ee46aab922ea203e0d30e966ea23647b"
+checksum = "a709e02f2b4aca747929cca5ed248880847c650233cf8b8cdc48f40aaf4898a6"
 dependencies = [
  "cc",
 ]
@@ -6835,7 +6770,7 @@ version = "0.1.0"
 dependencies = [
  "alloy-primitives 0.7.7",
  "alloy-sol-types",
- "consensus-core",
+ "helios-consensus-core",
  "serde",
  "ssz_rs",
 ]
@@ -6846,7 +6781,7 @@ version = "0.1.0"
 dependencies = [
  "alloy-primitives 0.7.7",
  "alloy-sol-types",
- "consensus-core",
+ "helios-consensus-core",
  "serde_cbor",
  "sp1-helios-primitives",
  "sp1-zkvm",
@@ -6865,7 +6800,8 @@ dependencies = [
  "clap",
  "dotenv",
  "env_logger",
- "helios",
+ "helios-consensus-core",
+ "helios-ethereum",
  "log",
  "reqwest 0.12.8",
  "serde",
@@ -8314,6 +8250,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "wasmtimer"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c7ed9d8b15c7fb594d72bfb4b5a276f3d2029333cd93a932f376f5937f6f80ee"
+dependencies = [
+ "futures",
+ "js-sys",
+ "parking_lot",
+ "pin-utils",
+ "slab",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "web-sys"
 version = "0.3.72"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8391,7 +8341,7 @@ version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf221c93e13a30d793f7645a0e7762c55d169dbb0a49671918a2319d289b10bb"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]

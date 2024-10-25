@@ -84,7 +84,7 @@ pub async fn main() -> Result<()> {
         .clone()
         .beacon
         .tree_hash_root();
-    let head = helios_client.store.finalized_header.clone().beacon.slot;
+    let head = helios_client.store.finalized_header.clone().beacon().slot;
     let sync_committee_hash = helios_client
         .store
         .current_sync_committee
