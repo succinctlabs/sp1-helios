@@ -17,6 +17,10 @@ path = "./bin/operator.rs"
 name = "test"
 path = "./bin/test.rs"
 
+[[bin]]
+name = "fetch_and_save_proof"
+path = "./bin/fetch_and_save_proof.rs"
+
 [dependencies]
 dotenv = { workspace = true }
 sp1-sdk = { workspace = true }

@@ -199,7 +199,7 @@ impl SP1LightClientOperator {
         stdin.write_slice(&encoded_proof_inputs);
 
         // Generate proof.
-        let proof = self.client.prove(&self.pk, stdin).plonk().run()?;
+        let proof = self.client.prove(&self.pk, stdin).groth16().run()?;
 
         info!("Attempting to update to new head block: {:?}", latest_block);
         Ok(Some(proof))
