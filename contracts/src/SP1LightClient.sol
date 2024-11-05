@@ -34,7 +34,7 @@ contract SP1LightClient {
     bytes32 public heliosProgramVkey;
 
     /// @notice The deployed SP1 verifier contract.
-    ISP1Verifier public verifier;
+    address public verifier;
 
     /// @notice The address of the guardian
     address public guardian;
@@ -80,19 +80,23 @@ contract SP1LightClient {
         SLOTS_PER_PERIOD = params.slotsPerPeriod;
         SLOTS_PER_EPOCH = params.slotsPerEpoch;
         SOURCE_CHAIN_ID = params.sourceChainId;
-        syncCommittees[getSyncCommitteePeriod(params.head)] = params.syncCommitteeHash;
+        syncCommittees[getSyncCommitteePeriod(params.head)] = params
+            .syncCommitteeHash;
         heliosProgramVkey = params.heliosProgramVkey;
         headers[params.head] = params.header;
         executionStateRoots[params.head] = params.executionStateRoot;
         head = params.head;
-        verifier = ISP1Verifier(params.verifier);
+        verifier = params.verifier;
         guardian = params.guardian;
     }
 
     /// @notice Updates the light client with a new header, execution state root, and sync committee (if changed)
     /// @param proof The proof bytes for the SP1 proof.
     /// @param publicValues The public commitments from the SP1 proof.
-    function update(bytes calldata proof, bytes calldata publicValues) external {
+    function update(
+        bytes calldata proof,
+        bytes calldata publicValues
+    ) external {
         // Parse the outputs from the committed public values associated with the proof.
         ProofOutputs memory po = abi.decode(publicValues, (ProofOutputs));
         if (po.newHead <= head) {
@@ -100,7 +104,11 @@ contract SP1LightClient {
         }
 
         // Verify the proof with the associated public values. This will revert if proof invalid.
-        verifier.verifyProof(heliosProgramVkey, publicValues, proof);
+        ISP1Verifier(verifier).verifyProof(
+            heliosProgramVkey,
+            publicValues,
+            proof
+        );
 
         head = po.newHead;
         if (headers[po.newHead] != bytes32(0)) {
@@ -140,7 +148,9 @@ contract SP1LightClient {
     }
 
     /// @notice Gets the sync committee period from a slot.
-    function getSyncCommitteePeriod(uint256 slot) public view returns (uint256) {
+    function getSyncCommitteePeriod(
+        uint256 slot
+    ) public view returns (uint256) {
         return slot / SLOTS_PER_PERIOD;
     }
 

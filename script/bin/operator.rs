@@ -242,6 +242,7 @@ impl SP1LightClientOperator {
         // If status is false, it reverted.
         if !receipt.status() {
             error!("Transaction reverted!");
+            return Err(anyhow::anyhow!("Transaction reverted!"));
         }
 
         info!(
@@ -260,7 +261,16 @@ impl SP1LightClientOperator {
             let contract = SP1LightClient::new(self.contract_address, self.wallet_filler.clone());
 
             // Get the current slot from the contract
-            let slot = contract.head().call().await?.head.try_into().unwrap();
+            let slot = contract
+                .head()
+                .call()
+                .await
+                .unwrap_or_else(|e| {
+                    panic!("Failed to get head. Are you sure the SP1LightClient is deployed to address: {:?}? Error: {:?}", self.contract_address, e)
+                })
+                .head
+                .try_into()
+                .unwrap();
 
             // Fetch the checkpoint at that slot
             let checkpoint = get_checkpoint(slot).await;
