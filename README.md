@@ -88,7 +88,7 @@ Add the contract address to the `.env` file in your root directory.
 | `CONTRACT_ADDRESS` | Address of the light client contract deployed |
 
 
-**Note:** if you see the error `Error: Failed to send transaction`, check that your account has sufficient funds or check that the private key is valid.
+**Note:** if you see the error, check that your account has sufficient funds or check that the private key is valid.
 
 ### 4) Run Light Client
 
