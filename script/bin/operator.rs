@@ -272,7 +272,6 @@ impl SP1LightClientOperator {
                 .try_into()
                 .unwrap();
 
-
             // Fetch the checkpoint at that slot
             let checkpoint = get_checkpoint(slot).await;
 
