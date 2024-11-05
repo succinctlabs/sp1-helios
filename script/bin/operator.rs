@@ -242,6 +242,7 @@ impl SP1LightClientOperator {
         // If status is false, it reverted.
         if !receipt.status() {
             error!("Transaction reverted!");
+            return Err(anyhow::anyhow!("Transaction reverted!"));
         }
 
         info!(
