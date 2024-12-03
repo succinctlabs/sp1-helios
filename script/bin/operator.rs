@@ -171,8 +171,12 @@ impl SP1LightClientOperator {
         // We must still apply the update locally to "sync" the helios client, this is due to
         // next_sync_committee not being stored when the helios client is bootstrapped.
         if !sync_committee_updates.is_empty() {
-            let next_sync_committee =
-                B256::from_slice(sync_committee_updates[0].next_sync_committee.tree_hash_root().as_ref());
+            let next_sync_committee = B256::from_slice(
+                sync_committee_updates[0]
+                    .next_sync_committee
+                    .tree_hash_root()
+                    .as_ref(),
+            );
 
             if contract_next_sync_committee == next_sync_committee {
                 println!("Applying optimization, skipping update");
