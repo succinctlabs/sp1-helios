@@ -18,7 +18,6 @@ use tokio::sync::{mpsc::channel, watch};
 use tree_hash::TreeHash;
 pub mod relay;
 
-/// TODO: Expose this from helios-ethereum
 pub const MAX_REQUEST_LIGHT_CLIENT_UPDATES: u8 = 128;
 
 /// Fetch updates for client
