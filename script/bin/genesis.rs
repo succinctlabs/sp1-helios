@@ -4,9 +4,7 @@ use anyhow::Result;
 /// Generate genesis parameters for light client contract
 use clap::Parser;
 use serde::{Deserialize, Serialize};
-use sp1_helios_script::{
-    get_checkpoint, get_client, get_latest_checkpoint,
-};
+use sp1_helios_script::{get_checkpoint, get_client, get_latest_checkpoint};
 use sp1_sdk::{utils, HashableKey, ProverClient};
 use ssz_rs::prelude::*;
 use std::{
@@ -122,7 +120,15 @@ pub async fn main() -> Result<()> {
     genesis_config.source_chain_id = source_chain_id;
     genesis_config.sync_committee_hash = format!("0x{:x}", sync_committee_hash);
     genesis_config.header = format!("0x{:x}", finalized_header);
-    genesis_config.execution_state_root = format!("0x{:x}", helios_client.store.finalized_header.execution().expect("Execution payload doesn't exist.").state_root());
+    genesis_config.execution_state_root = format!(
+        "0x{:x}",
+        helios_client
+            .store
+            .finalized_header
+            .execution()
+            .expect("Execution payload doesn't exist.")
+            .state_root()
+    );
     genesis_config.head = head;
     genesis_config.helios_program_vkey = vk.bytes32();
     genesis_config.verifier = format!("0x{:x}", verifier);

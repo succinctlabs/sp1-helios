@@ -2,9 +2,7 @@ use anyhow::Result;
 use clap::{command, Parser};
 use helios_ethereum::rpc::ConsensusRpc;
 use sp1_helios_primitives::types::ProofInputs;
-use sp1_helios_script::{
-    get_checkpoint, get_client, get_latest_checkpoint, get_updates,
-};
+use sp1_helios_script::{get_checkpoint, get_client, get_latest_checkpoint, get_updates};
 use sp1_sdk::{utils::setup_logger, ProverClient, SP1Stdin};
 
 const ELF: &[u8] = include_bytes!("../../elf/riscv32im-succinct-zkvm-elf");
@@ -32,7 +30,6 @@ async fn main() -> Result<()> {
     let helios_client = get_client(checkpoint).await;
     let updates = get_updates(&helios_client).await;
     let finality_update = helios_client.rpc.get_finality_update().await.unwrap();
-
 
     let expected_current_slot = helios_client.expected_current_slot();
     let inputs = ProofInputs {

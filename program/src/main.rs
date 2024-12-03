@@ -70,7 +70,11 @@ pub fn main() {
     let head = store.finalized_header.beacon().slot;
 
     let proof_outputs = ProofOutputs {
-        executionStateRoot: *store.finalized_header.execution().expect("Execution payload doesn't exist.").state_root(),
+        executionStateRoot: *store
+            .finalized_header
+            .execution()
+            .expect("Execution payload doesn't exist.")
+            .state_root(),
         newHeader: header,
         nextSyncCommitteeHash: next_sync_committee_hash,
         newHead: U256::from(head),
