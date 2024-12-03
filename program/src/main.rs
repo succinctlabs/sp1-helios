@@ -60,7 +60,7 @@ pub fn main() {
 
     apply_finality_update(&mut store, &finality_update);
 
-    // 4. Commit new state root, header, and sync committee for usage in the on-chain contract
+    // 3. Commit new state root, header, and sync committee for usage in the on-chain contract
     let header: B256 = store.finalized_header.beacon().tree_hash_root();
     let sync_committee_hash: B256 = store.current_sync_committee.tree_hash_root();
     let next_sync_committee_hash: B256 = match &mut store.next_sync_committee {
@@ -70,7 +70,7 @@ pub fn main() {
     let head = store.finalized_header.beacon().slot;
 
     let proof_outputs = ProofOutputs {
-        executionStateRoot: *store.finalized_header.execution().unwrap().state_root(),
+        executionStateRoot: *store.finalized_header.execution().expect("Execution payload doesn't exist.").state_root(),
         newHeader: header,
         nextSyncCommitteeHash: next_sync_committee_hash,
         newHead: U256::from(head),

@@ -183,9 +183,6 @@ impl SP1LightClientOperator {
             }
         }
 
-        // Fetch execution state proof
-        // let execution_state_proof = get_execution_state_root_proof(latest_block).await.unwrap();
-
         // Create program inputs
         let expected_current_slot = client.expected_current_slot();
         let inputs = ProofInputs {

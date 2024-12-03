@@ -10,8 +10,7 @@ use helios_ethereum::{
     consensus::Inner,
     rpc::http_rpc::HttpRpc,
 };
-use serde::Deserialize;
-use sp1_helios_primitives::types::ExecutionStateProof;
+
 use ssz_rs::prelude::*;
 use std::sync::Arc;
 use tokio::sync::{mpsc::channel, watch};
@@ -79,40 +78,6 @@ pub async fn get_checkpoint(slot: u64) -> B256 {
     let block: BeaconBlock<MainnetConsensusSpec> = client.rpc.get_block(slot).await.unwrap();
 
     B256::from_slice(block.tree_hash_root().as_ref())
-}
-
-#[derive(Deserialize)]
-struct ApiResponse {
-    success: bool,
-    result: ExecutionStateProof,
-}
-
-/// Fetch merkle proof for the execution state root of a specific slot.
-pub async fn get_execution_state_root_proof(
-    slot: u64,
-) -> Result<ExecutionStateProof, Box<dyn std::error::Error>> {
-    let client = reqwest::Client::new();
-
-    let chain_id = std::env::var("SOURCE_CHAIN_ID").expect("SOURCE_CHAIN_ID not set");
-    let url_suffix = match chain_id.as_str() {
-        "11155111" => "-sepolia", // Sepolia chain ID
-        "17000" => "-holesky",    // Holesky chain ID
-        "1" => "",                // Mainnet chain ID
-        _ => return Err(format!("Unsupported chain ID: {}", chain_id).into()),
-    };
-
-    let url = format!(
-        "https://beaconapi{}.succinct.xyz/api/beacon/proof/executionStateRoot/{}",
-        url_suffix, slot
-    );
-
-    let response: ApiResponse = client.get(url).send().await?.json().await?;
-
-    if response.success {
-        Ok(response.result)
-    } else {
-        Err("API request was not successful".into())
-    }
 }
 
 /// Setup a client from a checkpoint.
