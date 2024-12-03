@@ -184,7 +184,7 @@ impl SP1LightClientOperator {
         }
 
         // Fetch execution state proof
-        let execution_state_proof = get_execution_state_root_proof(latest_block).await.unwrap();
+        // let execution_state_proof = get_execution_state_root_proof(latest_block).await.unwrap();
 
         // Create program inputs
         let expected_current_slot = client.expected_current_slot();
@@ -195,7 +195,7 @@ impl SP1LightClientOperator {
             store: client.store.clone(),
             genesis_root: client.config.chain.genesis_root,
             forks: client.config.forks.clone(),
-            execution_state_proof,
+            // execution_state_proof,
         };
         let encoded_proof_inputs = serde_cbor::to_vec(&inputs)?;
         stdin.write_slice(&encoded_proof_inputs);

@@ -15,7 +15,7 @@ pub struct ProofInputs {
     pub store: LightClientStore<MainnetConsensusSpec>,
     pub genesis_root: B256,
     pub forks: Forks,
-    pub execution_state_proof: ExecutionStateProof,
+    // pub execution_state_proof: ExecutionStateProof,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]

@@ -3,7 +3,7 @@ use clap::{command, Parser};
 use helios_ethereum::rpc::ConsensusRpc;
 use sp1_helios_primitives::types::ProofInputs;
 use sp1_helios_script::{
-    get_checkpoint, get_client, get_execution_state_root_proof, get_latest_checkpoint, get_updates,
+    get_checkpoint, get_client, get_latest_checkpoint, get_updates,
 };
 use sp1_sdk::{utils::setup_logger, ProverClient, SP1Stdin};
 
@@ -32,9 +32,7 @@ async fn main() -> Result<()> {
     let helios_client = get_client(checkpoint).await;
     let updates = get_updates(&helios_client).await;
     let finality_update = helios_client.rpc.get_finality_update().await.unwrap();
-    let latest_block = finality_update.finalized_header.beacon().slot;
 
-    let execution_state_root_proof = get_execution_state_root_proof(latest_block).await.unwrap();
 
     let expected_current_slot = helios_client.expected_current_slot();
     let inputs = ProofInputs {
@@ -44,7 +42,6 @@ async fn main() -> Result<()> {
         store: helios_client.store.clone(),
         genesis_root: helios_client.config.chain.genesis_root,
         forks: helios_client.config.forks.clone(),
-        execution_state_proof: execution_state_root_proof,
     };
 
     // Write the inputs to the VM

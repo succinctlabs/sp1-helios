@@ -5,7 +5,7 @@ use anyhow::Result;
 use clap::Parser;
 use serde::{Deserialize, Serialize};
 use sp1_helios_script::{
-    get_checkpoint, get_client, get_execution_state_root_proof, get_latest_checkpoint,
+    get_checkpoint, get_client, get_latest_checkpoint,
 };
 use sp1_sdk::{utils, HashableKey, ProverClient};
 use ssz_rs::prelude::*;
@@ -91,7 +91,7 @@ pub async fn main() -> Result<()> {
         .clone()
         .tree_hash_root();
     let genesis_time = helios_client.config.chain.genesis_time;
-    let execution_state_root_proof = get_execution_state_root_proof(head).await.unwrap();
+    // let execution_state_root_proof = get_execution_state_root_proof(head).await.unwrap();
     let genesis_root = helios_client.config.chain.genesis_root;
     const SECONDS_PER_SLOT: u64 = 12;
     const SLOTS_PER_EPOCH: u64 = 32;
@@ -123,8 +123,7 @@ pub async fn main() -> Result<()> {
     genesis_config.source_chain_id = source_chain_id;
     genesis_config.sync_committee_hash = format!("0x{:x}", sync_committee_hash);
     genesis_config.header = format!("0x{:x}", finalized_header);
-    genesis_config.execution_state_root =
-        format!("0x{:x}", execution_state_root_proof.execution_state_root);
+    genesis_config.execution_state_root = format!("0x{:x}", helios_client.store.finalized_header.beacon().state_root);
     genesis_config.head = head;
     genesis_config.helios_program_vkey = vk.bytes32();
     genesis_config.verifier = format!("0x{:x}", verifier);
