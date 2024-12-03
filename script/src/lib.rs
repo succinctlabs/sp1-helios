@@ -1,11 +1,15 @@
 use alloy_primitives::B256;
-use helios_consensus_core::{calc_sync_period, consensus_spec::MainnetConsensusSpec, types::{Update, BeaconBlock}};
+use helios_consensus_core::{
+    calc_sync_period,
+    consensus_spec::MainnetConsensusSpec,
+    types::{BeaconBlock, Update},
+};
+use helios_ethereum::rpc::ConsensusRpc;
 use helios_ethereum::{
     config::{checkpoints, networks::Network, Config},
     consensus::Inner,
     rpc::http_rpc::HttpRpc,
 };
-use helios_ethereum::rpc::ConsensusRpc;
 use serde::Deserialize;
 use sp1_helios_primitives::types::ExecutionStateProof;
 use ssz_rs::prelude::*;
@@ -18,8 +22,11 @@ pub mod relay;
 pub const MAX_REQUEST_LIGHT_CLIENT_UPDATES: u8 = 128;
 
 /// Fetch updates for client
-pub async fn get_updates(client: &Inner<MainnetConsensusSpec, HttpRpc>) -> Vec<Update<MainnetConsensusSpec>> {
-    let period = calc_sync_period::<MainnetConsensusSpec>(client.store.finalized_header.beacon().slot);
+pub async fn get_updates(
+    client: &Inner<MainnetConsensusSpec, HttpRpc>,
+) -> Vec<Update<MainnetConsensusSpec>> {
+    let period =
+        calc_sync_period::<MainnetConsensusSpec>(client.store.finalized_header.beacon().slot);
 
     let updates = client
         .rpc

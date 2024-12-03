@@ -10,12 +10,12 @@ use alloy::{
     sol,
     transports::http::{Client, Http},
 };
-use helios_ethereum::consensus::Inner;
-use helios_ethereum::rpc::http_rpc::HttpRpc;
-use helios_consensus_core::consensus_spec::MainnetConsensusSpec;
-use helios_ethereum::rpc::ConsensusRpc;
 use alloy_primitives::{B256, U256};
 use anyhow::Result;
+use helios_consensus_core::consensus_spec::MainnetConsensusSpec;
+use helios_ethereum::consensus::Inner;
+use helios_ethereum::rpc::http_rpc::HttpRpc;
+use helios_ethereum::rpc::ConsensusRpc;
 use log::{error, info};
 use sp1_helios_primitives::types::ProofInputs;
 use sp1_helios_script::*;
