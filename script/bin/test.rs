@@ -28,12 +28,12 @@ async fn main() -> Result<()> {
 
     // Setup client.
     let helios_client = get_client(checkpoint).await;
-    let updates = get_updates(&helios_client).await;
+    let sync_committee_updates = get_updates(&helios_client).await;
     let finality_update = helios_client.rpc.get_finality_update().await.unwrap();
 
     let expected_current_slot = helios_client.expected_current_slot();
     let inputs = ProofInputs {
-        updates,
+        sync_committee_updates,
         finality_update,
         expected_current_slot,
         store: helios_client.store.clone(),

@@ -20,7 +20,7 @@ pub fn main() {
     let encoded_inputs = sp1_zkvm::io::read_vec();
 
     let ProofInputs {
-        updates,
+        sync_committee_updates,
         finality_update,
         expected_current_slot,
         mut store,
@@ -32,8 +32,8 @@ pub fn main() {
     let prev_head = store.finalized_header.beacon().slot;
 
     // 1. Apply sync committee updates, if any
-    for (index, update) in updates.iter().enumerate() {
-        println!("Processing update {} of {}.", index + 1, updates.len());
+    for (index, update) in sync_committee_updates.iter().enumerate() {
+        println!("Processing update {} of {}.", index + 1, sync_committee_updates.len());
         let update_is_valid =
             verify_update(update, expected_current_slot, &store, genesis_root, &forks).is_ok();
 
