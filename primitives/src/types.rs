@@ -9,13 +9,12 @@ pub use ssz_rs::prelude::{Bitvector, Vector};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ProofInputs {
-    pub updates: Vec<Update<MainnetConsensusSpec>>,
+    pub sync_committee_updates: Vec<Update<MainnetConsensusSpec>>,
     pub finality_update: FinalityUpdate<MainnetConsensusSpec>,
     pub expected_current_slot: u64,
     pub store: LightClientStore<MainnetConsensusSpec>,
     pub genesis_root: B256,
     pub forks: Forks,
-    pub execution_state_proof: ExecutionStateProof,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
