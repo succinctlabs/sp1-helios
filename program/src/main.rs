@@ -33,7 +33,11 @@ pub fn main() {
 
     // 1. Apply sync committee updates, if any
     for (index, update) in sync_committee_updates.iter().enumerate() {
-        println!("Processing update {} of {}.", index + 1, sync_committee_updates.len());
+        println!(
+            "Processing update {} of {}.",
+            index + 1,
+            sync_committee_updates.len()
+        );
         let update_is_valid =
             verify_update(update, expected_current_slot, &store, genesis_root, &forks).is_ok();
 
