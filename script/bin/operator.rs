@@ -201,11 +201,10 @@ impl SP1LightClientOperator {
         {
             use tokio::io::AsyncWriteExt;
 
-            let mut file = tokio::fs::File::create(format!("proof_inputs_{}.cbor", head)).await?;
+            let mut file = tokio::fs::File::create("proof_inputs.cbor").await?;
             file.write_all(&encoded_proof_inputs).await?;
             file.flush().await?;
         }
-
 
         stdin.write_slice(&encoded_proof_inputs);
 

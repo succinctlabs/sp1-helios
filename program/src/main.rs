@@ -49,17 +49,13 @@ pub fn main() {
     }
 
     // 2. Apply finality update
-    let finality_update_is_valid = verify_finality_update(
+    verify_finality_update(
         &finality_update,
         expected_current_slot,
         &store,
         genesis_root,
         &forks,
-    )
-    .is_ok();
-    if !finality_update_is_valid {
-        panic!("Finality update is invalid!");
-    }
+    ).unwrap();
     println!("Finality update is valid.");
 
     apply_finality_update(&mut store, &finality_update);

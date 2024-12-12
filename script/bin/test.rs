@@ -41,6 +41,14 @@ async fn main() -> Result<()> {
         forks: helios_client.config.forks.clone(),
     };
 
+    {
+        use tokio::io::AsyncWriteExt;
+
+        let mut file = tokio::fs::File::create("proof_inputs.cbor").await?;
+        file.write_all(&serde_cbor::to_vec(&inputs)?).await?;
+        file.flush().await?;
+    }
+
     // Write the inputs to the VM
     let mut stdin = SP1Stdin::new();
     stdin.write_slice(&serde_cbor::to_vec(&inputs)?);
