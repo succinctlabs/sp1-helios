@@ -198,6 +198,15 @@ impl SP1LightClientOperator {
             forks: client.config.forks.clone(),
         };
         let encoded_proof_inputs = serde_cbor::to_vec(&inputs)?;
+        {
+            use tokio::io::AsyncWriteExt;
+
+            let mut file = tokio::fs::File::create(format!("proof_inputs_{}.cbor", head)).await?;
+            file.write_all(&encoded_proof_inputs).await?;
+            file.flush().await?;
+        }
+
+
         stdin.write_slice(&encoded_proof_inputs);
 
         // Generate proof.
