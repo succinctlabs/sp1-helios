@@ -9,7 +9,7 @@ SP1 Helios verifies the consensus of a source chain in the execution environment
 ### Prerequisites
 
 - [Foundry](https://book.getfoundry.sh/getting-started/installation)
-- [SP1](https://docs.succinct.xyz/getting-started/install.html)
+- [SP1](https://docs.succinct.xyz/docs/getting-started/install)
 
 ### 1) Consensus RPC Setup
 
@@ -44,8 +44,8 @@ In the root directory, create a file called `.env` (mirroring `.env.example`) an
 | Parameter | Description |
 |-----------|-------------|
 | `GUARDIAN_ADDRESS` | Defines the owner for the light client. Defaults to the account owner of `PRIVATE_KEY`. |
-| `SP1_PRIVATE_KEY` | Required in `network` mode. The private key of the account that will be requesting proofs from the Succinct Prover Network. Get access [here](https://docs.succinct.xyz/generating-proofs/prover-network). |
-| `SP1_VERIFIER_ADDRESS` | Required in `network` mode. The address of the verifier contract. You can find the deployed verifiers [here](https://docs.succinct.xyz/onchain-verification/contract-addresses.html). |
+| `SP1_PRIVATE_KEY` | Required in `network` mode. The private key of the account that will be requesting proofs from the Succinct Prover Network. Get access [here](https://docs.succinct.xyz/docs/generating-proofs/prover-network). |
+| `SP1_VERIFIER_ADDRESS` | Required in `network` mode. The address of the verifier contract. You can find the deployed verifiers [here](https://docs.succinct.xyz/docs/verification/onchain/contract-addresses). |
 | `LOOP_DELAY_MINS` | The delay between each loop of the operator in minutes. Defaults to `5`. |
 
 ### 3) Deploy Contract
