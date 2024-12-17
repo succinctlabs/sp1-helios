@@ -3,9 +3,9 @@ use alloy::{
     consensus::Receipt, eips::BlockNumberOrTag, network::{Ethereum, EthereumWallet}, primitives::Address, providers::{
         fillers::{ChainIdFiller, FillProvider, GasFiller, JoinFill, NonceFiller, WalletFiller},
         Identity, Provider, ProviderBuilder, RootProvider,
-    }, rpc::{alloy_rpc_types::Log, types::TransactionReceipt}, signers::{k256::pkcs8::der::Encode, local::PrivateKeySigner}, sol, transports::http::{Client, Http}
+    }, rpc::{types::TransactionReceipt}, signers::{k256::pkcs8::der::Encode, local::PrivateKeySigner}, sol, transports::http::{Client, Http}
 };
-use alloy_merkle_tree::tree::MerkleTree;
+// use alloy_merkle_tree::tree::MerkleTree;
 use alloy_primitives::{Bloom, B256, U256};
 use anyhow::Result;
 use helios_consensus_core::{consensus_spec::MainnetConsensusSpec, types::ExecutionPayload};
@@ -21,7 +21,7 @@ use std::env;
 use std::sync::Arc;
 use std::time::Duration;
 use tree_hash::TreeHash;
-use alloy_rlp::{bytes::BufMut, BytesMut};
+// use alloy_rlp::{bytes::BufMut, BytesMut};
 
 const ELF: &[u8] = include_bytes!("../../elf/riscv32im-succinct-zkvm-elf");
 
@@ -124,7 +124,7 @@ impl SP1LightClientOperator {
     async fn request_update(
         &self,
         mut client: Inner<MainnetConsensusSpec, HttpRpc>,
-        // target_block: u64,
+        target_block: u64,
         // contract_address,
         // event
     ) -> Result<Option<SP1ProofWithPublicValues>> {
@@ -181,12 +181,25 @@ impl SP1LightClientOperator {
         let receipts_root = execution_payload.receipts_root();
         let receipts = self.wallet_filler.get_block_receipts(block).await.unwrap().unwrap();
 
-        let mut tree = MerkleTree::new();
+        // let mut tree = MerkleTree::new();
         for receipt in receipts {
 
             let r: TransactionReceipt = receipt;
 
-            let rr:Receipt<Log> = Receipt::from(r.inner.as_receipt_with_bloom());
+            let _r = r.inner.as_receipt_with_bloom().unwrap();
+            // let rr = Receipt::from(*_r);
+            // rr.en
+
+            // ordered_trie_root_with_encoder();
+
+            // let rrr = calculate_receipt_root();
+
+            // pub fn calculate_receipt_root<T>(receipts: &[T]) -> B256
+            // where
+            //     T: Encodable2718,
+            // {
+            //     ordered_trie_root_with_encoder(receipts, |r, buf| r.encode_2718(buf))
+            // }
 
             // mut dyn BufMut
             // let mut out = Vec::with_capacity(10000);
