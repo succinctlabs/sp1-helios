@@ -20,9 +20,9 @@ Confirm that you have the toolchain installed by running:
 cargo prove --version
 ```
 
-## Verify the SP1 Vector binary
+## Verify the SP1 Helios binary
 
-To build the SP1 Vector binary, first ensure that Docker is running.
+To build the SP1 Helios binary, first ensure that Docker is running.
 
 ```bash
 docker ps
