@@ -68,15 +68,15 @@ impl<'a> ReceiptWithBloomEncoder<'a> {
       rlp_head.payload_length += self.raw_receipt().logs_bloom().length();
       rlp_head.payload_length += self.raw_logs().length();
 
-      #[cfg(feature = "optimism")]
-      if self.raw_tx_type() == TxType::Deposit {
-          if let Some(deposit_nonce) = self.receipt.deposit_nonce {
-              rlp_head.payload_length += deposit_nonce.length();
-          }
-          if let Some(deposit_receipt_version) = self.receipt.deposit_receipt_version {
-              rlp_head.payload_length += deposit_receipt_version.length();
-          }
-      }
+      // #[cfg(feature = "optimism")]
+      // if self.raw_tx_type() == TxType::Deposit {
+      //     if let Some(deposit_nonce) = self.receipt.deposit_nonce {
+      //         rlp_head.payload_length += deposit_nonce.length();
+      //     }
+      //     if let Some(deposit_receipt_version) = self.receipt.deposit_receipt_version {
+      //         rlp_head.payload_length += deposit_receipt_version.length();
+      //     }
+      // }
 
       rlp_head
   }
@@ -91,15 +91,15 @@ impl<'a> ReceiptWithBloomEncoder<'a> {
       self.raw_receipt().logs_bloom().encode(out);
       self.raw_logs().encode(out);
 
-      #[cfg(feature = "optimism")]
-      if self.raw_tx_type() == TxType::Deposit {
-          if let Some(deposit_nonce) = self.receipt.deposit_nonce {
-              deposit_nonce.encode(out)
-          }
-          if let Some(deposit_receipt_version) = self.receipt.deposit_receipt_version {
-              deposit_receipt_version.encode(out)
-          }
-      }
+      // #[cfg(feature = "optimism")]
+      // if self.raw_tx_type() == TxType::Deposit {
+      //     if let Some(deposit_nonce) = self.receipt.deposit_nonce {
+      //         deposit_nonce.encode(out)
+      //     }
+      //     if let Some(deposit_receipt_version) = self.receipt.deposit_receipt_version {
+      //         deposit_receipt_version.encode(out)
+      //     }
+      // }
   }
 
   /// Encode receipt with or without the header data.
@@ -131,10 +131,10 @@ impl<'a> ReceiptWithBloomEncoder<'a> {
           TxType::Eip4844 => {
               out.put_u8(0x03);
           }
-          #[cfg(feature = "optimism")]
-          TxType::Deposit => {
-              out.put_u8(0x7E);
-          }
+          // #[cfg(feature = "optimism")]
+          // TxType::Deposit => {
+          //     out.put_u8(0x7E);
+          // }
       }
       out.put_slice(payload.as_ref());
   }
@@ -147,7 +147,7 @@ impl<'a> ReceiptWithBloomEncoder<'a> {
 }
 
 impl<'a> Encodable for ReceiptWithBloomEncoder<'a> {
-  
+
   fn encode(&self, out: &mut dyn BufMut) {
       self.encode_inner(out, true)
   }

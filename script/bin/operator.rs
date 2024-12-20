@@ -21,7 +21,7 @@ use helios_ethereum::consensus::Inner;
 use helios_ethereum::rpc::http_rpc::HttpRpc;
 use helios_ethereum::rpc::ConsensusRpc;
 use log::{error, info};
-use sp1_helios_primitives::{receipt::ReceiptWithBloomEncoder, types::ProofInputs};
+use sp1_helios_primitives::types::ProofInputs;
 use sp1_helios_script::*;
 use sp1_sdk::{network::proto::network::twirp::axum::extract::FromRef, ProverClient, SP1ProofWithPublicValues, SP1ProvingKey, SP1Stdin};
 use ssz_rs::prelude::*;
@@ -191,78 +191,13 @@ impl SP1LightClientOperator {
         let receipts_root = execution_payload.receipts_root();
         let receipts = self.wallet_filler.get_block_receipts(block).await.unwrap().unwrap();
 
-        let computed_receipts_root = ordered_trie_root_with_encoder(receipts, |r, buf| ReceiptWithBloomEncoder::new(&r).encode_inner(buf, false))
+        // let computed_receipts_root = ordered_trie_root_with_encoder(receipts, |r, buf| ReceiptWithBloomEncoder::new(&r).encode_inner(buf, false))
 
-        // let mut tree = MerkleTree::new();
-        for receipt in receipts {
+        // for receipt in receipts {
 
-            // let encoder = ReceiptWithBloomEncoder::new(&receipt);
-            // encoder.encode(out);
-        }
-
-
-
-
-        // // Should be 2 ^ N leaves
-        // let num_leaves = 16;
-        // for i in 0..num_leaves {
-        //     tree.insert(B256::from(U256::from(i)));
+        //     let encoder = ReceiptWithBloomEncoder::new(&receipt);
+        //     encoder.encode(out);
         // }
-        // tree.finish();
-
-        // for i in 0..num_leaves {
-        //     let proof = tree.create_proof(&B256::from(U256::from(i))).unwrap();
-        //     assert!(MerkleTree::verify_proof(&proof));
-        // }
-
-        // RLP encode receipts
-        // let encoded_receipts: Vec<Vec<u8>> = receipts
-        //     .iter()
-        //     .map(|receipt| {
-        //         let mut stream = RlpStream::new();
-        //         receipt.rlp_append(&mut stream);
-        //         stream.out()
-        //     })
-        //     .collect();
-
-        // // Construct the Patricia Trie
-        // let mut backend = MemoryBackend::<Vec<u8>, H256>::default();
-        // let mut trie = Trie::new(&mut backend);
-
-        // for (index, encoded_receipt) in encoded_receipts.iter().enumerate() {
-        //     let key = index.to_be_bytes().to_vec(); // Transaction index as key
-        //     trie.insert(&key, encoded_receipt).unwrap();
-        // }
-
-        // Compute the receiptsRoot
-        // let receipts_root = trie.commit().unwrap();
-
-
-
-        let parent_hash = execution_payload.parent_hash();
-        let block_hash = execution_payload.block_hash();
-
-        
-        // let body_root = beacon.body_root;
-        // TOOD: randao reveal, eth1_data, graffiti, proposer_slashings, attester_slashings..., execution_payload
-
-
-        // let execution = header.execution().unwrap();
-        // let execution_block_hash = execution.block_hash();
-        // let receipt_root = execution.receipts_root();
-        // TODO: Exeuction Payload: parentHash, blockHash, stateRoot, logsBloom, receiptsRoot, transactions, baseFeePerGas, gasUsed, etc...
-        // Receipt root: Transaction status, Cumulative gas used, Logs (address, topics, data), Bloom filter for logs.
-
-        // TODO: show that block hash is part of execution payload, which is part of beacon body root
-
-        
-        // Use alloy to fetch data
-        // curl -X POST -H "Content-Type: application/json" \
-        // --data '{"jsonrpc":"2.0","method":"eth_getBlockByNumber","params":["0x1b4", true],"id":1}' \
-        // http://127.0.0.1:8545
-
-
-
 
 
         // Optimization:
