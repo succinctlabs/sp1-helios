@@ -26,7 +26,7 @@ use std::sync::Arc;
 use std::time::Duration;
 use tree_hash::TreeHash;
 
-const ELF: &[u8] = include_bytes!("../../elf/riscv32im-succinct-zkvm-elf");
+const ELF: &[u8] = include_bytes!("../../elf/sp1-helios-docker");
 
 /// Alias the fill provider for the Ethereum network. Retrieved from the instantiation of the
 /// ProviderBuilder. Recommended method for passing around a ProviderBuilder.
