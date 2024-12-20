@@ -2,13 +2,13 @@
 pragma solidity ^0.8.22;
 
 import "forge-std/Script.sol";
-import {SP1LightClient} from "../src/SP1LightClient.sol";
+import {SP1Helios} from "../src/SP1Helios.sol";
 import {SP1MockVerifier} from "@sp1-contracts/SP1MockVerifier.sol";
 import {ISP1Verifier} from "@sp1-contracts/ISP1Verifier.sol";
 import {Vm} from "forge-std/Vm.sol";
 
 /// @title DeployScript
-/// @notice Deploy script for the SP1LightClient contract.
+/// @notice Deploy script for the SP1Helios contract.
 contract DeployScript is Script {
     function setUp() public {}
 
@@ -18,7 +18,7 @@ contract DeployScript is Script {
         // Update the rollup config to match the current chain. If the starting block number is 0, the latest block number and starting output root will be fetched.
         updateGenesisConfig();
 
-        SP1LightClient.InitParams memory params = readGenesisConfig();
+        SP1Helios.InitParams memory params = readGenesisConfig();
 
         // If the verifier address is set to 0, set it to the address of the mock verifier.
         if (params.verifier == address(0)) {
@@ -26,17 +26,17 @@ contract DeployScript is Script {
         }
 
         // Deploy the SP1 Helios contract.
-        SP1LightClient lightClient = new SP1LightClient(params);
+        SP1Helios helios = new SP1Helios(params);
 
-        return address(lightClient);
+        return address(helios);
     }
 
-    function readGenesisConfig() public returns (SP1LightClient.InitParams memory) {
+    function readGenesisConfig() public returns (SP1Helios.InitParams memory) {
         string memory root = vm.projectRoot();
         string memory path = string.concat(root, "/", "genesis.json");
         string memory json = vm.readFile(path);
         bytes memory data = vm.parseJson(json);
-        return abi.decode(data, (SP1LightClient.InitParams));
+        return abi.decode(data, (SP1Helios.InitParams));
     }
 
     function updateGenesisConfig() public {

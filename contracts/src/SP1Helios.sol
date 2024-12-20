@@ -3,9 +3,9 @@ pragma solidity ^0.8.22;
 
 import {ISP1Verifier} from "@sp1-contracts/ISP1Verifier.sol";
 
-/// @title SP1LightClient
-/// @notice An ethereum light client, built with SP1.
-contract SP1LightClient {
+/// @title SP1Helios
+/// @notice An Ethereum beacon chain light client, built with SP1 and Helios.
+contract SP1Helios {
     bytes32 public immutable GENESIS_VALIDATORS_ROOT;
     uint256 public immutable GENESIS_TIME;
     uint256 public immutable SECONDS_PER_SLOT;
@@ -80,8 +80,7 @@ contract SP1LightClient {
         SLOTS_PER_PERIOD = params.slotsPerPeriod;
         SLOTS_PER_EPOCH = params.slotsPerEpoch;
         SOURCE_CHAIN_ID = params.sourceChainId;
-        syncCommittees[getSyncCommitteePeriod(params.head)] = params
-            .syncCommitteeHash;
+        syncCommittees[getSyncCommitteePeriod(params.head)] = params.syncCommitteeHash;
         heliosProgramVkey = params.heliosProgramVkey;
         headers[params.head] = params.header;
         executionStateRoots[params.head] = params.executionStateRoot;
@@ -93,10 +92,7 @@ contract SP1LightClient {
     /// @notice Updates the light client with a new header, execution state root, and sync committee (if changed)
     /// @param proof The proof bytes for the SP1 proof.
     /// @param publicValues The public commitments from the SP1 proof.
-    function update(
-        bytes calldata proof,
-        bytes calldata publicValues
-    ) external {
+    function update(bytes calldata proof, bytes calldata publicValues) external {
         // Parse the outputs from the committed public values associated with the proof.
         ProofOutputs memory po = abi.decode(publicValues, (ProofOutputs));
         if (po.newHead <= head) {
@@ -104,11 +100,7 @@ contract SP1LightClient {
         }
 
         // Verify the proof with the associated public values. This will revert if proof invalid.
-        ISP1Verifier(verifier).verifyProof(
-            heliosProgramVkey,
-            publicValues,
-            proof
-        );
+        ISP1Verifier(verifier).verifyProof(heliosProgramVkey, publicValues, proof);
 
         head = po.newHead;
         if (headers[po.newHead] != bytes32(0)) {
@@ -148,9 +140,7 @@ contract SP1LightClient {
     }
 
     /// @notice Gets the sync committee period from a slot.
-    function getSyncCommitteePeriod(
-        uint256 slot
-    ) public view returns (uint256) {
+    function getSyncCommitteePeriod(uint256 slot) public view returns (uint256) {
         return slot / SLOTS_PER_PERIOD;
     }
 
@@ -159,7 +149,7 @@ contract SP1LightClient {
         return head / SLOTS_PER_EPOCH;
     }
 
-    /// @notice Updates the helios program vKey. Call when changing the helios program (e.g. adding a new constraint or updating a dependency)
+    /// @notice Updates the Helios program verification key.
     function updateHeliosProgramVkey(bytes32 newVkey) external onlyGuardian {
         heliosProgramVkey = newVkey;
     }
