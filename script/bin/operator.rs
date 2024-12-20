@@ -22,7 +22,7 @@ use helios_ethereum::rpc::http_rpc::HttpRpc;
 use helios_ethereum::rpc::ConsensusRpc;
 use log::{error, info};
 use sp1_helios_primitives::types::ProofInputs;
-use sp1_helios_script::*;
+use sp1_helios_script::{*, receipt::*, trie::*};
 use sp1_sdk::{network::proto::network::twirp::axum::extract::FromRef, ProverClient, SP1ProofWithPublicValues, SP1ProvingKey, SP1Stdin};
 use ssz_rs::prelude::*;
 use std::env;
@@ -191,7 +191,7 @@ impl SP1LightClientOperator {
         let receipts_root = execution_payload.receipts_root();
         let receipts = self.wallet_filler.get_block_receipts(block).await.unwrap().unwrap();
 
-        // let computed_receipts_root = ordered_trie_root_with_encoder(receipts, |r, buf| ReceiptWithBloomEncoder::new(&r).encode_inner(buf, false))
+        let computed_receipts_root = ordered_trie_root_with_encoder(receipts, |r, buf| ReceiptWithBloomEncoder::new(&r).encode_inner(buf, false));
 
         // for receipt in receipts {
 

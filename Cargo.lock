@@ -913,6 +913,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "alloy-trie"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "03704f265cbbb943b117ecb5055fd46e8f41e7dc8a58b1aed20bcd40ace38c15"
+dependencies = [
+ "alloy-primitives 0.7.7",
+ "alloy-rlp",
+ "derive_more 0.99.18",
+ "hashbrown 0.14.5",
+ "nybbles",
+ "serde",
+ "smallvec",
+ "tracing",
+]
+
+[[package]]
 name = "android-tzdata"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4665,6 +4681,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "830b246a0e5f20af87141b25c173cd1b609bd7779a4617d6ec582abaf90870f3"
 
 [[package]]
+name = "nybbles"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "95f06be0417d97f81fe4e5c86d7d01b392655a9cac9c19a848aa033e18937b23"
+dependencies = [
+ "alloy-rlp",
+ "const-hex",
+ "proptest",
+ "serde",
+ "smallvec",
+]
+
+[[package]]
 name = "object"
 version = "0.36.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6841,6 +6870,7 @@ version = "0.1.0"
 dependencies = [
  "alloy 0.1.4",
  "alloy-primitives 0.7.7",
+ "alloy-trie",
  "anyhow",
  "cargo_metadata",
  "clap",
@@ -6849,6 +6879,7 @@ dependencies = [
  "helios-consensus-core",
  "helios-ethereum",
  "log",
+ "nybbles",
  "reqwest 0.12.9",
  "serde",
  "serde_cbor",
