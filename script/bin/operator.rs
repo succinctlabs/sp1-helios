@@ -1,27 +1,34 @@
 /// Continuously generate proofs & keep light client updated with chain
 use alloy::{
-    consensus::Receipt, eips::BlockNumberOrTag, network::{Ethereum, EthereumWallet}, primitives::Address, providers::{
+    core::rlp::Encodable,
+    consensus::{Receipt, TxReceipt},
+    eips::BlockNumberOrTag,
+    network::{Ethereum, EthereumWallet},
+    primitives::{Address, Bloom, B256, Log, U256},
+    providers::{
         fillers::{ChainIdFiller, FillProvider, GasFiller, JoinFill, NonceFiller, WalletFiller},
         Identity, Provider, ProviderBuilder, RootProvider,
-    }, rpc::{types::TransactionReceipt}, signers::{k256::pkcs8::der::Encode, local::PrivateKeySigner}, sol, transports::http::{Client, Http}
+    },
+    rpc::types::TransactionReceipt,
+    signers::local::PrivateKeySigner,
+    sol,
+    transports::http::{Client, Http}
 };
 // use alloy_merkle_tree::tree::MerkleTree;
-use alloy_primitives::{Bloom, B256, U256};
 use anyhow::Result;
-use helios_consensus_core::{consensus_spec::MainnetConsensusSpec, types::ExecutionPayload};
+use helios_consensus_core::{consensus_spec::MainnetConsensusSpec, types::{BeaconBlock, ExecutionPayload}};
 use helios_ethereum::consensus::Inner;
 use helios_ethereum::rpc::http_rpc::HttpRpc;
 use helios_ethereum::rpc::ConsensusRpc;
 use log::{error, info};
-use sp1_helios_primitives::types::ProofInputs;
+use sp1_helios_primitives::{receipt::ReceiptWithBloomEncoder, types::ProofInputs};
 use sp1_helios_script::*;
-use sp1_sdk::{ProverClient, SP1ProofWithPublicValues, SP1ProvingKey, SP1Stdin};
+use sp1_sdk::{network::proto::network::twirp::axum::extract::FromRef, ProverClient, SP1ProofWithPublicValues, SP1ProvingKey, SP1Stdin};
 use ssz_rs::prelude::*;
 use std::env;
 use std::sync::Arc;
 use std::time::Duration;
 use tree_hash::TreeHash;
-// use alloy_rlp::{bytes::BufMut, BytesMut};
 
 const ELF: &[u8] = include_bytes!("../../elf/riscv32im-succinct-zkvm-elf");
 
@@ -124,7 +131,7 @@ impl SP1LightClientOperator {
     async fn request_update(
         &self,
         mut client: Inner<MainnetConsensusSpec, HttpRpc>,
-        target_block: u64,
+        // target_block: u64,
         // contract_address,
         // event
     ) -> Result<Option<SP1ProofWithPublicValues>> {
@@ -159,7 +166,6 @@ impl SP1LightClientOperator {
         let mut sync_committee_updates = get_updates(&client).await;
         let finality_update = client.rpc.get_finality_update().await.unwrap();
 
-
         // Check if contract is up to date
         let latest_block = finality_update.finalized_header.beacon().slot;
 
@@ -168,66 +174,30 @@ impl SP1LightClientOperator {
             return Ok(None);
         }
 
+
+        // TODO: Hardcoded values for now
+        let target_block: u64 = 6000; // TODO move to argument
+
         // Introspect target block
         if latest_block < target_block {
             info!("Target block not reached, yet.");
             return Ok(None);
         }
 
-        let consensus_block = client.rpc.get_block(target_block).await.unwrap();
+        let consensus_block: BeaconBlock<MainnetConsensusSpec> = client.rpc.get_block(target_block).await.unwrap();
         let execution_payload = consensus_block.body.execution_payload();
 
         let block = BlockNumberOrTag::from(*execution_payload.block_number());
         let receipts_root = execution_payload.receipts_root();
         let receipts = self.wallet_filler.get_block_receipts(block).await.unwrap().unwrap();
 
+        let computed_receipts_root = ordered_trie_root_with_encoder(receipts, |r, buf| ReceiptWithBloomEncoder::new(&r).encode_inner(buf, false))
+
         // let mut tree = MerkleTree::new();
         for receipt in receipts {
 
-            let r: TransactionReceipt = receipt;
-
-            let _r = r.inner.as_receipt_with_bloom().unwrap();
-            // let rr = Receipt::from(*_r);
-            // rr.en
-
-            // ordered_trie_root_with_encoder();
-
-            // let rrr = calculate_receipt_root();
-
-            // pub fn calculate_receipt_root<T>(receipts: &[T]) -> B256
-            // where
-            //     T: Encodable2718,
-            // {
-            //     ordered_trie_root_with_encoder(receipts, |r, buf| r.encode_2718(buf))
-            // }
-
-            // mut dyn BufMut
-            // let mut out = Vec::with_capacity(10000);
-
-            // receipt.inner.status().encode(&mut out);
-            // receipt.inner.cumulative_gas_used().encode(&mut out);
-            // receipt.inner.logs_bloom().encode(&mut out);
-            // receipt.inner.logs().encode(&mut out);
-
-            // let mut buf = vec![];
-            // buf.put(receipt.inner.as_receipt_with_bloom().unwrap());
-
-            // let r = RlpReceipt {
-            //     status: receipt.status(),
-            //     cumulative_gas_used: receipt.inner.cumulative_gas_used(),
-            //     logs_bloom: receipt.inner.logs_bloom().clone(),
-            //     logs: receipt.inner.logs().clone(),
-            // };
-
-            // let mut stream = RlpStream::new();
-            // stream.begin_list(4);
-            // stream.append(receipt.status());
-            // stream.append(receipt.inner.cumulative_gas_used());
-            // stream.append(receipt.inner.logs_bloom());
-            // stream.append_list(receipt.inner.logs());
-            // stream.out().copy_to_bytes(out.remaining_mut());
-
-            tree.insert(r.encode());
+            // let encoder = ReceiptWithBloomEncoder::new(&receipt);
+            // encoder.encode(out);
         }
 
 
@@ -273,13 +243,13 @@ impl SP1LightClientOperator {
         let block_hash = execution_payload.block_hash();
 
         
-        let body_root = beacon.body_root;
+        // let body_root = beacon.body_root;
         // TOOD: randao reveal, eth1_data, graffiti, proposer_slashings, attester_slashings..., execution_payload
 
 
-        let execution = header.execution().unwrap();
-        let execution_block_hash = execution.block_hash();
-        let receipt_root = execution.receipts_root();
+        // let execution = header.execution().unwrap();
+        // let execution_block_hash = execution.block_hash();
+        // let receipt_root = execution.receipts_root();
         // TODO: Exeuction Payload: parentHash, blockHash, stateRoot, logsBloom, receiptsRoot, transactions, baseFeePerGas, gasUsed, etc...
         // Receipt root: Transaction status, Cumulative gas used, Logs (address, topics, data), Bloom filter for logs.
 

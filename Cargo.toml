@@ -40,6 +40,7 @@ log = "0.4.22"
 env_logger = "0.11.3"
 alloy-primitives = "0.7.7"
 alloy = { version = "0.1.1", features = ["full"] }
+alloy-rlp = "0.3.4"
 anyhow = "1.0.86"
 reqwest = "0.12.5"
 tree_hash = "0.7.0"

@@ -6814,6 +6814,7 @@ dependencies = [
 name = "sp1-helios-primitives"
 version = "0.1.0"
 dependencies = [
+ "alloy 0.1.4",
  "alloy-primitives 0.7.7",
  "alloy-sol-types",
  "helios-consensus-core",
