@@ -1,0 +1,17 @@
+[book]
+authors = ["Ratan Kaliani"]
+language = "en"
+multilingual = false
+src = "book"
+title = "SP1 Helios"
+description = "A book on all things SP1 Helios"
+
+[build]
+build-dir = "target/book"
+
+[preprocessor.template]
+before = ["links"]
+
+[preprocessor.index]
+
+[preprocessor.links]

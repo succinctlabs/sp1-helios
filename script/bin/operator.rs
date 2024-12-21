@@ -26,7 +26,7 @@ use std::sync::Arc;
 use std::time::Duration;
 use tree_hash::TreeHash;
 
-const ELF: &[u8] = include_bytes!("../../elf/riscv32im-succinct-zkvm-elf");
+const ELF: &[u8] = include_bytes!("../../elf/sp1-helios-docker");
 
 /// Alias the fill provider for the Ethereum network. Retrieved from the instantiation of the
 /// ProviderBuilder. Recommended method for passing around a ProviderBuilder.
@@ -40,7 +40,7 @@ type EthereumFillProvider = FillProvider<
     Ethereum,
 >;
 
-struct SP1LightClientOperator {
+struct SP1HeliosOperator {
     client: ProverClient,
     pk: SP1ProvingKey,
     wallet_filler: Arc<EthereumFillProvider>,
@@ -52,7 +52,7 @@ struct SP1LightClientOperator {
 sol! {
     #[allow(missing_docs)]
     #[sol(rpc)]
-    contract SP1LightClient {
+    contract SP1Helios {
         bytes32 public immutable GENESIS_VALIDATORS_ROOT;
         uint256 public immutable GENESIS_TIME;
         uint256 public immutable SECONDS_PER_SLOT;
@@ -85,7 +85,7 @@ sol! {
     }
 }
 
-impl SP1LightClientOperator {
+impl SP1HeliosOperator {
     pub async fn new() -> Self {
         dotenv::dotenv().ok();
 
@@ -123,13 +123,13 @@ impl SP1LightClientOperator {
         }
     }
 
-    /// Fetch values and generate an 'update' proof for the SP1 LightClient contract.
+    /// Fetch values and generate an 'update' proof for the SP1 Helios contract.
     async fn request_update(
         &self,
         mut client: Inner<MainnetConsensusSpec, HttpRpc>,
     ) -> Result<Option<SP1ProofWithPublicValues>> {
         // Fetch required values.
-        let contract = SP1LightClient::new(self.contract_address, self.wallet_filler.clone());
+        let contract = SP1Helios::new(self.contract_address, self.wallet_filler.clone());
         let head: u64 = contract
             .head()
             .call()
@@ -207,7 +207,7 @@ impl SP1LightClientOperator {
         Ok(Some(proof))
     }
 
-    /// Relay an update proof to the SP1 LightClient contract.
+    /// Relay an update proof to the SP1 Helios contract.
     async fn relay_update(&self, proof: SP1ProofWithPublicValues) -> Result<()> {
         let proof_as_bytes = if env::var("SP1_PROVER").unwrap().to_lowercase() == "mock" {
             vec![]
@@ -216,7 +216,7 @@ impl SP1LightClientOperator {
         };
         let public_values_bytes = proof.public_values.to_vec();
 
-        let contract = SP1LightClient::new(self.contract_address, self.wallet_filler.clone());
+        let contract = SP1Helios::new(self.contract_address, self.wallet_filler.clone());
 
         let gas_limit = relay::get_gas_limit(self.chain_id);
         let max_fee_per_gas = relay::get_fee_cap(self.chain_id, self.wallet_filler.root()).await;
@@ -260,7 +260,7 @@ impl SP1LightClientOperator {
         info!("Starting SP1 Helios operator");
 
         loop {
-            let contract = SP1LightClient::new(self.contract_address, self.wallet_filler.clone());
+            let contract = SP1Helios::new(self.contract_address, self.wallet_filler.clone());
 
             // Get the current slot from the contract
             let slot = contract
@@ -268,7 +268,7 @@ impl SP1LightClientOperator {
                 .call()
                 .await
                 .unwrap_or_else(|e| {
-                    panic!("Failed to get head. Are you sure the SP1LightClient is deployed to address: {:?}? Error: {:?}", self.contract_address, e)
+                    panic!("Failed to get head. Are you sure the SP1Helios is deployed to address: {:?}? Error: {:?}", self.contract_address, e)
                 })
                 .head
                 .try_into()
@@ -309,7 +309,7 @@ async fn main() -> Result<()> {
         .unwrap_or("5".to_string())
         .parse()?;
 
-    let mut operator = SP1LightClientOperator::new().await;
+    let mut operator = SP1HeliosOperator::new().await;
     loop {
         if let Err(e) = operator.run(loop_delay_mins).await {
             error!("Error running operator: {}", e);
