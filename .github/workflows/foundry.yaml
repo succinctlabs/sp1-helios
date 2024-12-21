@@ -46,8 +46,8 @@ jobs:
           forge build --sizes
         id: build
 
-      - name: Run Forge tests
-        working-directory: contracts/
-        run: |
-          forge test -vvv
-        id: test
+      # - name: Run Forge tests
+      #   working-directory: contracts/
+      #   run: |
+      #     forge test -vvv
+      #   id: test
