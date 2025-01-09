@@ -14,7 +14,6 @@ use helios_ethereum::{
 use std::sync::Arc;
 use tokio::sync::{mpsc::channel, watch};
 use tree_hash::TreeHash;
-pub mod relay;
 
 pub const MAX_REQUEST_LIGHT_CLIENT_UPDATES: u8 = 128;
 
