@@ -34,7 +34,7 @@ Then build the binaries:
 cd program
 
 # Builds the SP1 Helios binary using the corresponding Docker tag, output directory and ELF name.
-cargo prove build --docker --tag v3.0.0 --output-directory ../script --elf-name sp1-helios-docker
+cargo prove build --docker --tag v3.0.0 --output-directory ../script --elf-name sp1-helios-elf
 ```
 
 Now, verify the binaries by confirming the output of `vkey` matches the vkeys on the contract. The `vkey` program outputs the verification key

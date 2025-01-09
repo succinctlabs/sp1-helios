@@ -23,8 +23,8 @@ helios-ethereum = { git = "https://github.com/a16z/helios", version = "0.7.0" }
 # general
 dotenv = "0.15.0"
 eyre = "0.6.12"
-sp1-sdk = "3.0.0"
-sp1-build = "3.0.0"
+sp1-sdk = "4.0.0-rc.9"
+sp1-build = "4.0.0-rc.9"
 tokio = "1.38.0"
 tracing = "0.1.37"
 serde = "1.0.203"

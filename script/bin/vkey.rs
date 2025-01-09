@@ -2,7 +2,7 @@ use alloy_primitives::B256;
 use anyhow::Result;
 use sp1_sdk::{HashableKey, ProverClient};
 
-const HELIOS_ELF: &[u8] = include_bytes!("../../elf/sp1-helios-docker");
+const HELIOS_ELF: &[u8] = include_bytes!("../../elf/sp1-helios-elf");
 
 fn main() -> Result<()> {
     let client = ProverClient::new();

@@ -13,7 +13,7 @@ use std::{
 };
 use tree_hash::TreeHash;
 
-const HELIOS_ELF: &[u8] = include_bytes!("../../elf/sp1-helios-docker");
+const HELIOS_ELF: &[u8] = include_bytes!("../../elf/sp1-helios-elf");
 
 #[derive(Parser, Debug, Clone)]
 #[command(about = "Get the genesis parameters from a block.")]
