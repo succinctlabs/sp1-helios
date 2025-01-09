@@ -5,15 +5,14 @@ use anyhow::Result;
 use clap::Parser;
 use serde::{Deserialize, Serialize};
 use sp1_helios_script::{get_checkpoint, get_client, get_latest_checkpoint};
-use sp1_sdk::{utils, HashableKey, ProverClient};
-use ssz_rs::prelude::*;
+use sp1_sdk::{utils, HashableKey, Prover, ProverClient};
 use std::{
     env, fs,
     path::{Path, PathBuf},
 };
 use tree_hash::TreeHash;
 
-const HELIOS_ELF: &[u8] = include_bytes!("../../elf/sp1-helios-docker");
+const HELIOS_ELF: &[u8] = include_bytes!("../../elf/sp1-helios-elf");
 
 #[derive(Parser, Debug, Clone)]
 #[command(about = "Get the genesis parameters from a block.")]
@@ -59,7 +58,7 @@ pub async fn main() -> Result<()> {
         );
     }
 
-    let client = ProverClient::new();
+    let client = ProverClient::builder().cpu().build();
     let (_pk, vk) = client.setup(HELIOS_ELF);
 
     let checkpoint;

@@ -1,14 +1,7 @@
-/// Continuously generate proofs & keep light client updated with chain
+use alloy::providers::Provider;
 use alloy::{
-    network::{Ethereum, EthereumWallet},
-    primitives::Address,
-    providers::{
-        fillers::{ChainIdFiller, FillProvider, GasFiller, JoinFill, NonceFiller, WalletFiller},
-        Identity, Provider, ProviderBuilder, RootProvider,
-    },
-    signers::local::PrivateKeySigner,
-    sol,
-    transports::http::{Client, Http},
+    network::EthereumWallet, primitives::Address, providers::ProviderBuilder,
+    signers::local::PrivateKeySigner, sol,
 };
 use alloy_primitives::{B256, U256};
 use anyhow::Result;
@@ -17,36 +10,23 @@ use helios_ethereum::consensus::Inner;
 use helios_ethereum::rpc::http_rpc::HttpRpc;
 use helios_ethereum::rpc::ConsensusRpc;
 use log::{error, info};
+use reqwest::Url;
 use sp1_helios_primitives::types::ProofInputs;
 use sp1_helios_script::*;
-use sp1_sdk::{ProverClient, SP1ProofWithPublicValues, SP1ProvingKey, SP1Stdin};
-use ssz_rs::prelude::*;
+use sp1_sdk::{EnvProver, ProverClient, SP1ProofWithPublicValues, SP1ProvingKey, SP1Stdin};
 use std::env;
-use std::sync::Arc;
 use std::time::Duration;
 use tree_hash::TreeHash;
 
-const ELF: &[u8] = include_bytes!("../../elf/sp1-helios-docker");
-
-/// Alias the fill provider for the Ethereum network. Retrieved from the instantiation of the
-/// ProviderBuilder. Recommended method for passing around a ProviderBuilder.
-type EthereumFillProvider = FillProvider<
-    JoinFill<
-        JoinFill<JoinFill<JoinFill<Identity, GasFiller>, NonceFiller>, ChainIdFiller>,
-        WalletFiller<EthereumWallet>,
-    >,
-    RootProvider<Http<Client>>,
-    Http<Client>,
-    Ethereum,
->;
+const ELF: &[u8] = include_bytes!("../../elf/sp1-helios-elf");
 
 struct SP1HeliosOperator {
-    client: ProverClient,
+    client: EnvProver,
     pk: SP1ProvingKey,
-    wallet_filler: Arc<EthereumFillProvider>,
+    wallet: EthereumWallet,
+    rpc_url: Url,
     contract_address: Address,
     relayer_address: Address,
-    chain_id: u64,
 }
 
 sol! {
@@ -89,12 +69,8 @@ impl SP1HeliosOperator {
     pub async fn new() -> Self {
         dotenv::dotenv().ok();
 
-        let client = ProverClient::new();
+        let client = ProverClient::from_env();
         let (pk, _) = client.setup(ELF);
-        let chain_id: u64 = env::var("DEST_CHAIN_ID")
-            .expect("DEST_CHAIN_ID not set")
-            .parse()
-            .unwrap();
         let rpc_url = env::var("DEST_RPC_URL")
             .expect("DEST_RPC_URL not set")
             .parse()
@@ -108,16 +84,12 @@ impl SP1HeliosOperator {
         let signer: PrivateKeySigner = private_key.parse().expect("Failed to parse private key");
         let relayer_address = signer.address();
         let wallet = EthereumWallet::from(signer);
-        let provider = ProviderBuilder::new()
-            .with_recommended_fillers()
-            .wallet(wallet)
-            .on_http(rpc_url);
 
         Self {
             client,
             pk,
-            wallet_filler: Arc::new(provider),
-            chain_id,
+            wallet,
+            rpc_url,
             contract_address,
             relayer_address,
         }
@@ -129,7 +101,8 @@ impl SP1HeliosOperator {
         mut client: Inner<MainnetConsensusSpec, HttpRpc>,
     ) -> Result<Option<SP1ProofWithPublicValues>> {
         // Fetch required values.
-        let contract = SP1Helios::new(self.contract_address, self.wallet_filler.clone());
+        let provider = ProviderBuilder::new().on_http(self.rpc_url.clone());
+        let contract = SP1Helios::new(self.contract_address, provider);
         let head: u64 = contract
             .head()
             .call()
@@ -201,7 +174,7 @@ impl SP1HeliosOperator {
         stdin.write_slice(&encoded_proof_inputs);
 
         // Generate proof.
-        let proof = self.client.prove(&self.pk, stdin).groth16().run()?;
+        let proof = self.client.prove(&self.pk, &stdin).groth16().run()?;
 
         info!("Attempting to update to new head block: {:?}", latest_block);
         Ok(Some(proof))
@@ -209,20 +182,15 @@ impl SP1HeliosOperator {
 
     /// Relay an update proof to the SP1 Helios contract.
     async fn relay_update(&self, proof: SP1ProofWithPublicValues) -> Result<()> {
-        let proof_as_bytes = if env::var("SP1_PROVER").unwrap().to_lowercase() == "mock" {
-            vec![]
-        } else {
-            proof.bytes()
-        };
         let public_values_bytes = proof.public_values.to_vec();
 
-        let contract = SP1Helios::new(self.contract_address, self.wallet_filler.clone());
+        let wallet_filler = ProviderBuilder::new()
+            .with_recommended_fillers()
+            .wallet(self.wallet.clone())
+            .on_http(self.rpc_url.clone());
+        let contract = SP1Helios::new(self.contract_address, wallet_filler.clone());
 
-        let gas_limit = relay::get_gas_limit(self.chain_id);
-        let max_fee_per_gas = relay::get_fee_cap(self.chain_id, self.wallet_filler.root()).await;
-
-        let nonce = self
-            .wallet_filler
+        let nonce = wallet_filler
             .get_transaction_count(self.relayer_address)
             .await?;
 
@@ -230,9 +198,7 @@ impl SP1HeliosOperator {
         const NUM_CONFIRMATIONS: u64 = 3;
         const TIMEOUT_SECONDS: u64 = 60;
         let receipt = contract
-            .update(proof_as_bytes.into(), public_values_bytes.into())
-            .gas_price(max_fee_per_gas)
-            .gas(gas_limit)
+            .update(proof.bytes().into(), public_values_bytes.into())
             .nonce(nonce)
             .send()
             .await?
@@ -260,7 +226,8 @@ impl SP1HeliosOperator {
         info!("Starting SP1 Helios operator");
 
         loop {
-            let contract = SP1Helios::new(self.contract_address, self.wallet_filler.clone());
+            let provider = ProviderBuilder::new().on_http(self.rpc_url.clone());
+            let contract = SP1Helios::new(self.contract_address, provider);
 
             // Get the current slot from the contract
             let slot = contract

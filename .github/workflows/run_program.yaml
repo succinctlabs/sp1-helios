@@ -35,7 +35,7 @@ jobs:
       - name: Run test
         run: |
           cd script
-          cargo run --bin test
+          cargo run --bin test --release
         env:
           SOURCE_CONSENSUS_RPC_URL: ${{ secrets.SOURCE_CONSENSUS_RPC_URL }}
           SOURCE_CHAIN_ID: ${{ secrets.SOURCE_CHAIN_ID }}

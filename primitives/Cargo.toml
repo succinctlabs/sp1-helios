@@ -6,7 +6,6 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
-ssz-rs = { workspace = true }
 serde = { workspace = true }
 helios-consensus-core = { workspace = true }
 alloy-sol-types = { workspace = true }

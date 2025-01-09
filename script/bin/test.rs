@@ -5,7 +5,7 @@ use sp1_helios_primitives::types::ProofInputs;
 use sp1_helios_script::{get_checkpoint, get_client, get_latest_checkpoint, get_updates};
 use sp1_sdk::{utils::setup_logger, ProverClient, SP1Stdin};
 
-const ELF: &[u8] = include_bytes!("../../elf/sp1-helios-docker");
+const ELF: &[u8] = include_bytes!("../../elf/sp1-helios-elf");
 #[derive(Parser, Debug, Clone)]
 #[command(about = "Get the genesis parameters from a block.")]
 pub struct GenesisArgs {
@@ -45,8 +45,8 @@ async fn main() -> Result<()> {
     let mut stdin = SP1Stdin::new();
     stdin.write_slice(&serde_cbor::to_vec(&inputs)?);
 
-    let prover_client = ProverClient::new();
-    let (_, report) = prover_client.execute(ELF, stdin).run()?;
+    let prover_client = ProverClient::builder().cpu().build();
+    let (_, report) = prover_client.execute(ELF, &stdin).run()?;
     println!("Execution Report: {:?}", report);
 
     Ok(())

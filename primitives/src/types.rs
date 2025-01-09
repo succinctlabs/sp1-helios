@@ -4,8 +4,6 @@ use helios_consensus_core::consensus_spec::MainnetConsensusSpec;
 use helios_consensus_core::types::Forks;
 use helios_consensus_core::types::{FinalityUpdate, LightClientStore, Update};
 use serde::{Deserialize, Serialize};
-use ssz_rs::prelude::*;
-pub use ssz_rs::prelude::{Bitvector, Vector};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ProofInputs {
