@@ -19,7 +19,7 @@ use helios_ethereum::rpc::ConsensusRpc;
 use log::{error, info};
 use sp1_helios_primitives::types::ProofInputs;
 use sp1_helios_script::*;
-use sp1_sdk::{ProverClient, SP1ProofWithPublicValues, SP1ProvingKey, SP1Stdin};
+use sp1_sdk::{EnvProver, ProverClient, SP1ProofWithPublicValues, SP1ProvingKey, SP1Stdin};
 use ssz_rs::prelude::*;
 use std::env;
 use std::sync::Arc;
@@ -41,7 +41,7 @@ type EthereumFillProvider = FillProvider<
 >;
 
 struct SP1HeliosOperator {
-    client: ProverClient,
+    client: EnvProver,
     pk: SP1ProvingKey,
     wallet_filler: Arc<EthereumFillProvider>,
     contract_address: Address,
@@ -89,7 +89,7 @@ impl SP1HeliosOperator {
     pub async fn new() -> Self {
         dotenv::dotenv().ok();
 
-        let client = ProverClient::new();
+        let client = ProverClient::from_env();
         let (pk, _) = client.setup(ELF);
         let chain_id: u64 = env::var("DEST_CHAIN_ID")
             .expect("DEST_CHAIN_ID not set")
@@ -201,7 +201,7 @@ impl SP1HeliosOperator {
         stdin.write_slice(&encoded_proof_inputs);
 
         // Generate proof.
-        let proof = self.client.prove(&self.pk, stdin).groth16().run()?;
+        let proof = self.client.prove(&self.pk, &stdin).groth16().run()?;
 
         info!("Attempting to update to new head block: {:?}", latest_block);
         Ok(Some(proof))
