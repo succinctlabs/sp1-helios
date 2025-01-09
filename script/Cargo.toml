@@ -29,7 +29,6 @@ helios-consensus-core = { workspace = true }
 helios-ethereum = { workspace = true }
 sp1-helios-primitives = { workspace = true }
 serde = { workspace = true }
-ssz-rs = { workspace = true }
 serde_cbor = { workspace = true }
 clap = { workspace = true }
 log = { workspace = true }

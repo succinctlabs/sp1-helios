@@ -7,7 +7,6 @@ use helios_consensus_core::{
     apply_finality_update, apply_update, verify_finality_update, verify_update,
 };
 use sp1_helios_primitives::types::{ProofInputs, ProofOutputs};
-use ssz_rs::prelude::*;
 use tree_hash::TreeHash;
 
 /// Program flow:

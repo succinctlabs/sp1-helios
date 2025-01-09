@@ -1775,7 +1775,7 @@ dependencies = [
 [[package]]
 name = "bls12_381"
 version = "0.8.0"
-source = "git+https://github.com/sp1-patches/bls12_381?branch=patch-v0.8.0#7e1b79041253d6f7b591534613245b3f60e05d8b"
+source = "git+https://github.com/sp1-patches/bls12_381?tag=patch-0.8.0-sp1-4.0.0-rc.3-v1#a5165759c8fb2153131e72877f79790490fec0f3"
 dependencies = [
  "cfg-if",
  "digest 0.9.0",
@@ -1784,7 +1784,7 @@ dependencies = [
  "hex",
  "pairing 0.23.0",
  "rand_core 0.6.4",
- "sp1-lib 3.4.0",
+ "sp1-lib",
  "subtle",
 ]
 
@@ -6441,7 +6441,7 @@ dependencies = [
 [[package]]
 name = "sha2"
 version = "0.9.9"
-source = "git+https://github.com/sp1-patches/RustCrypto-hashes?branch=patch-sha2-v0.9.9#db82a4848f8d033eab544255e1efa036cc06f054"
+source = "git+https://github.com/sp1-patches/RustCrypto-hashes?tag=patch-sha2-0.9.9-sp1-4.0.0-rc.3#db82a4848f8d033eab544255e1efa036cc06f054"
 dependencies = [
  "block-buffer 0.9.0",
  "cfg-if",
@@ -6453,7 +6453,7 @@ dependencies = [
 [[package]]
 name = "sha2"
 version = "0.10.8"
-source = "git+https://github.com/sp1-patches/RustCrypto-hashes?branch=patch-sha2-v0.10.8#1f224388fdede7cef649bce0d63876d1a9e3f515"
+source = "git+https://github.com/sp1-patches/RustCrypto-hashes?tag=patch-sha2-0.10.8-sp1-4.0.0-rc.3#1f224388fdede7cef649bce0d63876d1a9e3f515"
 dependencies = [
  "cfg-if",
  "cpufeatures",
@@ -6752,7 +6752,6 @@ dependencies = [
  "alloy-sol-types 0.7.7",
  "helios-consensus-core",
  "serde",
- "ssz_rs",
 ]
 
 [[package]]
@@ -6765,7 +6764,6 @@ dependencies = [
  "serde_cbor",
  "sp1-helios-primitives",
  "sp1-zkvm",
- "ssz_rs",
  "tree_hash",
 ]
 
@@ -6790,19 +6788,8 @@ dependencies = [
  "sp1-build",
  "sp1-helios-primitives",
  "sp1-sdk",
- "ssz_rs",
  "tokio",
  "tree_hash",
-]
-
-[[package]]
-name = "sp1-lib"
-version = "3.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7a5729da1b05d56c01457e5ecabdc77f1cc941df23f2921163a2f325aec22428"
-dependencies = [
- "bincode",
- "serde",
 ]
 
 [[package]]
@@ -7107,7 +7094,7 @@ dependencies = [
  "libm",
  "rand 0.8.5",
  "sha2 0.10.8",
- "sp1-lib 4.0.0-rc.9",
+ "sp1-lib",
  "sp1-primitives",
 ]
 
@@ -7125,31 +7112,6 @@ checksum = "d91ed6c858b01f942cd56b37a94b3e0a1798290327d1236e4d9cf4eaca44d29d"
 dependencies = [
  "base64ct",
  "der",
-]
-
-[[package]]
-name = "ssz_rs"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "057291e5631f280978fa9c8009390663ca4613359fc1318e36a8c24c392f6d1f"
-dependencies = [
- "bitvec 1.0.1",
- "hex",
- "num-bigint 0.4.6",
- "serde",
- "sha2 0.9.9",
- "ssz_rs_derive",
-]
-
-[[package]]
-name = "ssz_rs_derive"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f07d54c4d01a1713eb363b55ba51595da15f6f1211435b71466460da022aa140"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 1.0.109",
 ]
 
 [[package]]
@@ -7491,7 +7453,7 @@ dependencies = [
 [[package]]
 name = "tiny-keccak"
 version = "2.0.2"
-source = "git+https://github.com/sp1-patches/tiny-keccak?branch=patch-v2.0.2#bf0b28f63510a90c7b6c21ac6ff461c93ecd2331"
+source = "git+https://github.com/sp1-patches/tiny-keccak?tag=patch-2.0.2-sp1-4.0.0-rc.3#d2ffd330259c8f290b07d99cc1ef1f74774382c2"
 dependencies = [
  "cfg-if",
  "crunchy",
