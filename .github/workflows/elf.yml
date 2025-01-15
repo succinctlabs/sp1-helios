@@ -25,7 +25,7 @@ jobs:
           source ~/.bashrc
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
-      - name: Verify the OP Succinct binaries
+      - name: Verify the SP1 Helios Binary
         run: |
           # Build the binaries
           cd program
