@@ -27,6 +27,7 @@ pub fn main() {
         forks,
     } = serde_cbor::from_slice(&encoded_inputs).unwrap();
 
+    let start_sync_committee_hash = store.current_sync_committee.tree_hash_root();
     let prev_header: B256 = store.finalized_header.beacon().tree_hash_root();
     let prev_head = store.finalized_header.beacon().slot;
 
@@ -84,6 +85,7 @@ pub fn main() {
         prevHeader: prev_header,
         prevHead: U256::from(prev_head),
         syncCommitteeHash: sync_committee_hash,
+        startSyncCommitteeHash: start_sync_committee_hash,
     };
     sp1_zkvm::io::commit_slice(&proof_outputs.abi_encode());
 }
