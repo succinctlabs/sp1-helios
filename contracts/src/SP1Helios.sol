@@ -75,7 +75,6 @@ contract SP1Helios {
     error SyncCommitteeAlreadySet(uint256 period);
     error HeaderRootAlreadySet(uint256 slot);
     error StateRootAlreadySet(uint256 slot);
-    error SyncCommitteeNotSet(uint256 period);
     error SyncCommitteeStartMismatch(bytes32 given, bytes32 expected);
 
     constructor(InitParams memory params) {
