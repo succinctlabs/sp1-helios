@@ -106,6 +106,7 @@ contract SP1Helios {
         uint256 currentPeriod = getSyncCommitteePeriod(head);
 
         // Note: We should always have a sync committee for the current head.
+        // The "start" sync committee hash is the hash of the sync committee that should sign the next update.
         bytes32 currentSyncCommitteeHash = syncCommittees[currentPeriod];
         if (currentSyncCommitteeHash != po.startSyncCommitteeHash) {
             revert SyncCommitteeStartMismatch(po.startSyncCommitteeHash, currentSyncCommitteeHash);
