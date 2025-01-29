@@ -46,9 +46,9 @@ contract SP1Helios {
         uint256 newHead;
         bytes32 prevHeader;
         uint256 prevHead;
-        // This is the hash of the current sync committee
-        // associated with the new head.
+        // Hash of the sync committee at the new head.
         bytes32 syncCommitteeHash;
+        // Hash of the current sync committee that signed the previous update.
         bytes32 startSyncCommitteeHash;
     }
 
