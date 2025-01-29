@@ -33,5 +33,6 @@ sol! {
         bytes32 prevHeader;
         uint256 prevHead;
         bytes32 syncCommitteeHash;
+        bytes32 startSyncCommitteeHash;
     }
 }

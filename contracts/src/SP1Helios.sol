@@ -46,7 +46,10 @@ contract SP1Helios {
         uint256 newHead;
         bytes32 prevHeader;
         uint256 prevHead;
+        // Hash of the sync committee at the new head.
         bytes32 syncCommitteeHash;
+        // Hash of the current sync committee that signed the previous update.
+        bytes32 startSyncCommitteeHash;
     }
 
     struct InitParams {
@@ -72,6 +75,7 @@ contract SP1Helios {
     error SyncCommitteeAlreadySet(uint256 period);
     error HeaderRootAlreadySet(uint256 slot);
     error StateRootAlreadySet(uint256 slot);
+    error SyncCommitteeStartMismatch(bytes32 given, bytes32 expected);
 
     constructor(InitParams memory params) {
         GENESIS_VALIDATORS_ROOT = params.genesisValidatorsRoot;
@@ -99,17 +103,31 @@ contract SP1Helios {
             revert SlotBehindHead(po.newHead);
         }
 
+        uint256 currentPeriod = getSyncCommitteePeriod(head);
+
+        // Note: We should always have a sync committee for the current head.
+        // The "start" sync committee hash is the hash of the sync committee that should sign the next update.
+        bytes32 currentSyncCommitteeHash = syncCommittees[currentPeriod];
+        if (currentSyncCommitteeHash != po.startSyncCommitteeHash) {
+            revert SyncCommitteeStartMismatch(po.startSyncCommitteeHash, currentSyncCommitteeHash);
+        }
+
         // Verify the proof with the associated public values. This will revert if proof invalid.
         ISP1Verifier(verifier).verifyProof(heliosProgramVkey, publicValues, proof);
 
+        // Check that the new header hasnt been set already.
         head = po.newHead;
         if (headers[po.newHead] != bytes32(0)) {
             revert HeaderRootAlreadySet(po.newHead);
         }
+
+        // Check that the new state root hasnt been set already.
         headers[po.newHead] = po.newHeader;
         if (executionStateRoots[po.newHead] != bytes32(0)) {
             revert StateRootAlreadySet(po.newHead);
         }
+
+        // Finally set the new state root.
         executionStateRoots[po.newHead] = po.executionStateRoot;
         emit HeadUpdate(po.newHead, po.newHeader);
 
