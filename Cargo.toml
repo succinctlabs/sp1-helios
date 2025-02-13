@@ -16,9 +16,9 @@ sp1-helios-program = { path = "program" }
 sp1-helios-primitives = { path = "primitives" }
 
 # helios
-helios = { git = "https://github.com/a16z/helios", version = "0.8.0" }
-helios-consensus-core = { git = "https://github.com/a16z/helios", version = "0.8.0" }
-helios-ethereum = { git = "https://github.com/a16z/helios", version = "0.8.0" }
+helios = { git = "https://github.com/a16z/helios", rev = "59135e86e8d28b11aed217f636ebc25725e511ff" }
+helios-consensus-core = { git = "https://github.com/a16z/helios", rev = "59135e86e8d28b11aed217f636ebc25725e511ff" }
+helios-ethereum = { git = "https://github.com/a16z/helios", rev = "59135e86e8d28b11aed217f636ebc25725e511ff" }
 
 # general
 dotenv = "0.15.0"
@@ -52,8 +52,3 @@ tiny-keccak = { git = "https://github.com/sp1-patches/tiny-keccak", tag = "patch
 bls12_381 = { git = "https://github.com/sp1-patches/bls12_381", tag = "patch-0.8.0-sp1-4.0.0" }
 # From upstream: https://github.com/a16z/helios/blob/master/Cargo.toml#L115
 ethereum_hashing = { git = "https://github.com/ncitron/ethereum_hashing", rev = "7ee70944ed4fabe301551da8c447e4f4ae5e6c35" }
-
-[patch."https://github.com/a16z/helios"]
-helios = { git = "https://github.com/leruaa/helios", rev = "52d23f11603b764b8b1715c5260118523dd3e153" }
-helios-consensus-core = { git = "https://github.com/leruaa/helios", rev = "52d23f11603b764b8b1715c5260118523dd3e153" }
-helios-ethereum = { git = "https://github.com/leruaa/helios", rev = "52d23f11603b764b8b1715c5260118523dd3e153" }
