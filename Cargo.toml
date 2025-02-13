@@ -6,8 +6,8 @@ resolver = "2"
 license = "MIT"
 edition = "2021"
 authors = ["xavierdmello", "ratankaliani"]
-homepage = "https://succinctlabs.github.io/op-succinct/"
-repository = "https://github.com/succinctlabs/op-succinct"
+homepage = "https://succinctlabs.github.io/sp1-helios/"
+repository = "https://github.com/succinctlabs/sp1-helios"
 
 [workspace.dependencies]
 # sp1-helios
@@ -16,9 +16,9 @@ sp1-helios-program = { path = "program" }
 sp1-helios-primitives = { path = "primitives" }
 
 # helios
-helios = { git = "https://github.com/a16z/helios", version = "0.7.0" }
-helios-consensus-core = { git = "https://github.com/a16z/helios", version = "0.7.0" }
-helios-ethereum = { git = "https://github.com/a16z/helios", version = "0.7.0" }
+helios = { git = "https://github.com/a16z/helios", version = "0.8.0" }
+helios-consensus-core = { git = "https://github.com/a16z/helios", version = "0.8.0" }
+helios-ethereum = { git = "https://github.com/a16z/helios", version = "0.8.0" }
 
 # general
 dotenv = "0.15.0"
@@ -33,15 +33,15 @@ zduny-wasm-timer = "0.2.8"
 serde_cbor = "0.11.2"
 hex = "0.4.3"
 serde_json = "1.0.125"
-alloy-sol-types = "0.7.7"
+alloy-sol-types = "0.8.15"
 clap = "4.5.9"
 log = "0.4.22"
 env_logger = "0.11.3"
-alloy-primitives = "0.7.7"
-alloy = { version = "0.1.1", features = ["full"] }
+alloy-primitives = "0.8.15"
+alloy = { version = "0.9.1", features = ["full"] }
 anyhow = "1.0.86"
 reqwest = "0.12.5"
-tree_hash = "0.7.0"
+tree_hash = "0.9.0"
 serde_with = { version = "3.4.0", features = ["hex"] }
 cargo_metadata = "0.18"
 
@@ -52,3 +52,8 @@ tiny-keccak = { git = "https://github.com/sp1-patches/tiny-keccak", tag = "patch
 bls12_381 = { git = "https://github.com/sp1-patches/bls12_381", tag = "patch-0.8.0-sp1-4.0.0" }
 # From upstream: https://github.com/a16z/helios/blob/master/Cargo.toml#L115
 ethereum_hashing = { git = "https://github.com/ncitron/ethereum_hashing", rev = "7ee70944ed4fabe301551da8c447e4f4ae5e6c35" }
+
+[patch."https://github.com/a16z/helios"]
+helios = { git = "https://github.com/leruaa/helios", rev = "52d23f11603b764b8b1715c5260118523dd3e153" }
+helios-consensus-core = { git = "https://github.com/leruaa/helios", rev = "52d23f11603b764b8b1715c5260118523dd3e153" }
+helios-ethereum = { git = "https://github.com/leruaa/helios", rev = "52d23f11603b764b8b1715c5260118523dd3e153" }
