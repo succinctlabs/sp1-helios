@@ -16,6 +16,7 @@ sp1-helios-program = { path = "program" }
 sp1-helios-primitives = { path = "primitives" }
 
 # helios
+# TODO: update to helios 0.8.1 release
 helios = { git = "https://github.com/a16z/helios", rev = "59135e86e8d28b11aed217f636ebc25725e511ff" }
 helios-consensus-core = { git = "https://github.com/a16z/helios", rev = "59135e86e8d28b11aed217f636ebc25725e511ff" }
 helios-ethereum = { git = "https://github.com/a16z/helios", rev = "59135e86e8d28b11aed217f636ebc25725e511ff" }
