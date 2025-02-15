@@ -29,7 +29,7 @@ jobs:
         run: |
           # Build the binaries
           cd program
-          ~/.sp1/bin/cargo-prove prove build --elf-name sp1-helios-elf --docker --tag v4.0.0-rc.10 --output-directory ../elf
+          ~/.sp1/bin/cargo-prove prove build --elf-name sp1-helios-elf --docker --output-directory ../elf
           cd ../
 
           # Check for any changes in the elf directory
