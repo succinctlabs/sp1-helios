@@ -2896,8 +2896,8 @@ checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 
 [[package]]
 name = "helios-consensus-core"
-version = "0.8.1"
-source = "git+https://github.com/a16z/helios?tag=0.8.1#ca1fb55cbf01109b7f494963c5e4dd5c1f8db6b7"
+version = "0.8.3"
+source = "git+https://github.com/a16z/helios?tag=0.8.3#e52d85a7e286ea86a5d856b3a8ab12fb9f977d05"
 dependencies = [
  "alloy",
  "alloy-rlp",
@@ -2921,8 +2921,8 @@ dependencies = [
 
 [[package]]
 name = "helios-core"
-version = "0.8.1"
-source = "git+https://github.com/a16z/helios?tag=0.8.1#ca1fb55cbf01109b7f494963c5e4dd5c1f8db6b7"
+version = "0.8.3"
+source = "git+https://github.com/a16z/helios?tag=0.8.3#e52d85a7e286ea86a5d856b3a8ab12fb9f977d05"
 dependencies = [
  "alloy",
  "alloy-trie",
@@ -2947,8 +2947,8 @@ dependencies = [
 
 [[package]]
 name = "helios-ethereum"
-version = "0.8.1"
-source = "git+https://github.com/a16z/helios?tag=0.8.1#ca1fb55cbf01109b7f494963c5e4dd5c1f8db6b7"
+version = "0.8.3"
+source = "git+https://github.com/a16z/helios?tag=0.8.3#e52d85a7e286ea86a5d856b3a8ab12fb9f977d05"
 dependencies = [
  "alloy",
  "alloy-trie",
