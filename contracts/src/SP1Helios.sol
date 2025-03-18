@@ -18,8 +18,7 @@ contract SP1Helios {
         _;
     }
 
-    /// @notice The latest slot the light client has a finalized header for.
-    uint256 public head = 0;
+    mapping(bytes32 => bytes32) public verifiedSlots;
 
     /// @notice Maps from a slot to a beacon block header root.
     mapping(uint256 => bytes32) public headers;
@@ -30,6 +29,9 @@ contract SP1Helios {
     /// @notice Maps from a period to the hash for the sync committee.
     mapping(uint256 => bytes32) public syncCommittees;
 
+    /// @notice Maps from block number and (contract, slot) pair to storage value
+    mapping(uint256 => mapping(bytes32 => bytes32)) public storageValues;
+
     /// @notice The verification key for the SP1 Helios program.
     bytes32 public heliosProgramVkey;
 
@@ -38,6 +40,12 @@ contract SP1Helios {
 
     /// @notice The address of the guardian
     address public guardian;
+
+    struct StorageSlot {
+        bytes32 key;
+        bytes32 value;
+        address contractAddress;
+    }
 
     struct ProofOutputs {
         bytes32 executionStateRoot;
@@ -50,6 +58,7 @@ contract SP1Helios {
         bytes32 syncCommitteeHash;
         // Hash of the current sync committee that signed the previous update.
         bytes32 startSyncCommitteeHash;
+        StorageSlot[] slots;
     }
 
     struct InitParams {
@@ -70,12 +79,19 @@ contract SP1Helios {
 
     event HeadUpdate(uint256 indexed slot, bytes32 indexed root);
     event SyncCommitteeUpdate(uint256 indexed period, bytes32 indexed root);
+    event StorageSlotVerified(
+        uint256 indexed slot,
+        bytes32 indexed key,
+        bytes32 value,
+        address contractAddress
+    );
 
     error SlotBehindHead(uint256 slot);
     error SyncCommitteeAlreadySet(uint256 period);
-    error HeaderRootAlreadySet(uint256 slot);
-    error StateRootAlreadySet(uint256 slot);
+    error InvalidHeaderRoot(uint256 slot);
+    error InvalidStateRoot(uint256 slot);
     error SyncCommitteeStartMismatch(bytes32 given, bytes32 expected);
+    error PreviousHeadNotSet(uint256 slot);
 
     constructor(InitParams memory params) {
         GENESIS_VALIDATORS_ROOT = params.genesisValidatorsRoot;
@@ -84,7 +100,8 @@ contract SP1Helios {
         SLOTS_PER_PERIOD = params.slotsPerPeriod;
         SLOTS_PER_EPOCH = params.slotsPerEpoch;
         SOURCE_CHAIN_ID = params.sourceChainId;
-        syncCommittees[getSyncCommitteePeriod(params.head)] = params.syncCommitteeHash;
+        syncCommittees[getSyncCommitteePeriod(params.head)] = params
+            .syncCommitteeHash;
         heliosProgramVkey = params.heliosProgramVkey;
         headers[params.head] = params.header;
         executionStateRoots[params.head] = params.executionStateRoot;
@@ -96,10 +113,18 @@ contract SP1Helios {
     /// @notice Updates the light client with a new header, execution state root, and sync committee (if changed)
     /// @param proof The proof bytes for the SP1 proof.
     /// @param publicValues The public commitments from the SP1 proof.
-    function update(bytes calldata proof, bytes calldata publicValues) external {
+    function update(
+        bytes calldata proof,
+        bytes calldata publicValues,
+        uint256 head
+    ) external {
+        if (headers[head] == bytes32(0)) {
+            revert PreviousHeadNotSet(head);
+        }
+
         // Parse the outputs from the committed public values associated with the proof.
         ProofOutputs memory po = abi.decode(publicValues, (ProofOutputs));
-        if (po.newHead <= head) {
+        if (po.newHead < head) {
             revert SlotBehindHead(po.newHead);
         }
 
@@ -109,29 +134,58 @@ contract SP1Helios {
         // The "start" sync committee hash is the hash of the sync committee that should sign the next update.
         bytes32 currentSyncCommitteeHash = syncCommittees[currentPeriod];
         if (currentSyncCommitteeHash != po.startSyncCommitteeHash) {
-            revert SyncCommitteeStartMismatch(po.startSyncCommitteeHash, currentSyncCommitteeHash);
+            revert SyncCommitteeStartMismatch(
+                po.startSyncCommitteeHash,
+                currentSyncCommitteeHash
+            );
         }
 
         // Verify the proof with the associated public values. This will revert if proof invalid.
-        ISP1Verifier(verifier).verifyProof(heliosProgramVkey, publicValues, proof);
+        ISP1Verifier(verifier).verifyProof(
+            heliosProgramVkey,
+            publicValues,
+            proof
+        );
 
         // Check that the new header hasnt been set already.
-        head = po.newHead;
-        if (headers[po.newHead] != bytes32(0)) {
-            revert HeaderRootAlreadySet(po.newHead);
+        if (
+            headers[po.newHead] != bytes32(0) &&
+            headers[po.newHead] != po.newHeader
+        ) {
+            revert InvalidHeaderRoot(po.newHead);
         }
+        // Set new header.
+        headers[po.newHead] = po.newHeader;
 
         // Check that the new state root hasnt been set already.
-        headers[po.newHead] = po.newHeader;
-        if (executionStateRoots[po.newHead] != bytes32(0)) {
-            revert StateRootAlreadySet(po.newHead);
+        if (
+            executionStateRoots[po.newHead] != bytes32(0) &&
+            executionStateRoots[po.newHead] != po.executionStateRoot
+        ) {
+            revert InvalidStateRoot(po.newHead);
         }
 
         // Finally set the new state root.
         executionStateRoots[po.newHead] = po.executionStateRoot;
         emit HeadUpdate(po.newHead, po.newHeader);
 
-        uint256 period = getSyncCommitteePeriod(head);
+        // Store all provided storage slot values
+        for (uint256 i = 0; i < po.slots.length; i++) {
+            StorageSlot memory slot = po.slots[i];
+            bytes32 storageKey = computeStorageKey(
+                slot.contractAddress,
+                slot.key
+            );
+            storageValues[po.newHead][storageKey] = slot.value;
+            emit StorageSlotVerified(
+                po.newHead,
+                slot.key,
+                slot.value,
+                slot.contractAddress
+            );
+        }
+
+        uint256 period = getSyncCommitteePeriod(po.newHead);
 
         // If the sync committee for the new peroid is not set, set it.
         // This can happen if the light client was very behind and had a lot of updates
@@ -158,7 +212,9 @@ contract SP1Helios {
     }
 
     /// @notice Gets the sync committee period from a slot.
-    function getSyncCommitteePeriod(uint256 slot) public view returns (uint256) {
+    function getSyncCommitteePeriod(
+        uint256 slot
+    ) public view returns (uint256) {
         return slot / SLOTS_PER_PERIOD;
     }
 
@@ -170,5 +226,25 @@ contract SP1Helios {
     /// @notice Updates the Helios program verification key.
     function updateHeliosProgramVkey(bytes32 newVkey) external onlyGuardian {
         heliosProgramVkey = newVkey;
+    }
+
+    /// @notice Computes the key for a contract's storage slot
+    function computeStorageKey(
+        address contractAddress,
+        bytes32 slot
+    ) public pure returns (bytes32) {
+        return keccak256(abi.encodePacked(contractAddress, slot));
+    }
+
+    /// @notice Gets the value of a storage slot at a specific block
+    function getStorageSlot(
+        uint256 blockNumber,
+        address contractAddress,
+        bytes32 slot
+    ) external view returns (bytes32) {
+        return
+            storageValues[blockNumber][
+                computeStorageKey(contractAddress, slot)
+            ];
     }
 }
