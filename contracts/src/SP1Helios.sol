@@ -18,8 +18,6 @@ contract SP1Helios {
         _;
     }
 
-    mapping(bytes32 => bytes32) public verifiedSlots;
-
     /// @notice Maps from a slot to a beacon block header root.
     mapping(uint256 => bytes32) public headers;
 
@@ -29,8 +27,8 @@ contract SP1Helios {
     /// @notice Maps from a period to the hash for the sync committee.
     mapping(uint256 => bytes32) public syncCommittees;
 
-    /// @notice Maps from block number and (contract, slot) pair to storage value
-    mapping(uint256 => mapping(bytes32 => bytes32)) public storageValues;
+    /// @notice Maps from (block number, contract, slot) tuple to storage value
+    mapping(bytes32 => bytes32) public storageValues;
 
     /// @notice The verification key for the SP1 Helios program.
     bytes32 public heliosProgramVkey;
@@ -173,10 +171,11 @@ contract SP1Helios {
         for (uint256 i = 0; i < po.slots.length; i++) {
             StorageSlot memory slot = po.slots[i];
             bytes32 storageKey = computeStorageKey(
+                po.newHead,
                 slot.contractAddress,
                 slot.key
             );
-            storageValues[po.newHead][storageKey] = slot.value;
+            storageValues[storageKey] = slot.value;
             emit StorageSlotVerified(
                 po.newHead,
                 slot.key,
@@ -230,10 +229,11 @@ contract SP1Helios {
 
     /// @notice Computes the key for a contract's storage slot
     function computeStorageKey(
+        uint256 blockNumber,
         address contractAddress,
         bytes32 slot
     ) public pure returns (bytes32) {
-        return keccak256(abi.encodePacked(contractAddress, slot));
+        return keccak256(abi.encodePacked(blockNumber, contractAddress, slot));
     }
 
     /// @notice Gets the value of a storage slot at a specific block
@@ -243,8 +243,8 @@ contract SP1Helios {
         bytes32 slot
     ) external view returns (bytes32) {
         return
-            storageValues[blockNumber][
-                computeStorageKey(contractAddress, slot)
+            storageValues[
+                computeStorageKey(blockNumber, contractAddress, slot)
             ];
     }
 }
