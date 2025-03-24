@@ -10,12 +10,12 @@ codegen-units = 1
 lto = "thin"
 
 [dependencies]
-risc0-zkvm = { version = "2.0.0-rc.3", features = ["unstable"] }
+alloy-primitives = "0.8.15"
+alloy-sol-types = "0.8.15"
 helios-consensus-core = { git = "https://github.com/a16z/helios", tag = "0.8.3" }
+risc0-zkvm = { version = "2.0.0-rc.3", features = ["unstable"] }
 serde_cbor = "0.11.2"
 sp1-helios-primitives = { path = "../../primitives" }
-alloy-sol-types = "0.8.15"
-alloy-primitives = "0.8.15"
 tree_hash = "0.9.0"
 
 [patch.crates-io]

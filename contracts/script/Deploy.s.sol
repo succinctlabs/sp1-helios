@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.22;
 
-import "forge-std/Script.sol";
+import {Script} from "forge-std/Script.sol";
 import {SP1Helios} from "../src/SP1Helios.sol";
-import {SP1MockVerifier} from "@sp1-contracts/SP1MockVerifier.sol";
-import {ISP1Verifier} from "@sp1-contracts/ISP1Verifier.sol";
+import {RiscZeroCheats} from "risc0/test/RiscZeroCheats.sol";
+import {RiscZeroMockVerifier} from "risc0/test/RiscZeroMockVerifier.sol";
+import {IRiscZeroVerifier} from "risc0/IRiscZeroVerifier.sol";
 import {Vm} from "forge-std/Vm.sol";
 
 /// @title DeployScript
 /// @notice Deploy script for the SP1Helios contract.
-contract DeployScript is Script {
+contract DeployScript is Script, RiscZeroCheats {
     function setUp() public {}
 
     function run() public returns (address) {
@@ -22,7 +23,7 @@ contract DeployScript is Script {
 
         // If the verifier address is set to 0, set it to the address of the mock verifier.
         if (params.verifier == address(0)) {
-            params.verifier = address(new SP1MockVerifier());
+            params.verifier = address(deployRiscZeroVerifier());
         }
 
         // Deploy the SP1 Helios contract.

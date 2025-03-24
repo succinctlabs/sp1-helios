@@ -1,2 +1,3 @@
-@sp1-contracts/=lib/sp1-contracts/contracts/src/
-@openzeppelin/=lib/sp1-contracts/contracts/lib/openzeppelin-contracts/contracts/
+openzeppelin/=lib/openzeppelin-contracts/
+risc0/=lib/risc0-ethereum/contracts/src/
+@openzeppelin/=lib/openzeppelin-contracts/
