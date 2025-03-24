@@ -12,17 +12,17 @@ use helios_ethereum::rpc::ConsensusRpc;
 use log::{error, info};
 use reqwest::Url;
 use risc0_zkvm::{default_prover, ExecutorEnv, Prover, ProverOpts, Receipt};
-use sp1_helios_methods::SP1_HELIOS_GUEST_ELF;
-use sp1_helios_primitives::types::{ContractStorage, ProofInputs};
-use sp1_helios_script::*;
+use r0vm_helios_methods::R0VM_HELIOS_GUEST_ELF;
+use r0vm_helios_primitives::types::{ContractStorage, ProofInputs};
+use r0vm_helios_script::*;
 use std::env;
 use std::rc::Rc;
 use std::time::Duration;
 use tree_hash::TreeHash;
 
-struct SP1HeliosOperator {
+struct R0VMHeliosOperator {
     client: Rc<dyn Prover>,
-    // pk: SP1ProvingKey,
+    // pk: R0VMProvingKey,
     wallet: EthereumWallet,
     rpc_url: Url,
     contract_address: Address,
@@ -32,7 +32,7 @@ struct SP1HeliosOperator {
 sol! {
     #[allow(missing_docs)]
     #[sol(rpc)]
-    contract SP1Helios {
+    contract R0VMHelios {
         bytes32 public immutable GENESIS_VALIDATORS_ROOT;
         uint256 public immutable GENESIS_TIME;
         uint256 public immutable SECONDS_PER_SLOT;
@@ -77,7 +77,7 @@ sol! {
     }
 }
 
-impl SP1HeliosOperator {
+impl R0VMHeliosOperator {
     pub async fn new() -> Self {
         dotenv::dotenv().ok();
 
@@ -105,14 +105,14 @@ impl SP1HeliosOperator {
         }
     }
 
-    /// Fetch values and generate an 'update' proof for the SP1 Helios contract.
+    /// Fetch values and generate an 'update' proof for the R0VM Helios contract.
     async fn request_update(
         &self,
         mut client: Inner<MainnetConsensusSpec, HttpRpc>,
     ) -> Result<Option<Receipt>> {
         // Fetch required values.
         let provider = ProviderBuilder::new().on_http(self.rpc_url.clone());
-        let contract = SP1Helios::new(self.contract_address, provider);
+        let contract = R0VMHelios::new(self.contract_address, provider);
         let head: u64 = contract
             .head()
             .call()
@@ -192,13 +192,13 @@ impl SP1HeliosOperator {
         // Generate proof.
         let proof =
             self.client
-                .prove_with_opts(env, SP1_HELIOS_GUEST_ELF, &ProverOpts::groth16())?;
+                .prove_with_opts(env, R0VM_HELIOS_GUEST_ELF, &ProverOpts::groth16())?;
 
         info!("Attempting to update to new head block: {:?}", latest_block);
         Ok(Some(proof.receipt))
     }
 
-    /// Relay an update proof to the SP1 Helios contract.
+    /// Relay an update proof to the R0VM Helios contract.
     async fn relay_update(&self, proof: Receipt, head: u64) -> Result<()> {
         let seal = risc0_ethereum_contracts::encode_seal(&proof)?;
 
@@ -206,7 +206,7 @@ impl SP1HeliosOperator {
             .with_recommended_fillers()
             .wallet(self.wallet.clone())
             .on_http(self.rpc_url.clone());
-        let contract = SP1Helios::new(self.contract_address, wallet_filler.clone());
+        let contract = R0VMHelios::new(self.contract_address, wallet_filler.clone());
 
         let nonce = wallet_filler
             .get_transaction_count(self.relayer_address)
@@ -245,11 +245,11 @@ impl SP1HeliosOperator {
 
     /// Start the operator.
     async fn run(&mut self, loop_delay_mins: u64) -> Result<()> {
-        info!("Starting SP1 Helios operator");
+        info!("Starting R0VM Helios operator");
 
         loop {
             let provider = ProviderBuilder::new().on_http(self.rpc_url.clone());
-            let contract = SP1Helios::new(self.contract_address, provider);
+            let contract = R0VMHelios::new(self.contract_address, provider);
 
             // Get the current slot from the contract
             let slot = contract
@@ -257,7 +257,7 @@ impl SP1HeliosOperator {
                 .call()
                 .await
                 .unwrap_or_else(|e| {
-                    panic!("Failed to get head. Are you sure the SP1Helios is deployed to address: {:?}? Error: {:?}", self.contract_address, e)
+                    panic!("Failed to get head. Are you sure the R0VMHelios is deployed to address: {:?}? Error: {:?}", self.contract_address, e)
                 })
                 .head
                 .try_into()
@@ -298,7 +298,7 @@ async fn main() -> Result<()> {
         .unwrap_or("5".to_string())
         .parse()?;
 
-    let mut operator = SP1HeliosOperator::new().await;
+    let mut operator = R0VMHeliosOperator::new().await;
     loop {
         if let Err(e) = operator.run(loop_delay_mins).await {
             error!("Error running operator: {}", e);

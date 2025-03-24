@@ -5,8 +5,8 @@ use anyhow::Result;
 use clap::Parser;
 use risc0_zkvm::Digest;
 use serde::{Deserialize, Serialize};
-use sp1_helios_methods::SP1_HELIOS_GUEST_ID;
-use sp1_helios_script::{get_checkpoint, get_client, get_latest_checkpoint};
+use r0vm_helios_methods::R0VM_HELIOS_GUEST_ID;
+use r0vm_helios_script::{get_checkpoint, get_client, get_latest_checkpoint};
 use std::{
     env, fs,
     path::{Path, PathBuf},
@@ -118,7 +118,7 @@ pub async fn main() -> Result<()> {
     );
     genesis_config.head = head;
     genesis_config.helios_image_id =
-        B256::from_slice(Digest::from(SP1_HELIOS_GUEST_ID).as_bytes()).to_string();
+        B256::from_slice(Digest::from(R0VM_HELIOS_GUEST_ID).as_bytes()).to_string();
     genesis_config.verifier = Address::ZERO.to_string();
 
     // Get the account associated with the private key.

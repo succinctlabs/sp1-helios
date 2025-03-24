@@ -1,6 +1,6 @@
 [package]
 version = "0.1.0"
-name = "sp1-helios-primitives"
+name = "r0vm-helios-primitives"
 edition.workspace = true
 license.workspace = true
 authors.workspace = true

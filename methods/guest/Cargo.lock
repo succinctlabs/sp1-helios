@@ -3339,6 +3339,29 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "74765f6d916ee2faa39bc8e68e4f3ed8949b48cccdac59983d287a7cb71ce9c5"
 
 [[package]]
+name = "r0vm-helios-guest"
+version = "0.1.0"
+dependencies = [
+ "alloy-primitives",
+ "alloy-sol-types",
+ "helios-consensus-core",
+ "r0vm-helios-primitives",
+ "risc0-zkvm",
+ "serde_cbor",
+ "tree_hash",
+]
+
+[[package]]
+name = "r0vm-helios-primitives"
+version = "0.1.0"
+dependencies = [
+ "alloy-primitives",
+ "alloy-sol-types",
+ "helios-consensus-core",
+ "serde",
+]
+
+[[package]]
 name = "radium"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4202,29 +4225,6 @@ checksum = "c970269d99b64e60ec3bd6ad27270092a5394c4e309314b18ae3fe575695fbe8"
 dependencies = [
  "libc",
  "windows-sys 0.52.0",
-]
-
-[[package]]
-name = "sp1-helios-guest"
-version = "0.1.0"
-dependencies = [
- "alloy-primitives",
- "alloy-sol-types",
- "helios-consensus-core",
- "risc0-zkvm",
- "serde_cbor",
- "sp1-helios-primitives",
- "tree_hash",
-]
-
-[[package]]
-name = "sp1-helios-primitives"
-version = "0.1.0"
-dependencies = [
- "alloy-primitives",
- "alloy-sol-types",
- "helios-consensus-core",
- "serde",
 ]
 
 [[package]]

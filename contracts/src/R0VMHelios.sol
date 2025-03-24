@@ -4,14 +4,13 @@ pragma solidity ^0.8.22;
 import {IRiscZeroVerifier} from "risc0/IRiscZeroVerifier.sol";
 import {AccessControlEnumerable} from "openzeppelin/access/extensions/AccessControlEnumerable.sol";
 
-/// @title SP1Helios
-/// @notice An Ethereum beacon chain light client, built with SP1 and Helios.
+/// @title R0VMHelios
+/// @notice An Ethereum beacon chain light client, built with R0VM and Helios.
 /// @dev This contract uses SP1 zero-knowledge proofs to verify updates to the Ethereum beacon chain state.
 /// The contract stores the latest verified beacon chain header, execution state root, and sync committee information.
 /// It also provides functionality to verify and store Ethereum storage slot values.
 /// Updater permissions are fixed at contract creation time and cannot be modified afterward.
-contract SP1Helios is AccessControlEnumerable {
-    /// @notice The genesis validators root for the beacon chain
+contract R0VMHelios {
     bytes32 public immutable GENESIS_VALIDATORS_ROOT;
 
     /// @notice The timestamp at which the beacon chain genesis block was processed
@@ -53,13 +52,10 @@ contract SP1Helios is AccessControlEnumerable {
     /// @notice Maps from (block number, contract, slot) tuple to storage value
     mapping(bytes32 => bytes32) public storageValues;
 
-    /// @notice The verification key for the SP1 Helios program.
+    /// @notice The verification key for the R0VM Helios program.
     bytes32 public heliosImageID;
 
-    /// @notice The verification key for the SP1 Helios program
-    bytes32 public immutable heliosProgramVkey;
-
-    /// @notice The deployed SP1 verifier contract
+    /// @notice The deployed R0VM verifier contract.
     address public immutable verifier;
 
     /// @notice Represents a storage slot in an Ethereum smart contract

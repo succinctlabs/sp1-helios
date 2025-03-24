@@ -2,14 +2,14 @@
 pragma solidity ^0.8.22;
 
 import {Script} from "forge-std/Script.sol";
-import {SP1Helios} from "../src/SP1Helios.sol";
+import {R0VMHelios} from "../src/R0VMHelios.sol";
 import {RiscZeroCheats} from "risc0/test/RiscZeroCheats.sol";
 import {RiscZeroMockVerifier} from "risc0/test/RiscZeroMockVerifier.sol";
 import {IRiscZeroVerifier} from "risc0/IRiscZeroVerifier.sol";
 import {Vm} from "forge-std/Vm.sol";
 
 /// @title DeployScript
-/// @notice Deploy script for the SP1Helios contract.
+/// @notice Deploy script for the R0VMHelios contract.
 contract DeployScript is Script, RiscZeroCheats {
     function setUp() public {}
 
@@ -19,25 +19,25 @@ contract DeployScript is Script, RiscZeroCheats {
         // Update the rollup config to match the current chain. If the starting block number is 0, the latest block number and starting output root will be fetched.
         updateGenesisConfig();
 
-        SP1Helios.InitParams memory params = readGenesisConfig();
+        R0VMHelios.InitParams memory params = readGenesisConfig();
 
         // If the verifier address is set to 0, set it to the address of the mock verifier.
         if (params.verifier == address(0)) {
             params.verifier = address(deployRiscZeroVerifier());
         }
 
-        // Deploy the SP1 Helios contract.
-        SP1Helios helios = new SP1Helios(params);
+        // Deploy the R0VM Helios contract.
+        R0VMHelios helios = new R0VMHelios(params);
 
         return address(helios);
     }
 
-    function readGenesisConfig() public returns (SP1Helios.InitParams memory) {
+    function readGenesisConfig() public returns (R0VMHelios.InitParams memory) {
         string memory root = vm.projectRoot();
         string memory path = string.concat(root, "/", "genesis.json");
         string memory json = vm.readFile(path);
         bytes memory data = vm.parseJson(json);
-        return abi.decode(data, (SP1Helios.InitParams));
+        return abi.decode(data, (R0VMHelios.InitParams));
     }
 
     function updateGenesisConfig() public {

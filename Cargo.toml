@@ -10,10 +10,10 @@ homepage = "https://succinctlabs.github.io/sp1-helios/"
 repository = "https://github.com/succinctlabs/sp1-helios"
 
 [workspace.dependencies]
-# sp1-helios
-sp1-helios-script = { path = "host" }
-sp1-helios-methods = { path = "methods" }
-sp1-helios-primitives = { path = "primitives" }
+# r0vm-helios
+r0vm-helios-script = { path = "host" }
+r0vm-helios-methods = { path = "methods" }
+r0vm-helios-primitives = { path = "primitives" }
 
 # risc0 dependencies.
 risc0-build = { version = "2.0.1-rc.3" }

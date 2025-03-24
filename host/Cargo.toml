@@ -1,6 +1,6 @@
 [package]
 version = "0.1.0"
-name = "sp1-helios-script"
+name = "r0vm-helios-script"
 edition.workspace = true
 license.workspace = true
 authors.workspace = true
@@ -22,8 +22,8 @@ dotenv = { workspace = true }
 tokio = { workspace = true }
 helios-consensus-core = { workspace = true }
 helios-ethereum = { workspace = true }
-sp1-helios-primitives = { workspace = true }
-sp1-helios-methods = { workspace = true }
+r0vm-helios-primitives = { workspace = true }
+r0vm-helios-methods = { workspace = true }
 serde = { workspace = true }
 serde_cbor = { workspace = true }
 clap = { workspace = true }
