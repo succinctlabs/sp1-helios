@@ -11,18 +11,18 @@ use helios_ethereum::rpc::http_rpc::HttpRpc;
 use helios_ethereum::rpc::ConsensusRpc;
 use log::{error, info};
 use reqwest::Url;
+use risc0_zkvm::{default_prover, ExecutorEnv, Prover, ProverOpts, Receipt};
+use sp1_helios_methods::SP1_HELIOS_GUEST_ELF;
 use sp1_helios_primitives::types::{ContractStorage, ProofInputs};
 use sp1_helios_script::*;
-use sp1_sdk::{EnvProver, ProverClient, SP1ProofWithPublicValues, SP1ProvingKey, SP1Stdin};
 use std::env;
+use std::rc::Rc;
 use std::time::Duration;
 use tree_hash::TreeHash;
 
-const ELF: &[u8] = include_bytes!("../../elf/sp1-helios-elf");
-
 struct SP1HeliosOperator {
-    client: EnvProver,
-    pk: SP1ProvingKey,
+    client: Rc<dyn Prover>,
+    // pk: SP1ProvingKey,
     wallet: EthereumWallet,
     rpc_url: Url,
     contract_address: Address,
@@ -43,7 +43,7 @@ sol! {
         mapping(uint256 => bytes32) public executionStateRoots;
         mapping(uint256 => bytes32) public headers;
         mapping(bytes32 => bytes32) public storageValues;
-        bytes32 public heliosProgramVkey;
+        bytes32 public heliosImageID;
         address public verifier;
 
         struct StorageSlot {
@@ -68,7 +68,7 @@ sol! {
         event SyncCommitteeUpdate(uint256 indexed period, bytes32 indexed root);
         event StorageSlotVerified(uint256 indexed slot, bytes32 indexed key, bytes32 value, address contractAddress);
 
-        function update(bytes calldata proof, bytes calldata publicValues, uint256 head) external;
+        function update(bytes calldata seal, bytes calldata journalData, uint256 head) external;
         function getSyncCommitteePeriod(uint256 slot) internal view returns (uint256);
         function getCurrentSlot() internal view returns (uint256);
         function getCurrentEpoch() internal view returns (uint256);
@@ -81,8 +81,7 @@ impl SP1HeliosOperator {
     pub async fn new() -> Self {
         dotenv::dotenv().ok();
 
-        let client = ProverClient::from_env();
-        let (pk, _) = client.setup(ELF);
+        let client = default_prover();
         let rpc_url = env::var("DEST_RPC_URL")
             .expect("DEST_RPC_URL not set")
             .parse()
@@ -99,7 +98,6 @@ impl SP1HeliosOperator {
 
         Self {
             client,
-            pk,
             wallet,
             rpc_url,
             contract_address,
@@ -111,7 +109,7 @@ impl SP1HeliosOperator {
     async fn request_update(
         &self,
         mut client: Inner<MainnetConsensusSpec, HttpRpc>,
-    ) -> Result<Option<SP1ProofWithPublicValues>> {
+    ) -> Result<Option<Receipt>> {
         // Fetch required values.
         let provider = ProviderBuilder::new().on_http(self.rpc_url.clone());
         let contract = SP1Helios::new(self.contract_address, provider);
@@ -137,8 +135,6 @@ impl SP1HeliosOperator {
             .await
             .unwrap()
             ._0;
-
-        let mut stdin = SP1Stdin::new();
 
         // Setup client.
         let mut sync_committee_updates = get_updates(&client).await;
@@ -189,18 +185,22 @@ impl SP1HeliosOperator {
             },
         };
         let encoded_proof_inputs = serde_cbor::to_vec(&inputs)?;
-        stdin.write_slice(&encoded_proof_inputs);
+        let env = ExecutorEnv::builder()
+            .write_frame(&encoded_proof_inputs)
+            .build()?;
 
         // Generate proof.
-        let proof = self.client.prove(&self.pk, &stdin).groth16().run()?;
+        let proof =
+            self.client
+                .prove_with_opts(env, SP1_HELIOS_GUEST_ELF, &ProverOpts::groth16())?;
 
         info!("Attempting to update to new head block: {:?}", latest_block);
-        Ok(Some(proof))
+        Ok(Some(proof.receipt))
     }
 
     /// Relay an update proof to the SP1 Helios contract.
-    async fn relay_update(&self, proof: SP1ProofWithPublicValues, head: u64) -> Result<()> {
-        let public_values_bytes = proof.public_values.to_vec();
+    async fn relay_update(&self, proof: Receipt, head: u64) -> Result<()> {
+        let seal = risc0_ethereum_contracts::encode_seal(&proof)?;
 
         let wallet_filler = ProviderBuilder::new()
             .with_recommended_fillers()
@@ -217,8 +217,8 @@ impl SP1HeliosOperator {
         const TIMEOUT_SECONDS: u64 = 60;
         let receipt = contract
             .update(
-                proof.bytes().into(),
-                public_values_bytes.into(),
+                seal.into(),
+                proof.journal.bytes.into(),
                 head.try_into().unwrap(),
             )
             .nonce(nonce)

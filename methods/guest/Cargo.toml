@@ -1,0 +1,27 @@
+[package]
+name = "sp1-helios-guest"
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+
+[profile.release]
+codegen-units = 1
+lto = "thin"
+
+[dependencies]
+risc0-zkvm = { version = "2.0.0-rc.3", features = ["unstable"] }
+helios-consensus-core = { git = "https://github.com/a16z/helios", tag = "0.8.3" }
+serde_cbor = "0.11.2"
+sp1-helios-primitives = { path = "../../primitives" }
+alloy-sol-types = "0.8.15"
+alloy-primitives = "0.8.15"
+tree_hash = "0.9.0"
+
+[patch.crates-io]
+bls12_381 = { git = "https://github.com/risc0/zkcrypto-bls12_381.git", branch = "iddo/tmp" }
+sha2-v0-9-9 = { git = "https://github.com/risc0/RustCrypto-hashes", package = "sha2", tag = "sha2-v0.9.9-risczero.0" }
+sha2-v0-10-8 = { git = "https://github.com/risc0/RustCrypto-hashes", package = "sha2", tag = "sha2-v0.10.8-risczero.0" }
+tiny-keccak = { git = "https://github.com/risc0/tiny-keccak", tag = "tiny-keccak/v2.0.2-risczero.0" }
+# From upstream: https://github.com/a16z/helios/blob/master/Cargo.toml#L115
+ethereum_hashing = { git = "https://github.com/ncitron/ethereum_hashing", rev = "7ee70944ed4fabe301551da8c447e4f4ae5e6c35" }

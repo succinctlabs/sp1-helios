@@ -1,5 +1,4 @@
 #![no_main]
-sp1_zkvm::entrypoint!(main);
 
 use alloy_primitives::{keccak256, Bytes, FixedBytes, B256, U256};
 use alloy_rlp::Encodable;
@@ -8,10 +7,13 @@ use alloy_trie::{proof, Nibbles};
 use helios_consensus_core::{
     apply_finality_update, apply_update, verify_finality_update, verify_update,
 };
+use risc0_zkvm::guest::env;
 use sp1_helios_primitives::types::{
     ContractStorage, ProofInputs, ProofOutputs, VerifiedStorageSlot,
 };
 use tree_hash::TreeHash;
+
+risc0_zkvm::guest::entry!(main);
 
 /// Program flow:
 /// 1. Apply sync committee updates, if any
@@ -21,7 +23,7 @@ use tree_hash::TreeHash;
 /// 5. Asset all updates are valid
 /// 6. Commit new state root, header, and sync committee for usage in the on-chain contract
 pub fn main() {
-    let encoded_inputs = sp1_zkvm::io::read_vec();
+    let encoded_inputs = env::read_frame();
 
     let ProofInputs {
         sync_committee_updates,
@@ -99,7 +101,7 @@ pub fn main() {
         startSyncCommitteeHash: start_sync_committee_hash,
         slots: verified_slots,
     };
-    sp1_zkvm::io::commit_slice(&proof_outputs.abi_encode());
+    env::commit_slice(&proof_outputs.abi_encode());
 }
 
 fn verify_storage_slot_proofs(

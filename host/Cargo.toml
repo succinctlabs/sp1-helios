@@ -17,17 +17,13 @@ path = "./bin/operator.rs"
 name = "test"
 path = "./bin/test.rs"
 
-[[bin]]
-name = "vkey"
-path = "./bin/vkey.rs"
-
 [dependencies]
 dotenv = { workspace = true }
-sp1-sdk = { workspace = true }
 tokio = { workspace = true }
 helios-consensus-core = { workspace = true }
 helios-ethereum = { workspace = true }
 sp1-helios-primitives = { workspace = true }
+sp1-helios-methods = { workspace = true }
 serde = { workspace = true }
 serde_cbor = { workspace = true }
 clap = { workspace = true }
@@ -41,6 +37,5 @@ reqwest = { workspace = true }
 tree_hash = { workspace = true }
 serde_json = { workspace = true }
 alloy-trie = { workspace = true }
-
-[build-dependencies]
-sp1-build = { workspace = true }
+risc0-zkvm = { workspace = true }
+risc0-ethereum-contracts = "2.0.0-rc.3"
