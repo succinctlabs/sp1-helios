@@ -11,7 +11,7 @@ use helios_ethereum::rpc::http_rpc::HttpRpc;
 use helios_ethereum::rpc::ConsensusRpc;
 use log::{error, info};
 use reqwest::Url;
-use sp1_helios_primitives::types::ProofInputs;
+use sp1_helios_primitives::types::{ContractStorage, ProofInputs};
 use sp1_helios_script::*;
 use sp1_sdk::{EnvProver, ProverClient, SP1ProofWithPublicValues, SP1ProvingKey, SP1Stdin};
 use std::env;
@@ -42,8 +42,15 @@ sol! {
         mapping(uint256 => bytes32) public syncCommittees;
         mapping(uint256 => bytes32) public executionStateRoots;
         mapping(uint256 => bytes32) public headers;
+        mapping(bytes32 => bytes32) public storageValues;
         bytes32 public heliosProgramVkey;
         address public verifier;
+
+        struct StorageSlot {
+            bytes32 key;
+            bytes32 value;
+            address contractAddress;
+        }
 
         struct ProofOutputs {
             bytes32 executionStateRoot;
@@ -53,15 +60,20 @@ sol! {
             bytes32 prevHeader;
             uint256 prevHead;
             bytes32 syncCommitteeHash;
+            bytes32 startSyncCommitteeHash;
+            StorageSlot[] slots;
         }
 
         event HeadUpdate(uint256 indexed slot, bytes32 indexed root);
         event SyncCommitteeUpdate(uint256 indexed period, bytes32 indexed root);
+        event StorageSlotVerified(uint256 indexed slot, bytes32 indexed key, bytes32 value, address contractAddress);
 
-        function update(bytes calldata proof, bytes calldata publicValues) external;
+        function update(bytes calldata proof, bytes calldata publicValues, uint256 head) external;
         function getSyncCommitteePeriod(uint256 slot) internal view returns (uint256);
         function getCurrentSlot() internal view returns (uint256);
         function getCurrentEpoch() internal view returns (uint256);
+        function computeStorageKey(uint256 blockNumber, address contractAddress, bytes32 slot) public pure returns (bytes32);
+        function getStorageSlot(uint256 blockNumber, address contractAddress, bytes32 slot) external view returns (bytes32);
     }
 }
 
@@ -169,6 +181,12 @@ impl SP1HeliosOperator {
             store: client.store.clone(),
             genesis_root: client.config.chain.genesis_root,
             forks: client.config.forks.clone(),
+            contract_storage_slots: ContractStorage {
+                address: todo!(),
+                expected_value: todo!(),
+                mpt_proof: todo!(),
+                storage_slots: todo!(),
+            },
         };
         let encoded_proof_inputs = serde_cbor::to_vec(&inputs)?;
         stdin.write_slice(&encoded_proof_inputs);
@@ -181,7 +199,7 @@ impl SP1HeliosOperator {
     }
 
     /// Relay an update proof to the SP1 Helios contract.
-    async fn relay_update(&self, proof: SP1ProofWithPublicValues) -> Result<()> {
+    async fn relay_update(&self, proof: SP1ProofWithPublicValues, head: u64) -> Result<()> {
         let public_values_bytes = proof.public_values.to_vec();
 
         let wallet_filler = ProviderBuilder::new()
@@ -198,7 +216,11 @@ impl SP1HeliosOperator {
         const NUM_CONFIRMATIONS: u64 = 3;
         const TIMEOUT_SECONDS: u64 = 60;
         let receipt = contract
-            .update(proof.bytes().into(), public_values_bytes.into())
+            .update(
+                proof.bytes().into(),
+                public_values_bytes.into(),
+                head.try_into().unwrap(),
+            )
             .nonce(nonce)
             .send()
             .await?
@@ -250,7 +272,7 @@ impl SP1HeliosOperator {
             // Request an update
             match self.request_update(client).await {
                 Ok(Some(proof)) => {
-                    self.relay_update(proof).await?;
+                    self.relay_update(proof, slot).await?;
                 }
                 Ok(None) => {
                     // Contract is up to date. Nothing to update.

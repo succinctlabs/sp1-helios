@@ -1,1 +1,2 @@
 @sp1-contracts/=lib/sp1-contracts/contracts/src/
+@openzeppelin/=lib/sp1-contracts/contracts/lib/openzeppelin-contracts/contracts/

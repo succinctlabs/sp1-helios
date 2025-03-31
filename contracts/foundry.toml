@@ -3,6 +3,9 @@ src = "src"
 out = "out"
 libs = ["lib"]
 fs_permissions = [{ access = "read", path = "genesis.json" }]
+optimizer = true
+optimizer_runs = 1000000
+via_ir = true
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/crates/config
 # https://book.getfoundry.sh/reference/config/formatter#line_length
