@@ -13,3 +13,6 @@ sp1-helios-primitives = { workspace = true }
 alloy-sol-types = { workspace = true }
 alloy-primitives = { workspace = true, features = ["sha3-keccak"] }
 tree_hash = { workspace = true }
+alloy-trie = { workspace = true }
+alloy-rlp = { workspace = true }
+hex = "0.4.3"
