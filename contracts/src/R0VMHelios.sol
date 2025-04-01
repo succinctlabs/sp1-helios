@@ -2,7 +2,8 @@
 pragma solidity ^0.8.22;
 
 import {IRiscZeroVerifier} from "risc0/IRiscZeroVerifier.sol";
-import {AccessControlEnumerable} from "openzeppelin/access/extensions/AccessControlEnumerable.sol";
+import {AccessControlEnumerable} from
+    "openzeppelin/contracts/access/extensions/AccessControlEnumerable.sol";
 
 /// @title R0VMHelios
 /// @notice An Ethereum beacon chain light client, built with R0VM and Helios.
@@ -10,7 +11,7 @@ import {AccessControlEnumerable} from "openzeppelin/access/extensions/AccessCont
 /// The contract stores the latest verified beacon chain header, execution state root, and sync committee information.
 /// It also provides functionality to verify and store Ethereum storage slot values.
 /// Updater permissions are fixed at contract creation time and cannot be modified afterward.
-contract R0VMHelios {
+contract R0VMHelios is AccessControlEnumerable {
     bytes32 public immutable GENESIS_VALIDATORS_ROOT;
 
     /// @notice The timestamp at which the beacon chain genesis block was processed
@@ -196,7 +197,7 @@ contract R0VMHelios {
         // Check that the new state root hasnt been set already.
         if (
             executionStateRoots[po.newHead] != bytes32(0)
-            && executionStateRoots[po.newHead] != po.executionStateRoot
+                && executionStateRoots[po.newHead] != po.executionStateRoot
         ) {
             revert InvalidStateRoot(po.newHead);
         }

@@ -3343,8 +3343,11 @@ name = "r0vm-helios-guest"
 version = "0.1.0"
 dependencies = [
  "alloy-primitives",
+ "alloy-rlp",
  "alloy-sol-types",
+ "alloy-trie",
  "helios-consensus-core",
+ "hex",
  "r0vm-helios-primitives",
  "risc0-zkvm",
  "serde_cbor",
@@ -3357,6 +3360,7 @@ version = "0.1.0"
 dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
+ "alloy-trie",
  "helios-consensus-core",
  "serde",
 ]
