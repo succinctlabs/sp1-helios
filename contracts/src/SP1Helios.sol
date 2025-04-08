@@ -98,8 +98,7 @@ contract SP1Helios {
         SLOTS_PER_PERIOD = params.slotsPerPeriod;
         SLOTS_PER_EPOCH = params.slotsPerEpoch;
         SOURCE_CHAIN_ID = params.sourceChainId;
-        syncCommittees[getSyncCommitteePeriod(params.head)] = params
-            .syncCommitteeHash;
+        syncCommittees[getSyncCommitteePeriod(params.head)] = params.syncCommitteeHash;
         heliosProgramVkey = params.heliosProgramVkey;
         headers[params.head] = params.header;
         executionStateRoots[params.head] = params.executionStateRoot;
@@ -111,16 +110,9 @@ contract SP1Helios {
     /// @notice Updates the light client with a new header, execution state root, and sync committee (if changed)
     /// @param proof The proof bytes for the SP1 proof.
     /// @param publicValues The public commitments from the SP1 proof.
-    function update(
-        bytes calldata proof,
-        bytes calldata publicValues
-    ) external {
+    function update(bytes calldata proof, bytes calldata publicValues) external {
         // Verify the proof with the associated public values. This will revert if the proof is invalid.
-        ISP1Verifier(verifier).verifyProof(
-            heliosProgramVkey,
-            publicValues,
-            proof
-        );
+        ISP1Verifier(verifier).verifyProof(heliosProgramVkey, publicValues, proof);
 
         // Read the proof outputs from the public values.
         ProofOutputs memory po = abi.decode(publicValues, (ProofOutputs));
@@ -142,10 +134,7 @@ contract SP1Helios {
         }
         // The sync committee hash used in the proof should match the current sync committee.
         if (currentSyncCommitteeHash != po.prevSyncCommitteeHash) {
-            revert SyncCommitteeStartMismatch(
-                po.prevSyncCommitteeHash,
-                currentSyncCommitteeHash
-            );
+            revert SyncCommitteeStartMismatch(po.prevSyncCommitteeHash, currentSyncCommitteeHash);
         }
 
         // Confirm that the new slot is greater than the current head.
@@ -192,9 +181,7 @@ contract SP1Helios {
     }
 
     /// @notice Gets the sync committee period from a slot.
-    function getSyncCommitteePeriod(
-        uint256 slot
-    ) public view returns (uint256) {
+    function getSyncCommitteePeriod(uint256 slot) public view returns (uint256) {
         return slot / SLOTS_PER_PERIOD;
     }
 
