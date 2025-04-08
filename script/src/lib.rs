@@ -55,7 +55,7 @@ pub async fn get_checkpoint(slot: u64) -> B256 {
 
     let config = Config {
         consensus_rpc: consensus_rpc.to_string(),
-        execution_rpc: String::new(),
+        execution_rpc: None,
         chain: base_config.chain,
         forks: base_config.forks,
         strict_checkpoint_age: false,
@@ -87,7 +87,7 @@ pub async fn get_client(checkpoint: B256) -> Inner<MainnetConsensusSpec, HttpRpc
 
     let config = Config {
         consensus_rpc: consensus_rpc.to_string(),
-        execution_rpc: String::new(),
+        execution_rpc: None,
         chain: base_config.chain,
         forks: base_config.forks,
         strict_checkpoint_age: false,
