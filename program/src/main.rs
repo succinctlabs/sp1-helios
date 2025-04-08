@@ -55,7 +55,8 @@ pub fn main() {
     )
     .expect("Finality update failed to verify.");
 
-    apply_finality_update(&mut store, &finality_update).expect("A valid finality update should always apply.");
+    apply_finality_update(&mut store, &finality_update)
+        .expect("A valid finality update should always apply.");
 
     // Ensure the new head is greater than the previous head. This guarantees that the finality
     // update was correctly applied.
