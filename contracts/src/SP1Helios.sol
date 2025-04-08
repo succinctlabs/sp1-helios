@@ -175,7 +175,9 @@ contract SP1Helios {
                 emit SyncCommitteeUpdate(nextPeriod, po.nextSyncCommitteeHash);
             } else if (syncCommittees[nextPeriod] != po.nextSyncCommitteeHash) {
                 // If the next sync committee is non-zero, it should match the expected value.
-                revert NextSyncCommitteeMismatch(syncCommittees[nextPeriod], po.nextSyncCommitteeHash);
+                revert NextSyncCommitteeMismatch(
+                    syncCommittees[nextPeriod], po.nextSyncCommitteeHash
+                );
             }
         }
     }
