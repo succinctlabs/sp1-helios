@@ -6,7 +6,7 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
-sp1-zkvm = "4.1.0"
+sp1-zkvm = "4.1.7"
 helios-consensus-core = { workspace = true }
 serde_cbor = { workspace = true }
 sp1-helios-primitives = { workspace = true }

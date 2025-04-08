@@ -39,17 +39,27 @@ contract SP1Helios {
     /// @notice The address of the guardian
     address public guardian;
 
+    /// @notice Semantic version.
+    /// @custom:semver v1.1.0
+    string public constant version = "v1.1.0";
+
     struct ProofOutputs {
-        bytes32 executionStateRoot;
-        bytes32 newHeader;
-        bytes32 nextSyncCommitteeHash;
-        uint256 newHead;
+        /// The previous beacon block header hash.
         bytes32 prevHeader;
+        /// The slot of the previous head.
         uint256 prevHead;
-        // Hash of the sync committee at the new head.
+        /// The anchor sync committee hash which was used to verify the proof.
+        bytes32 prevSyncCommitteeHash;
+        /// The slot of the new head.
+        uint256 newHead;
+        /// The new beacon block header hash.
+        bytes32 newHeader;
+        /// The execution state root from the execution payload of the new beacon block.
+        bytes32 executionStateRoot;
+        /// The sync committee hash of the current period.
         bytes32 syncCommitteeHash;
-        // Hash of the current sync committee that signed the previous update.
-        bytes32 startSyncCommitteeHash;
+        /// The sync committee hash of the next period.
+        bytes32 nextSyncCommitteeHash;
     }
 
     struct InitParams {
@@ -71,11 +81,15 @@ contract SP1Helios {
     event HeadUpdate(uint256 indexed slot, bytes32 indexed root);
     event SyncCommitteeUpdate(uint256 indexed period, bytes32 indexed root);
 
+    error PrevHeadMismatch(uint256 given, uint256 expected);
+    error PrevHeaderMismatch(bytes32 given, bytes32 expected);
     error SlotBehindHead(uint256 slot);
     error SyncCommitteeAlreadySet(uint256 period);
     error HeaderRootAlreadySet(uint256 slot);
     error StateRootAlreadySet(uint256 slot);
     error SyncCommitteeStartMismatch(bytes32 given, bytes32 expected);
+    error SyncCommitteeNotSet(uint256 period);
+    error NextSyncCommitteeMismatch(bytes32 given, bytes32 expected);
 
     constructor(InitParams memory params) {
         GENESIS_VALIDATORS_ROOT = params.genesisValidatorsRoot;
@@ -97,62 +111,73 @@ contract SP1Helios {
     /// @param proof The proof bytes for the SP1 proof.
     /// @param publicValues The public commitments from the SP1 proof.
     function update(bytes calldata proof, bytes calldata publicValues) external {
-        // Parse the outputs from the committed public values associated with the proof.
+        // Verify the proof with the associated public values. This will revert if the proof is invalid.
+        ISP1Verifier(verifier).verifyProof(heliosProgramVkey, publicValues, proof);
+
+        // Read the proof outputs from the public values.
         ProofOutputs memory po = abi.decode(publicValues, (ProofOutputs));
+
+        // Assert the prevHead matches the head.
+        if (po.prevHead != head) {
+            revert PrevHeadMismatch(po.prevHead, head);
+        }
+        // Assert the prevHeader matches the header for the current head.
+        if (headers[po.prevHead] != po.prevHeader) {
+            revert PrevHeaderMismatch(headers[po.prevHead], po.prevHeader);
+        }
+
+        // The sync committee for the current head should always be set.
+        uint256 currentPeriod = getSyncCommitteePeriod(head);
+        bytes32 currentSyncCommitteeHash = syncCommittees[currentPeriod];
+        if (currentSyncCommitteeHash == bytes32(0)) {
+            revert SyncCommitteeNotSet(currentPeriod);
+        }
+        // The sync committee hash used in the proof should match the current sync committee.
+        if (currentSyncCommitteeHash != po.prevSyncCommitteeHash) {
+            revert SyncCommitteeStartMismatch(po.prevSyncCommitteeHash, currentSyncCommitteeHash);
+        }
+
+        // Confirm that the new slot is greater than the current head.
         if (po.newHead <= head) {
             revert SlotBehindHead(po.newHead);
         }
-
-        uint256 currentPeriod = getSyncCommitteePeriod(head);
-
-        // Note: We should always have a sync committee for the current head.
-        // The "start" sync committee hash is the hash of the sync committee that should sign the next update.
-        bytes32 currentSyncCommitteeHash = syncCommittees[currentPeriod];
-        if (currentSyncCommitteeHash != po.startSyncCommitteeHash) {
-            revert SyncCommitteeStartMismatch(po.startSyncCommitteeHash, currentSyncCommitteeHash);
-        }
-
-        // Verify the proof with the associated public values. This will revert if proof invalid.
-        ISP1Verifier(verifier).verifyProof(heliosProgramVkey, publicValues, proof);
-
-        // Check that the new header hasnt been set already.
-        head = po.newHead;
+        // Confirm that the new header has not been set already. This check is redundant, but
+        // we include it for clarity.
         if (headers[po.newHead] != bytes32(0)) {
             revert HeaderRootAlreadySet(po.newHead);
         }
-
-        // Check that the new state root hasnt been set already.
-        headers[po.newHead] = po.newHeader;
+        // Confirm that the new state root has not been set already. This check is redundant, but
+        // we include it for clarity.
         if (executionStateRoots[po.newHead] != bytes32(0)) {
             revert StateRootAlreadySet(po.newHead);
         }
-
-        // Finally set the new state root.
+        head = po.newHead;
+        headers[po.newHead] = po.newHeader;
         executionStateRoots[po.newHead] = po.executionStateRoot;
         emit HeadUpdate(po.newHead, po.newHeader);
 
-        uint256 period = getSyncCommitteePeriod(head);
+        uint256 newPeriod = getSyncCommitteePeriod(po.newHead);
 
-        // If the sync committee for the new peroid is not set, set it.
-        // This can happen if the light client was very behind and had a lot of updates
+        // Set the sync committee for the new period if it is not set.
+        // This can happen if the light client was very behind and had a lot of updates.
         // Note: Only the latest sync committee is stored, not the intermediate ones from every update.
-        // This may leave gaps in the sync committee history
-        if (syncCommittees[period] == bytes32(0)) {
-            syncCommittees[period] = po.syncCommitteeHash;
-            emit SyncCommitteeUpdate(period, po.syncCommitteeHash);
+        if (syncCommittees[newPeriod] == bytes32(0)) {
+            syncCommittees[newPeriod] = po.syncCommitteeHash;
+            emit SyncCommitteeUpdate(newPeriod, po.syncCommitteeHash);
         }
-        // Set next peroid's sync committee hash if value exists.
+
+        // Set the next sync committee if it is defined and not set.
         if (po.nextSyncCommitteeHash != bytes32(0)) {
-            uint256 nextPeriod = period + 1;
-
-            // If the next sync committee is already correct, we don't need to update it.
-            if (syncCommittees[nextPeriod] != po.nextSyncCommitteeHash) {
-                if (syncCommittees[nextPeriod] != bytes32(0)) {
-                    revert SyncCommitteeAlreadySet(nextPeriod);
-                }
-
+            uint256 nextPeriod = newPeriod + 1;
+            if (syncCommittees[nextPeriod] == bytes32(0)) {
+                // If the next sync committee is not set, set it.
                 syncCommittees[nextPeriod] = po.nextSyncCommitteeHash;
                 emit SyncCommitteeUpdate(nextPeriod, po.nextSyncCommitteeHash);
+            } else if (syncCommittees[nextPeriod] != po.nextSyncCommitteeHash) {
+                // If the next sync committee is non-zero, it should match the expected value.
+                revert NextSyncCommitteeMismatch(
+                    syncCommittees[nextPeriod], po.nextSyncCommitteeHash
+                );
             }
         }
     }
