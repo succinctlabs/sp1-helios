@@ -16,15 +16,15 @@ sp1-helios-program = { path = "program" }
 sp1-helios-primitives = { path = "primitives" }
 
 # helios
-helios = { git = "https://github.com/a16z/helios", tag = "0.8.3" }
-helios-consensus-core = { git = "https://github.com/a16z/helios", tag = "0.8.3" }
-helios-ethereum = { git = "https://github.com/a16z/helios", tag = "0.8.3" }
+helios = { git = "https://github.com/a16z/helios", tag = "0.8.5" }
+helios-consensus-core = { git = "https://github.com/a16z/helios", tag = "0.8.5" }
+helios-ethereum = { git = "https://github.com/a16z/helios", tag = "0.8.5" }
 
 # general
 dotenv = "0.15.0"
 eyre = "0.6.12"
-sp1-sdk = "4.1.0"
-sp1-build = "4.1.0"
+sp1-sdk = "4.1.7"
+sp1-build = "4.1.7"
 tokio = "1.38.0"
 tracing = "0.1.37"
 serde = "1.0.203"

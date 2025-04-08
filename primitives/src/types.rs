@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ProofInputs {
-    pub sync_committee_updates: Vec<Update<MainnetConsensusSpec>>,
+    pub updates: Vec<Update<MainnetConsensusSpec>>,
     pub finality_update: FinalityUpdate<MainnetConsensusSpec>,
     pub expected_current_slot: u64,
     pub store: LightClientStore<MainnetConsensusSpec>,
@@ -26,13 +26,21 @@ pub struct ExecutionStateProof {
 
 sol! {
     struct ProofOutputs {
-        bytes32 executionStateRoot;
-        bytes32 newHeader;
-        bytes32 nextSyncCommitteeHash;
-        uint256 newHead;
+        /// The previous beacon block header hash.
         bytes32 prevHeader;
+        /// The slot of the previous head.
         uint256 prevHead;
+        /// The anchor sync committee hash which was used to verify the proof.
+        bytes32 prevSyncCommitteeHash;
+        /// The slot of the new head.
+        uint256 newHead;
+        /// The new beacon block header hash.
+        bytes32 newHeader;
+        /// The execution state root from the execution payload of the new beacon block.
+        bytes32 executionStateRoot;
+        /// The sync committee hash of the current period.
         bytes32 syncCommitteeHash;
-        bytes32 startSyncCommitteeHash;
+        /// The sync committee hash of the next period.
+        bytes32 nextSyncCommitteeHash;
     }
 }
