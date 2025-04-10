@@ -74,7 +74,6 @@ pub async fn get_checkpoint(slot: u64) -> Result<B256> {
         Arc::new(config),
     );
 
-
     let block: BeaconBlock<MainnetConsensusSpec> = client
         .rpc
         .get_block(slot)
@@ -85,9 +84,7 @@ pub async fn get_checkpoint(slot: u64) -> Result<B256> {
 }
 
 /// Setup a client from a checkpoint.
-pub async fn get_client(
-    checkpoint: B256,
-) -> Result<Inner<MainnetConsensusSpec, HttpRpc>> {
+pub async fn get_client(checkpoint: B256) -> Result<Inner<MainnetConsensusSpec, HttpRpc>> {
     let consensus_rpc = std::env::var("SOURCE_CONSENSUS_RPC_URL").unwrap();
     let chain_id = std::env::var("SOURCE_CHAIN_ID").unwrap();
     let network = Network::from_chain_id(chain_id.parse().unwrap()).unwrap();
