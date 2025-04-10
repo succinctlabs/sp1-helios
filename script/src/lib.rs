@@ -11,6 +11,7 @@ use helios_ethereum::{
     rpc::http_rpc::HttpRpc,
 };
 
+use anyhow::{anyhow, Result};
 use std::sync::Arc;
 use tokio::sync::{mpsc::channel, watch};
 use tree_hash::TreeHash;
@@ -47,7 +48,7 @@ pub async fn get_latest_checkpoint() -> B256 {
 }
 
 /// Fetch checkpoint from a slot number.
-pub async fn get_checkpoint(slot: u64) -> B256 {
+pub async fn get_checkpoint(slot: u64) -> Result<B256> {
     let consensus_rpc = std::env::var("SOURCE_CONSENSUS_RPC_URL").unwrap();
     let chain_id = std::env::var("SOURCE_CHAIN_ID").unwrap();
     let network = Network::from_chain_id(chain_id.parse().unwrap()).unwrap();
@@ -73,13 +74,20 @@ pub async fn get_checkpoint(slot: u64) -> B256 {
         Arc::new(config),
     );
 
-    let block: BeaconBlock<MainnetConsensusSpec> = client.rpc.get_block(slot).await.unwrap();
 
-    B256::from_slice(block.tree_hash_root().as_ref())
+    let block: BeaconBlock<MainnetConsensusSpec> = client
+        .rpc
+        .get_block(slot)
+        .await
+        .map_err(|e| anyhow!("error getting block: {}", e.to_string()))?;
+
+    Ok(B256::from_slice(block.tree_hash_root().as_ref()))
 }
 
 /// Setup a client from a checkpoint.
-pub async fn get_client(checkpoint: B256) -> Inner<MainnetConsensusSpec, HttpRpc> {
+pub async fn get_client(
+    checkpoint: B256,
+) -> Result<Inner<MainnetConsensusSpec, HttpRpc>> {
     let consensus_rpc = std::env::var("SOURCE_CONSENSUS_RPC_URL").unwrap();
     let chain_id = std::env::var("SOURCE_CHAIN_ID").unwrap();
     let network = Network::from_chain_id(chain_id.parse().unwrap()).unwrap();
@@ -106,6 +114,9 @@ pub async fn get_client(checkpoint: B256) -> Inner<MainnetConsensusSpec, HttpRpc
         Arc::new(config),
     );
 
-    client.bootstrap(checkpoint).await.unwrap();
     client
+        .bootstrap(checkpoint)
+        .await
+        .map_err(|e| anyhow!("error bootstrapping client: {}", e.to_string()))?;
+    Ok(client)
 }

@@ -1,3 +1,4 @@
+use alloy_primitives::B256;
 use anyhow::Result;
 use clap::{command, Parser};
 use helios_ethereum::rpc::ConsensusRpc;
@@ -19,19 +20,35 @@ async fn main() -> Result<()> {
     setup_logger();
     let args = GenesisArgs::parse();
 
-    // Get the current slot from the contract or fetch the latest checkpoint
-    let checkpoint = if let Some(slot) = args.slot {
-        get_checkpoint(slot).await
-    } else {
-        get_latest_checkpoint().await
+    // Get the latest checkpoint.
+    let slot = match args.slot {
+        Some(s) => s,
+        None => {
+            // Get latest checkpoint and use it to determine current slot
+            let latest_checkpoint = get_latest_checkpoint().await;
+            let client = get_client(latest_checkpoint).await?;
+            client.expected_current_slot()
+        }
     };
 
-    // Setup client.
-    let helios_client = get_client(checkpoint).await;
+    // Find a valid checkpoint by searching backwards from the slot
+    let mut checkpoint = B256::ZERO;
+    for i in (slot.saturating_sub(1000)..slot).rev() {
+        if let Ok(cp) = get_checkpoint(i).await {
+            if get_client(cp).await.is_ok() {
+                checkpoint = cp;
+                break;
+            }
+        }
+    }
+
+    // Setup client with the found checkpoint
+    let helios_client = get_client(checkpoint).await?;
+    let expected_current_slot = helios_client.expected_current_slot();
+
     let updates = get_updates(&helios_client).await;
     let finality_update = helios_client.rpc.get_finality_update().await.unwrap();
 
-    let expected_current_slot = helios_client.expected_current_slot();
     let inputs = ProofInputs {
         updates,
         finality_update,
