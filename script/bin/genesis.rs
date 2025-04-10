@@ -63,7 +63,7 @@ pub async fn main() -> Result<()> {
 
     let checkpoint;
     if let Some(temp_slot) = args.slot {
-        checkpoint = get_checkpoint(temp_slot).await;
+        checkpoint = get_checkpoint(temp_slot).await?;
     } else {
         checkpoint = get_latest_checkpoint().await;
     }
@@ -74,7 +74,7 @@ pub async fn main() -> Result<()> {
         verifier = env::var("SP1_VERIFIER_ADDRESS").unwrap().parse().unwrap();
     }
 
-    let helios_client = get_client(checkpoint).await;
+    let helios_client = get_client(checkpoint).await?;
     let finalized_header = helios_client
         .store
         .finalized_header

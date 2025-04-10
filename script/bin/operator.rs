@@ -238,10 +238,10 @@ impl SP1HeliosOperator {
                 .unwrap();
 
             // Fetch the checkpoint at that slot
-            let checkpoint = get_checkpoint(slot).await;
+            let checkpoint = get_checkpoint(slot).await?;
 
             // Get the client from the checkpoint
-            let client = get_client(checkpoint).await;
+            let client = get_client(checkpoint).await?;
 
             // Request an update
             match self.request_update(client).await {
