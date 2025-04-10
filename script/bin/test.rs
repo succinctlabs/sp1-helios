@@ -33,10 +33,12 @@ async fn main() -> Result<()> {
 
     // Find a valid checkpoint by searching backwards from the slot
     let mut checkpoint = B256::ZERO;
-    for i in (slot.saturating_sub(1000)..slot).rev() {
+    let mut checkpoint_slot: u64 = 0;
+    for i in slot.saturating_sub(8000)..slot {
         if let Ok(cp) = get_checkpoint(i).await {
             if get_client(cp).await.is_ok() {
                 checkpoint = cp;
+                checkpoint_slot = i;
                 break;
             }
         }
@@ -44,10 +46,20 @@ async fn main() -> Result<()> {
 
     // Setup client with the found checkpoint
     let helios_client = get_client(checkpoint).await?;
-    let expected_current_slot = helios_client.expected_current_slot();
 
     let updates = get_updates(&helios_client).await;
     let finality_update = helios_client.rpc.get_finality_update().await.unwrap();
+    let expected_current_slot = helios_client.expected_current_slot();
+
+    println!("Checkpoint slot: {}", checkpoint_slot);
+    println!(
+        "Finality update slot: {}",
+        finality_update.attested_header().beacon().slot
+    );
+    println!(
+        "Finality update signature slot: {}",
+        finality_update.signature_slot()
+    );
 
     let inputs = ProofInputs {
         updates,
@@ -63,7 +75,7 @@ async fn main() -> Result<()> {
     stdin.write_slice(&serde_cbor::to_vec(&inputs)?);
 
     let prover_client = ProverClient::builder().cpu().build();
-    let (_, report) = prover_client.execute(ELF, &stdin).run()?;
+    let (_, report) = prover_client.execute(ELF, &stdin).calculate_gas(false).run()?;
     println!("Execution Report: {:?}", report);
 
     Ok(())
