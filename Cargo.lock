@@ -2902,8 +2902,8 @@ checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 
 [[package]]
 name = "helios-common"
-version = "0.8.5"
-source = "git+https://github.com/a16z/helios?tag=0.8.5#7c8018157cf5adc176ba2de8c769c1a7cc6f6106"
+version = "0.8.6"
+source = "git+https://github.com/a16z/helios?tag=0.8.6#ed40c850671b5a1dee1efcc5951b8c424bf3edb2"
 dependencies = [
  "alloy",
  "eyre",
@@ -2915,8 +2915,8 @@ dependencies = [
 
 [[package]]
 name = "helios-consensus-core"
-version = "0.8.5"
-source = "git+https://github.com/a16z/helios?tag=0.8.5#7c8018157cf5adc176ba2de8c769c1a7cc6f6106"
+version = "0.8.6"
+source = "git+https://github.com/a16z/helios?tag=0.8.6#ed40c850671b5a1dee1efcc5951b8c424bf3edb2"
 dependencies = [
  "alloy",
  "alloy-rlp",
@@ -2940,8 +2940,8 @@ dependencies = [
 
 [[package]]
 name = "helios-core"
-version = "0.8.5"
-source = "git+https://github.com/a16z/helios?tag=0.8.5#7c8018157cf5adc176ba2de8c769c1a7cc6f6106"
+version = "0.8.6"
+source = "git+https://github.com/a16z/helios?tag=0.8.6#ed40c850671b5a1dee1efcc5951b8c424bf3edb2"
 dependencies = [
  "alloy",
  "alloy-trie",
@@ -2968,8 +2968,8 @@ dependencies = [
 
 [[package]]
 name = "helios-ethereum"
-version = "0.8.5"
-source = "git+https://github.com/a16z/helios?tag=0.8.5#7c8018157cf5adc176ba2de8c769c1a7cc6f6106"
+version = "0.8.6"
+source = "git+https://github.com/a16z/helios?tag=0.8.6#ed40c850671b5a1dee1efcc5951b8c424bf3edb2"
 dependencies = [
  "alloy",
  "alloy-trie",
@@ -3006,7 +3006,7 @@ dependencies = [
 [[package]]
 name = "helios-verifiable-api-client"
 version = "0.1.0"
-source = "git+https://github.com/a16z/helios?tag=0.8.5#7c8018157cf5adc176ba2de8c769c1a7cc6f6106"
+source = "git+https://github.com/a16z/helios?tag=0.8.6#ed40c850671b5a1dee1efcc5951b8c424bf3edb2"
 dependencies = [
  "alloy",
  "async-trait",
@@ -3021,7 +3021,7 @@ dependencies = [
 [[package]]
 name = "helios-verifiable-api-types"
 version = "0.1.0"
-source = "git+https://github.com/a16z/helios?tag=0.8.5#7c8018157cf5adc176ba2de8c769c1a7cc6f6106"
+source = "git+https://github.com/a16z/helios?tag=0.8.6#ed40c850671b5a1dee1efcc5951b8c424bf3edb2"
 dependencies = [
  "alloy",
  "helios-common",
