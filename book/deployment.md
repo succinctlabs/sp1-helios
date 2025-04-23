@@ -44,7 +44,7 @@ In the root directory, create a file called `.env` (mirroring `.env.example`) an
 | Parameter | Description |
 |-----------|-------------|
 | `GUARDIAN_ADDRESS` | Defines the owner for the light client. Defaults to the account owner of `PRIVATE_KEY` |
-| `SP1_PRIVATE_KEY` | Required in `network` mode. The private key of the account that will be requesting proofs from the Succinct Prover Network |
+| `NETWORK_PRIVATE_KEY` | Required in `network` mode. The private key of the account that will be requesting proofs from the Succinct Prover Network |
 | `SP1_VERIFIER_ADDRESS` | Required in `network` mode. The address of the verifier contract |
 | `LOOP_DELAY_MINS` | The delay between each loop of the operator in minutes. Defaults to `5` |
 
