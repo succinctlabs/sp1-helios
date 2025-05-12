@@ -125,6 +125,13 @@ impl SP1HeliosOperator {
             .await
             .unwrap()
             ._0;
+        let current_sync_committee = contract.syncCommittees(U256::from(period))
+            .call()
+            .await
+            .unwrap()
+            ._0;
+
+        assert_eq!(current_sync_committee, client.store.current_sync_committee.tree_hash_root());
 
         let mut stdin = SP1Stdin::new();
 
@@ -138,6 +145,11 @@ impl SP1HeliosOperator {
             info!("Contract is up to date. Nothing to update.");
             return Ok(None);
         }
+
+        println!("found slot on chain: {}", head);
+        println!("found period: {}", period);
+        println!("found finality update for slot: {:?}", finality_update.finalized_header().beacon().slot);
+        println!("found previous sync committee, {:?}", client.store.current_sync_committee.tree_hash_root());
 
         // Optimization:
         // Skip processing update inside program if next_sync_committee is already stored in contract.
@@ -153,6 +165,8 @@ impl SP1HeliosOperator {
 
                 client.verify_update(&temp_update).unwrap(); // Panics if not valid
                 client.apply_update(&temp_update);
+
+                println!("sync committee updated to {:?}", client.store.current_sync_committee.tree_hash_root());
             }
         }
 
@@ -189,6 +203,13 @@ impl SP1HeliosOperator {
         let nonce = wallet_filler
             .get_transaction_count(self.relayer_address)
             .await?;
+
+        let thingy = contract.update(proof.bytes().into(), public_values_bytes.into());
+        let calldata = thingy.calldata();
+
+        println!("calldata: {:?}", calldata);
+
+        panic!("done.");
 
         // Wait for 3 required confirmations with a timeout of 60 seconds.
         const NUM_CONFIRMATIONS: u64 = 3;

@@ -1,4 +1,4 @@
-use alloy_primitives::B256;
+use alloy_primitives::{b256, B256};
 use helios_consensus_core::{
     calc_sync_period,
     consensus_spec::MainnetConsensusSpec,
@@ -74,13 +74,15 @@ pub async fn get_checkpoint(slot: u64) -> Result<B256> {
         Arc::new(config),
     );
 
-    let block: BeaconBlock<MainnetConsensusSpec> = client
-        .rpc
-        .get_block(slot)
-        .await
-        .map_err(|e| anyhow!("error getting block: {}", e.to_string()))?;
+    // let block: BeaconBlock<MainnetConsensusSpec> = client
+    //     .rpc
+    //     .get_block(slot)
+    //     .await
+    //     .map_err(|e| anyhow!("error getting block: {}", e.to_string()))?;
 
-    Ok(B256::from_slice(block.tree_hash_root().as_ref()))
+    // Ok(B256::from_slice(block.tree_hash_root().as_ref()))
+
+    Ok(b256!("73acae7c991490e448ac46e24e8fff431fa6c20326e8c96e6f9e2628c7c34821"))
 }
 
 /// Setup a client from a checkpoint.
