@@ -98,7 +98,7 @@ impl SP1HeliosOperator {
     /// Fetch values and generate an 'update' proof for the SP1 Helios contract.
     async fn request_update(
         &self,
-        mut client: Inner<MainnetConsensusSpec, HttpRpc>,
+        client: Inner<MainnetConsensusSpec, HttpRpc>,
     ) -> Result<Option<SP1ProofWithPublicValues>> {
         // Fetch required values.
         let provider = ProviderBuilder::new().on_http(self.rpc_url.clone());
@@ -119,17 +119,11 @@ impl SP1HeliosOperator {
             ._0
             .try_into()
             .unwrap();
-        let contract_next_sync_committee = contract
-            .syncCommittees(U256::from(period + 1))
-            .call()
-            .await
-            .unwrap()
-            ._0;
 
         let mut stdin = SP1Stdin::new();
 
         // Setup client.
-        let mut updates = get_updates(&client).await;
+        let updates = get_updates(&client).await;
         let finality_update = client.rpc.get_finality_update().await.unwrap();
 
         // Check if contract is up to date
@@ -137,23 +131,6 @@ impl SP1HeliosOperator {
         if latest_block <= head {
             info!("Contract is up to date. Nothing to update.");
             return Ok(None);
-        }
-
-        // Optimization:
-        // Skip processing update inside program if next_sync_committee is already stored in contract.
-        // We must still apply the update locally to "sync" the helios client, this is due to
-        // next_sync_committee not being stored when the helios client is bootstrapped.
-        if !updates.is_empty() {
-            let next_sync_committee =
-                B256::from_slice(updates[0].next_sync_committee().tree_hash_root().as_ref());
-
-            if contract_next_sync_committee == next_sync_committee {
-                println!("Applying optimization, skipping update");
-                let temp_update = updates.remove(0);
-
-                client.verify_update(&temp_update).unwrap(); // Panics if not valid
-                client.apply_update(&temp_update);
-            }
         }
 
         // Create program inputs
