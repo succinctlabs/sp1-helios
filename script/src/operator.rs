@@ -102,8 +102,8 @@ where
         if latest_block <= head {
             info!("Contract is up to date. Nothing to update.");
             return Ok(None);
-        } else if latest_block % 32 != 0 {
-            info!("Attempted to commit to a non-checkpoint slot. Skipping update.");
+        } else if latest_block % 32 > 0 {
+            info!("Attempted to commit to a non-checkpoint slot: {latest_block}. Skipping update.");
             return Ok(None);
         }
 
