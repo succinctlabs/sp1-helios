@@ -103,28 +103,18 @@ impl SP1HeliosOperator {
         // Fetch required values.
         let provider = ProviderBuilder::new().on_http(self.rpc_url.clone());
         let contract = SP1Helios::new(self.contract_address, provider);
-        let head: u64 = contract
-            .head()
-            .call()
-            .await
-            .unwrap()
-            .head
-            .try_into()
-            .unwrap();
+        let head: u64 = contract.head().call().await.unwrap().to();
         let period: u64 = contract
             .getSyncCommitteePeriod(U256::from(head))
             .call()
             .await
             .unwrap()
-            ._0
-            .try_into()
-            .unwrap();
+            .to();
         let contract_next_sync_committee = contract
             .syncCommittees(U256::from(period + 1))
             .call()
             .await
-            .unwrap()
-            ._0;
+            .unwrap();
 
         let mut stdin = SP1Stdin::new();
 
@@ -181,7 +171,6 @@ impl SP1HeliosOperator {
         let public_values_bytes = proof.public_values.to_vec();
 
         let wallet_filler = ProviderBuilder::new()
-            .with_recommended_fillers()
             .wallet(self.wallet.clone())
             .on_http(self.rpc_url.clone());
         let contract = SP1Helios::new(self.contract_address, wallet_filler.clone());
@@ -233,9 +222,7 @@ impl SP1HeliosOperator {
                 .unwrap_or_else(|e| {
                     panic!("Failed to get head. Are you sure the SP1Helios is deployed to address: {:?}? Error: {:?}", self.contract_address, e)
                 })
-                .head
-                .try_into()
-                .unwrap();
+                .to();
 
             // Fetch the checkpoint at that slot
             let checkpoint = get_checkpoint(slot).await?;
