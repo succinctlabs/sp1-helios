@@ -90,6 +90,7 @@ contract SP1Helios {
     error SyncCommitteeStartMismatch(bytes32 given, bytes32 expected);
     error SyncCommitteeNotSet(uint256 period);
     error NextSyncCommitteeMismatch(bytes32 given, bytes32 expected);
+    error NonCheckpointSlot(uint256 slot);
 
     constructor(InitParams memory params) {
         GENESIS_VALIDATORS_ROOT = params.genesisValidatorsRoot;
@@ -140,6 +141,12 @@ contract SP1Helios {
         // Confirm that the new slot is greater than the current head.
         if (po.newHead <= head) {
             revert SlotBehindHead(po.newHead);
+        }
+        // Confirm that the new slot is a checkpoint slot.
+        // This is useful if the there were ever some delay greater than 30 minutes between updates,
+        // as CL nodes typically only store checkpoint slot proofs.
+        if (po.newHead % 32 != 0) {
+            revert NonCheckpointSlot(po.newHead);
         }
         // Confirm that the new header has not been set already. This check is redundant, but
         // we include it for clarity.
