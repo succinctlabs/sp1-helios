@@ -107,6 +107,8 @@ where
             return Ok(None);
         }
 
+        info!("Updating to new head block: {:?} from {:?}", latest_block, head);
+
         // Create program inputs
         let expected_current_slot = client.expected_current_slot();
         let inputs = ProofInputs {
