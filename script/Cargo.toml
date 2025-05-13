@@ -14,10 +14,6 @@ name = "operator"
 path = "./bin/operator.rs"
 
 [[bin]]
-name = "test"
-path = "./bin/test.rs"
-
-[[bin]]
 name = "vkey"
 path = "./bin/vkey.rs"
 

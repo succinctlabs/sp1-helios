@@ -1,9 +1,9 @@
+use alloy::network::EthereumWallet;
+use alloy::primitives::Address;
+use alloy::providers::ProviderBuilder;
+use alloy::signers::local::PrivateKeySigner;
 use sp1_helios_script::operator::SP1HeliosOperator;
 use std::env;
-use alloy::primitives::Address;
-use alloy::signers::local::PrivateKeySigner;
-use alloy::providers::ProviderBuilder;
-use alloy::network::EthereumWallet;
 use std::time::Duration;
 #[tokio::main]
 async fn main() {

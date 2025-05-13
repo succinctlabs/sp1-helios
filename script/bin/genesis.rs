@@ -4,7 +4,7 @@ use anyhow::Result;
 /// Generate genesis parameters for light client contract
 use clap::Parser;
 use serde::{Deserialize, Serialize};
-use sp1_helios_script::{get_client};
+use sp1_helios_script::get_client;
 use sp1_sdk::{utils, HashableKey, Prover, ProverClient};
 use std::{
     env, fs,
@@ -77,7 +77,7 @@ pub async fn main() -> Result<()> {
     let head = helios_client.store.finalized_header.clone().beacon().slot;
 
     assert!(head % 32 == 0, "Head is not a checkpoint slot.");
-    
+
     let sync_committee_hash = helios_client
         .store
         .current_sync_committee

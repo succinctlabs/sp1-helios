@@ -59,8 +59,14 @@ pub fn main() {
 
     // Ensure the new head is greater than the previous head. This guarantees that the finality
     // update was correctly applied.
-    assert!(store.finalized_header.beacon().slot > prev_head, "New head is not greater than previous head.");
-    assert!(store.finalized_header.beacon().slot % 32 == 0, "New head is not a checkpoint slot.");
+    assert!(
+        store.finalized_header.beacon().slot > prev_head,
+        "New head is not greater than previous head."
+    );
+    assert!(
+        store.finalized_header.beacon().slot % 32 == 0,
+        "New head is not a checkpoint slot."
+    );
 
     // 3. Commit new state root, header, and sync committee.
     let header: B256 = store.finalized_header.beacon().tree_hash_root();
