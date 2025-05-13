@@ -57,6 +57,6 @@ ethereum_hashing = { git = "https://github.com/ncitron/ethereum_hashing", rev = 
 
 # TODO: Remove when Helios 0.8.8 is released 
 [patch."https://github.com/a16z/helios"]
-helios = { git = "https://github.com/leruaa/helios", rev = "e7b222935c4637c8f9e1d02c00b71383d4229f80" }
-helios-consensus-core = { git = "https://github.com/leruaa/helios", rev = "e7b222935c4637c8f9e1d02c00b71383d4229f80" }
-helios-ethereum = { git = "https://github.com/leruaa/helios", rev = "e7b222935c4637c8f9e1d02c00b71383d4229f80" }
+helios = { git = "https://github.com/leruaa/helios", rev = "cf80ec836027a01cdddca09bac1bac437bf4891c" }
+helios-consensus-core = { git = "https://github.com/leruaa/helios", rev = "cf80ec836027a01cdddca09bac1bac437bf4891c" }
+helios-ethereum = { git = "https://github.com/leruaa/helios", rev = "cf80ec836027a01cdddca09bac1bac437bf4891c" }

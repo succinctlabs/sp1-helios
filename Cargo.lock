@@ -3079,7 +3079,7 @@ checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 [[package]]
 name = "helios-common"
 version = "0.8.7"
-source = "git+https://github.com/leruaa/helios?rev=e7b222935c4637c8f9e1d02c00b71383d4229f80#e7b222935c4637c8f9e1d02c00b71383d4229f80"
+source = "git+https://github.com/leruaa/helios?rev=cf80ec836027a01cdddca09bac1bac437bf4891c#cf80ec836027a01cdddca09bac1bac437bf4891c"
 dependencies = [
  "alloy",
  "eyre",
@@ -3092,7 +3092,7 @@ dependencies = [
 [[package]]
 name = "helios-consensus-core"
 version = "0.8.7"
-source = "git+https://github.com/leruaa/helios?rev=e7b222935c4637c8f9e1d02c00b71383d4229f80#e7b222935c4637c8f9e1d02c00b71383d4229f80"
+source = "git+https://github.com/leruaa/helios?rev=cf80ec836027a01cdddca09bac1bac437bf4891c#cf80ec836027a01cdddca09bac1bac437bf4891c"
 dependencies = [
  "alloy",
  "alloy-rlp",
@@ -3117,7 +3117,7 @@ dependencies = [
 [[package]]
 name = "helios-core"
 version = "0.8.7"
-source = "git+https://github.com/leruaa/helios?rev=e7b222935c4637c8f9e1d02c00b71383d4229f80#e7b222935c4637c8f9e1d02c00b71383d4229f80"
+source = "git+https://github.com/leruaa/helios?rev=cf80ec836027a01cdddca09bac1bac437bf4891c#cf80ec836027a01cdddca09bac1bac437bf4891c"
 dependencies = [
  "alloy",
  "alloy-trie",
@@ -3145,7 +3145,7 @@ dependencies = [
 [[package]]
 name = "helios-ethereum"
 version = "0.8.7"
-source = "git+https://github.com/leruaa/helios?rev=e7b222935c4637c8f9e1d02c00b71383d4229f80#e7b222935c4637c8f9e1d02c00b71383d4229f80"
+source = "git+https://github.com/leruaa/helios?rev=cf80ec836027a01cdddca09bac1bac437bf4891c#cf80ec836027a01cdddca09bac1bac437bf4891c"
 dependencies = [
  "alloy",
  "alloy-trie",
@@ -3182,7 +3182,7 @@ dependencies = [
 [[package]]
 name = "helios-verifiable-api-client"
 version = "0.1.0"
-source = "git+https://github.com/leruaa/helios?rev=e7b222935c4637c8f9e1d02c00b71383d4229f80#e7b222935c4637c8f9e1d02c00b71383d4229f80"
+source = "git+https://github.com/leruaa/helios?rev=cf80ec836027a01cdddca09bac1bac437bf4891c#cf80ec836027a01cdddca09bac1bac437bf4891c"
 dependencies = [
  "alloy",
  "async-trait",
@@ -3197,7 +3197,7 @@ dependencies = [
 [[package]]
 name = "helios-verifiable-api-types"
 version = "0.1.0"
-source = "git+https://github.com/leruaa/helios?rev=e7b222935c4637c8f9e1d02c00b71383d4229f80#e7b222935c4637c8f9e1d02c00b71383d4229f80"
+source = "git+https://github.com/leruaa/helios?rev=cf80ec836027a01cdddca09bac1bac437bf4891c#cf80ec836027a01cdddca09bac1bac437bf4891c"
 dependencies = [
  "alloy",
  "helios-common",
@@ -8497,4 +8497,4 @@ dependencies = [
 [[patch.unused]]
 name = "helios"
 version = "0.8.7"
-source = "git+https://github.com/leruaa/helios?rev=e7b222935c4637c8f9e1d02c00b71383d4229f80#e7b222935c4637c8f9e1d02c00b71383d4229f80"
+source = "git+https://github.com/leruaa/helios?rev=cf80ec836027a01cdddca09bac1bac437bf4891c#cf80ec836027a01cdddca09bac1bac437bf4891c"
