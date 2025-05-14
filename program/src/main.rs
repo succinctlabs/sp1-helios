@@ -76,14 +76,12 @@ pub fn main() {
         None => B256::ZERO,
     };
     let head = store.finalized_header.beacon().slot;
+    let exection = store.finalized_header.execution().expect("Execution payload doesn't exist.");
 
     let proof_outputs = ProofOutputs {
-        executionStateRoot: *store
-            .finalized_header
-            .execution()
-            .expect("Execution payload doesn't exist.")
-            .state_root(),
+        executionStateRoot: *exection.state_root(),
         newHeader: header,
+        executionBlockNumber: U256::from(*exection.block_number()),
         nextSyncCommitteeHash: next_sync_committee_hash,
         newHead: U256::from(head),
         prevHeader: prev_header,
