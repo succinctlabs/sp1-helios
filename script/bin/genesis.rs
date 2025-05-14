@@ -4,7 +4,7 @@ use anyhow::Result;
 /// Generate genesis parameters for light client contract
 use clap::Parser;
 use serde::{Deserialize, Serialize};
-use sp1_helios_script::{get_checkpoint, get_client, get_latest_checkpoint};
+use sp1_helios_script::get_client;
 use sp1_sdk::{utils, HashableKey, Prover, ProverClient};
 use std::{
     env, fs,
@@ -60,13 +60,6 @@ pub async fn main() -> Result<()> {
 
     let client = ProverClient::builder().cpu().build();
     let (_pk, vk) = client.setup(HELIOS_ELF);
-
-    let checkpoint;
-    if let Some(temp_slot) = args.slot {
-        checkpoint = get_checkpoint(temp_slot).await?;
-    } else {
-        checkpoint = get_latest_checkpoint().await;
-    }
     let sp1_prover = env::var("SP1_PROVER").unwrap();
 
     let mut verifier = Address::ZERO;
@@ -74,7 +67,7 @@ pub async fn main() -> Result<()> {
         verifier = env::var("SP1_VERIFIER_ADDRESS").unwrap().parse().unwrap();
     }
 
-    let helios_client = get_client(checkpoint).await?;
+    let helios_client = get_client(args.slot).await?;
     let finalized_header = helios_client
         .store
         .finalized_header
@@ -82,6 +75,9 @@ pub async fn main() -> Result<()> {
         .beacon()
         .tree_hash_root();
     let head = helios_client.store.finalized_header.clone().beacon().slot;
+
+    assert!(head % 32 == 0, "Head is not a checkpoint slot.");
+
     let sync_committee_hash = helios_client
         .store
         .current_sync_committee
@@ -95,7 +91,7 @@ pub async fn main() -> Result<()> {
     let source_chain_id: u64 = match env::var("SOURCE_CHAIN_ID") {
         Ok(val) => val.parse().unwrap(),
         Err(_) => {
-            println!("SOURCE_CHAIN_ID not set, defaulting to mainnet");
+            eprintln!("SOURCE_CHAIN_ID not set, defaulting to mainnet");
             1 // Mainnet chain ID
         }
     };
