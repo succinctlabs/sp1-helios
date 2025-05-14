@@ -76,7 +76,10 @@ pub fn main() {
         None => B256::ZERO,
     };
     let head = store.finalized_header.beacon().slot;
-    let exection = store.finalized_header.execution().expect("Execution payload doesn't exist.");
+    let exection = store
+        .finalized_header
+        .execution()
+        .expect("Execution payload doesn't exist.");
 
     let proof_outputs = ProofOutputs {
         executionStateRoot: *exection.state_root(),
