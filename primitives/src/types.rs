@@ -38,6 +38,8 @@ sol! {
         bytes32 newHeader;
         /// The execution state root from the execution payload of the new beacon block.
         bytes32 executionStateRoot;
+        /// The execution block number.
+        uint256 executionBlockNumber;
         /// The sync committee hash of the current period.
         bytes32 syncCommitteeHash;
         /// The sync committee hash of the next period.

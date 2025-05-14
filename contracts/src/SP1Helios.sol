@@ -56,6 +56,8 @@ contract SP1Helios {
         bytes32 newHeader;
         /// The execution state root from the execution payload of the new beacon block.
         bytes32 executionStateRoot;
+        /// The execution block number.
+        uint256 executionBlockNumber;
         /// The sync committee hash of the current period.
         bytes32 syncCommitteeHash;
         /// The sync committee hash of the next period.
@@ -155,12 +157,12 @@ contract SP1Helios {
         }
         // Confirm that the new state root has not been set already. This check is redundant, but
         // we include it for clarity.
-        if (executionStateRoots[po.newHead] != bytes32(0)) {
-            revert StateRootAlreadySet(po.newHead);
+        if (executionStateRoots[po.executionBlockNumber] != bytes32(0)) {
+            revert StateRootAlreadySet(po.executionBlockNumber);
         }
         head = po.newHead;
         headers[po.newHead] = po.newHeader;
-        executionStateRoots[po.newHead] = po.executionStateRoot;
+        executionStateRoots[po.executionBlockNumber] = po.executionStateRoot;
         emit HeadUpdate(po.newHead, po.newHeader);
 
         uint256 newPeriod = getSyncCommitteePeriod(po.newHead);
