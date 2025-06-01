@@ -23,8 +23,8 @@ helios-ethereum = { git = "https://github.com/a16z/helios", tag = "0.8.6" }
 # general
 dotenv = "0.15.0"
 eyre = "0.6.12"
-sp1-sdk = "4.1.7"
-sp1-build = "4.1.7"
+sp1-sdk = "5.0.0"
+sp1-build = "5.0.0"
 tokio = "1.38.0"
 tracing = "0.1.37"
 serde = "1.0.203"
@@ -50,6 +50,6 @@ sha2-v0-9-9 = { git = "https://github.com/sp1-patches/RustCrypto-hashes", packag
 sha2-v0-10-8 = { git = "https://github.com/sp1-patches/RustCrypto-hashes", package = "sha2", tag = "patch-sha2-0.10.8-sp1-4.0.0" }
 sha3-v0-10-8 = { git = "https://github.com/sp1-patches/RustCrypto-hashes", package = "sha3", tag = "patch-sha3-0.10.8-sp1-4.0.0" }
 tiny-keccak = { git = "https://github.com/sp1-patches/tiny-keccak", tag = "patch-2.0.2-sp1-4.0.0" }
-bls12_381 = { git = "https://github.com/sp1-patches/bls12_381", tag = "patch-0.8.0-sp1-4.0.0" }
+bls12_381 = { git = "https://github.com/sp1-patches/bls12_381", tag = "patch-0.8.0-sp1-5.0.0-v2" }
 # From upstream: https://github.com/a16z/helios/blob/master/Cargo.toml#L115
 ethereum_hashing = { git = "https://github.com/ncitron/ethereum_hashing", rev = "7ee70944ed4fabe301551da8c447e4f4ae5e6c35" }
