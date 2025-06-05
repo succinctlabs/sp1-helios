@@ -27,6 +27,7 @@ pub struct GenesisArgs {
 #[serde(rename_all = "camelCase")]
 pub struct GenesisConfig {
     pub execution_state_root: String,
+    pub execution_block_number: u64,
     pub genesis_time: u64,
     pub genesis_validators_root: String,
     pub guardian: String,
@@ -125,6 +126,12 @@ pub async fn main() -> Result<()> {
             .state_root()
     );
     genesis_config.head = head;
+    genesis_config.execution_block_number = *helios_client
+        .store
+        .finalized_header
+        .execution()
+        .expect("Execution payload doesn't exist.")
+        .block_number();
     genesis_config.helios_program_vkey = vk.bytes32();
     genesis_config.verifier = format!("0x{:x}", verifier);
 

@@ -21,6 +21,9 @@ contract SP1Helios {
     /// @notice The latest slot the light client has a finalized header for.
     uint256 public head = 0;
 
+    /// @notice The latest execution block number the light client has a finalized execution state root for.
+    uint256 public executionBlockNumber = 0;
+
     /// @notice Maps from a slot to a beacon block header root.
     mapping(uint256 => bytes32) public headers;
 
@@ -66,6 +69,7 @@ contract SP1Helios {
 
     struct InitParams {
         bytes32 executionStateRoot;
+        uint256 executionBlockNumber;
         uint256 genesisTime;
         bytes32 genesisValidatorsRoot;
         address guardian;
@@ -112,22 +116,36 @@ contract SP1Helios {
 
     /// @notice Updates the light client with a new header, execution state root, and sync committee (if changed)
     /// @param proof The proof bytes for the SP1 proof.
-    /// @param publicValues The public commitments from the SP1 proof.
-    function update(bytes calldata proof, bytes calldata publicValues) external {
+    /// @param newHead The slot of the new head.
+    /// @param newHeader The new beacon block header hash.
+    /// @param executionStateRoot The execution state root from the execution payload of the new beacon block.
+    /// @param _executionBlockNumber The execution block number.
+    /// @param syncCommitteeHash The sync committee hash of the current period.
+    /// @param nextSyncCommitteeHash The sync committee hash of the next period.
+    function update(
+        bytes calldata proof,
+        uint256 newHead,
+        bytes32 newHeader,
+        bytes32 executionStateRoot,
+        uint256 _executionBlockNumber,
+        bytes32 syncCommitteeHash,
+        bytes32 nextSyncCommitteeHash
+    ) external {
+        // Fill in the proof outputs with our expected values known by the contract.
+        ProofOutputs memory po = ProofOutputs({
+            prevHeader: headers[head],
+            prevHead: head,
+            prevSyncCommitteeHash: syncCommittees[getSyncCommitteePeriod(head)],
+            newHead: newHead,
+            newHeader: newHeader,
+            executionStateRoot: executionStateRoot,
+            executionBlockNumber: _executionBlockNumber,
+            syncCommitteeHash: syncCommitteeHash,
+            nextSyncCommitteeHash: nextSyncCommitteeHash
+        });
+
         // Verify the proof with the associated public values. This will revert if the proof is invalid.
-        ISP1Verifier(verifier).verifyProof(heliosProgramVkey, publicValues, proof);
-
-        // Read the proof outputs from the public values.
-        ProofOutputs memory po = abi.decode(publicValues, (ProofOutputs));
-
-        // Assert the prevHead matches the head.
-        if (po.prevHead != head) {
-            revert PrevHeadMismatch(po.prevHead, head);
-        }
-        // Assert the prevHeader matches the header for the current head.
-        if (headers[po.prevHead] != po.prevHeader) {
-            revert PrevHeaderMismatch(headers[po.prevHead], po.prevHeader);
-        }
+        ISP1Verifier(verifier).verifyProof(heliosProgramVkey, abi.encode(po), proof);
 
         // The sync committee for the current head should always be set.
         uint256 currentPeriod = getSyncCommitteePeriod(head);
@@ -135,6 +153,7 @@ contract SP1Helios {
         if (currentSyncCommitteeHash == bytes32(0)) {
             revert SyncCommitteeNotSet(currentPeriod);
         }
+
         // The sync committee hash used in the proof should match the current sync committee.
         if (currentSyncCommitteeHash != po.prevSyncCommitteeHash) {
             revert SyncCommitteeStartMismatch(po.prevSyncCommitteeHash, currentSyncCommitteeHash);
@@ -144,27 +163,23 @@ contract SP1Helios {
         if (po.newHead <= head) {
             revert SlotBehindHead(po.newHead);
         }
+
         // Confirm that the new slot is a checkpoint slot.
         // This is useful if the there were ever some delay greater than 30 minutes between updates,
         // as CL nodes typically only store checkpoint slot proofs.
+        //
+        // This condition is actually checked by the proof, but we include it here for clarity.
         if (po.newHead % 32 != 0) {
             revert NonCheckpointSlot(po.newHead);
         }
-        // Confirm that the new header has not been set already. This check is redundant, but
-        // we include it for clarity.
-        if (headers[po.newHead] != bytes32(0)) {
-            revert HeaderRootAlreadySet(po.newHead);
-        }
-        // Confirm that the new state root has not been set already. This check is redundant, but
-        // we include it for clarity.
-        if (executionStateRoots[po.executionBlockNumber] != bytes32(0)) {
-            revert StateRootAlreadySet(po.executionBlockNumber);
-        }
+
+        // Update the new CL head, and execution values.
         head = po.newHead;
         headers[po.newHead] = po.newHeader;
         executionStateRoots[po.executionBlockNumber] = po.executionStateRoot;
-        emit HeadUpdate(po.newHead, po.newHeader);
+        executionBlockNumber = po.executionBlockNumber;
 
+        // Get the new period associated with the new head.
         uint256 newPeriod = getSyncCommitteePeriod(po.newHead);
 
         // Set the sync committee for the new period if it is not set.
@@ -189,6 +204,16 @@ contract SP1Helios {
                 );
             }
         }
+
+        emit HeadUpdate(po.newHead, po.newHeader);
+    }
+
+    function latestExecutionStateRoot() public view returns (bytes32) {
+        return executionStateRoots[executionBlockNumber];
+    }
+
+    function latestExecutionBlockNumber() public view returns (uint256) {
+        return executionBlockNumber;
     }
 
     /// @notice Gets the sync committee period from a slot.
