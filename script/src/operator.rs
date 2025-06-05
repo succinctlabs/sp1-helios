@@ -1,5 +1,8 @@
+#![allow(clippy::too_many_arguments)]
+
 use crate::*;
 use alloy::providers::{Provider, WalletProvider};
+use alloy::sol_types::SolType;
 use alloy::transports::Transport;
 use alloy::{primitives::Address, sol};
 use anyhow::{Context, Result};
@@ -9,6 +12,7 @@ use helios_ethereum::rpc::http_rpc::HttpRpc;
 use helios_ethereum::rpc::ConsensusRpc;
 use log::{error, info};
 use sp1_helios_primitives::types::ProofInputs;
+use sp1_helios_primitives::types::ProofOutputs;
 use sp1_sdk::{EnvProver, ProverClient, SP1ProofWithPublicValues, SP1ProvingKey, SP1Stdin};
 use std::time::Duration;
 
@@ -30,20 +34,19 @@ sol! {
         bytes32 public heliosProgramVkey;
         address public verifier;
 
-        struct ProofOutputs {
-            bytes32 executionStateRoot;
-            bytes32 newHeader;
-            bytes32 nextSyncCommitteeHash;
-            uint256 newHead;
-            bytes32 prevHeader;
-            uint256 prevHead;
-            bytes32 syncCommitteeHash;
-        }
-
         event HeadUpdate(uint256 indexed slot, bytes32 indexed root);
         event SyncCommitteeUpdate(uint256 indexed period, bytes32 indexed root);
 
-        function update(bytes calldata proof, bytes calldata publicValues) external;
+        function update(
+            bytes calldata proof,
+            uint256 newHead,
+            bytes32 newHeader,
+            bytes32 executionStateRoot,
+            uint256 executionBlockNumber,
+            bytes32 syncCommitteeHash,
+            bytes32 nextSyncCommitteeHash
+        ) external;
+
         function getSyncCommitteePeriod(uint256 slot) internal view returns (uint256);
         function getCurrentSlot() internal view returns (uint256);
         function getCurrentEpoch() internal view returns (uint256);
@@ -151,8 +154,18 @@ where
         const NUM_CONFIRMATIONS: u64 = 3;
         const TIMEOUT_SECONDS: u64 = 60;
 
+        let po = ProofOutputs::abi_decode(proof.public_values.as_slice(), true)?;
+
         let receipt = contract
-            .update(proof.bytes().into(), proof.public_values.to_vec().into())
+            .update(
+                proof.bytes().into(),
+                po.newHead,
+                po.newHeader,
+                po.executionStateRoot,
+                po.executionBlockNumber,
+                po.syncCommitteeHash,
+                po.nextSyncCommitteeHash,
+            )
             .nonce(nonce)
             .send()
             .await?
