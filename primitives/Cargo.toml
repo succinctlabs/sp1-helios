@@ -11,3 +11,6 @@ helios-consensus-core = { workspace = true }
 alloy-sol-types = { workspace = true }
 alloy-primitives = { workspace = true }
 alloy-trie = { workspace = true }
+alloy-rlp = { workspace = true }
+hex = { workspace = true }
+anyhow = { workspace = true }

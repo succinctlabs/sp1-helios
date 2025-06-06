@@ -11,7 +11,10 @@ use helios_ethereum::consensus::Inner;
 use helios_ethereum::rpc::http_rpc::HttpRpc;
 use helios_ethereum::rpc::ConsensusRpc;
 use log::{error, info};
-use sp1_helios_primitives::types::{ContractStorage, ProofInputs, ProofOutputs, StorageSlotWithProof};
+use sp1_helios_primitives::types::{
+    ContractStorage, ProofInputs, ProofOutputs, StorageSlotWithProof,
+};
+use sp1_helios_primitives::verify_storage_slot_proofs;
 use sp1_sdk::{EnvProver, ProverClient, SP1ProofWithPublicValues, SP1ProvingKey, SP1Stdin};
 use std::time::Duration;
 
@@ -127,8 +130,16 @@ where
             latest_block, head
         );
 
+        let latest_execution_block_number = client
+            .store
+            .finalized_header
+            .execution()
+            .expect("Failed to get (finalized) execution header from store")
+            .block_number();
+
         let contract_storage = if let Some(rx) = &self.storage_slots_to_fetch {
-            self.get_storage_slots(rx.borrow().as_slice()).await?
+            self.get_storage_slots(rx.borrow().as_slice(), *latest_execution_block_number)
+                .await?
         } else {
             vec![]
         };
@@ -210,11 +221,27 @@ where
     async fn get_storage_slots(
         &self,
         config: &[StorageSlotConfig],
+        block_number: u64,
     ) -> Result<Vec<ContractStorage>> {
-        let futs = config.iter().map(|c| async move {
-            let proof = self.provider.get_proof(c.contract, c.keys.clone()).await?;
+        let Some(block) = self
+            .provider
+            .get_block(
+                block_number.into(),
+                alloy::rpc::types::BlockTransactionsKind::Hashes,
+            )
+            .await?
+        else {
+            anyhow::bail!("Failed to get block {block_number} from provider, this was expected to valid since the store claimed to have this block finalized.");
+        };
 
-            Result::<_, anyhow::Error>::Ok(ContractStorage {
+        let futs = config.iter().map(|c| async {
+            let proof = self
+                .provider
+                .get_proof(c.contract, c.keys.clone())
+                .number(block_number)
+                .await?;
+
+            let contract_storage = ContractStorage {
                 address: proof.address,
                 value: alloy_trie::TrieAccount {
                     nonce: proof.nonce,
@@ -232,7 +259,12 @@ where
                         mpt_proof: p.proof,
                     })
                     .collect(),
-            })
+            };
+
+            verify_storage_slot_proofs(block.header.state_root, &contract_storage)
+                .context(format!("Preflight storage slot proofs failed to verify for contract {:?}", c.contract))?;
+
+            Result::<_, anyhow::Error>::Ok(contract_storage)
         });
 
         futures::future::try_join_all(futs).await
