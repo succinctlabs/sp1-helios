@@ -2,7 +2,7 @@
 pragma solidity ^0.8.22;
 
 import "forge-std/Script.sol";
-import {SP1Helios} from "../src/SP1Helios.sol";
+import {SP1Helios, InitParams} from "../src/SP1Helios.sol";
 import {SP1MockVerifier} from "@sp1-contracts/SP1MockVerifier.sol";
 import {ISP1Verifier} from "@sp1-contracts/ISP1Verifier.sol";
 import {Vm} from "forge-std/Vm.sol";
@@ -18,7 +18,7 @@ contract DeployScript is Script {
         // Update the rollup config to match the current chain. If the starting block number is 0, the latest block number and starting output root will be fetched.
         updateGenesisConfig();
 
-        SP1Helios.InitParams memory params = readGenesisConfig();
+        InitParams memory params = readGenesisConfig();
 
         // If the verifier address is set to 0, set it to the address of the mock verifier.
         if (params.verifier == address(0)) {
@@ -31,12 +31,12 @@ contract DeployScript is Script {
         return address(helios);
     }
 
-    function readGenesisConfig() public returns (SP1Helios.InitParams memory) {
+    function readGenesisConfig() public returns (InitParams memory) {
         string memory root = vm.projectRoot();
         string memory path = string.concat(root, "/", "genesis.json");
         string memory json = vm.readFile(path);
         bytes memory data = vm.parseJson(json);
-        return abi.decode(data, (SP1Helios.InitParams));
+        return abi.decode(data, (InitParams));
     }
 
     function updateGenesisConfig() public {

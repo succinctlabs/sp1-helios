@@ -14,3 +14,5 @@ alloy-trie = { workspace = true }
 alloy-rlp = { workspace = true }
 hex = { workspace = true }
 anyhow = { workspace = true }
+tree_hash = { workspace = true }
+alloy-contract = { workspace = true } 
