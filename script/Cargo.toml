@@ -30,12 +30,14 @@ clap = { workspace = true }
 log = { workspace = true }
 env_logger = { workspace = true }
 alloy-primitives = { workspace = true }
+alloy-trie = { workspace = true }
 alloy = { workspace = true }
 anyhow = { workspace = true }
 cargo_metadata = { workspace = true }
 reqwest = { workspace = true }
 tree_hash = { workspace = true }
 serde_json = { workspace = true }
+futures = "0.3.31"
 
 [build-dependencies]
 sp1-build = { workspace = true }

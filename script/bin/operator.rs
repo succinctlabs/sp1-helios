@@ -40,7 +40,7 @@ async fn main() {
         .wallet(wallet)
         .on_http(rpc_url);
 
-    let operator = SP1HeliosOperator::new(provider, contract_address).await;
+    let operator = SP1HeliosOperator::new(provider, contract_address, None).await;
 
     // Run the operator indefinitely.
     operator.run(loop_delay_mins).await

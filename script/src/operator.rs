@@ -11,10 +11,11 @@ use helios_ethereum::consensus::Inner;
 use helios_ethereum::rpc::http_rpc::HttpRpc;
 use helios_ethereum::rpc::ConsensusRpc;
 use log::{error, info};
-use sp1_helios_primitives::types::ProofInputs;
-use sp1_helios_primitives::types::ProofOutputs;
+use sp1_helios_primitives::types::{ContractStorage, ProofInputs, ProofOutputs, StorageSlotWithProof};
 use sp1_sdk::{EnvProver, ProverClient, SP1ProofWithPublicValues, SP1ProvingKey, SP1Stdin};
 use std::time::Duration;
+
+use tokio::sync::watch;
 
 const ELF: &[u8] = include_bytes!("../../elf/sp1-helios-elf");
 
@@ -58,7 +59,13 @@ pub struct SP1HeliosOperator<P, T> {
     provider: P,
     pk: Arc<SP1ProvingKey>,
     contract_address: Address,
+    storage_slots_to_fetch: Option<watch::Receiver<Vec<StorageSlotConfig>>>,
     _marker: std::marker::PhantomData<T>,
+}
+
+pub struct StorageSlotConfig {
+    pub contract: Address,
+    pub keys: Vec<B256>,
 }
 
 impl<T, P> SP1HeliosOperator<P, T>
@@ -66,7 +73,11 @@ where
     T: Transport + Clone,
     P: Provider<T> + WalletProvider,
 {
-    pub async fn new(provider: P, contract_address: Address) -> Self {
+    pub async fn new(
+        provider: P,
+        contract_address: Address,
+        storage_slot_config: Option<watch::Receiver<Vec<StorageSlotConfig>>>,
+    ) -> Self {
         let client = ProverClient::from_env();
         let (pk, _) = client.setup(ELF);
 
@@ -75,6 +86,7 @@ where
             provider,
             pk: Arc::new(pk),
             contract_address,
+            storage_slots_to_fetch: storage_slot_config,
             _marker: std::marker::PhantomData,
         }
     }
@@ -115,6 +127,12 @@ where
             latest_block, head
         );
 
+        let contract_storage = if let Some(rx) = &self.storage_slots_to_fetch {
+            self.get_storage_slots(rx.borrow().as_slice()).await?
+        } else {
+            vec![]
+        };
+
         // Create program inputs
         let expected_current_slot = client.expected_current_slot();
         let inputs = ProofInputs {
@@ -124,6 +142,7 @@ where
             store: client.store.clone(),
             genesis_root: client.config.chain.genesis_root,
             forks: client.config.forks.clone(),
+            contract_storage,
         };
         let encoded_proof_inputs = serde_cbor::to_vec(&inputs)?;
         stdin.write_slice(&encoded_proof_inputs);
@@ -188,6 +207,43 @@ where
         Ok(())
     }
 
+    async fn get_storage_slots(
+        &self,
+        config: &[StorageSlotConfig],
+    ) -> Result<Vec<ContractStorage>> {
+        let futs = config.iter().map(|c| async move {
+            let proof = self.provider.get_proof(c.contract, c.keys.clone()).await?;
+
+            Result::<_, anyhow::Error>::Ok(ContractStorage {
+                address: proof.address,
+                value: alloy_trie::TrieAccount {
+                    nonce: proof.nonce,
+                    balance: proof.balance,
+                    storage_root: proof.storage_hash,
+                    code_hash: proof.code_hash,
+                },
+                mpt_proof: proof.account_proof,
+                storage_slots: proof
+                    .storage_proof
+                    .into_iter()
+                    .map(|p| StorageSlotWithProof {
+                        key: p.key.as_b256(),
+                        value: p.value,
+                        mpt_proof: p.proof,
+                    })
+                    .collect(),
+            })
+        });
+
+        futures::future::try_join_all(futs).await
+    }
+}
+
+impl<T, P> SP1HeliosOperator<P, T>
+where
+    P: Provider<T> + WalletProvider,
+    T: Transport + Clone,
+{
     pub async fn run_once(&self) -> Result<()> {
         let contract = SP1Helios::new(self.contract_address, &self.provider);
 
