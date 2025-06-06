@@ -6067,6 +6067,7 @@ dependencies = [
 name = "sp1-helios-primitives"
 version = "0.1.0"
 dependencies = [
+ "alloy-contract",
  "alloy-primitives 0.8.21",
  "alloy-rlp",
  "alloy-sol-types",
@@ -6075,6 +6076,7 @@ dependencies = [
  "helios-consensus-core",
  "hex",
  "serde",
+ "tree_hash",
 ]
 
 [[package]]

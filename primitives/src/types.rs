@@ -1,3 +1,5 @@
+#![allow(clippy::too_many_arguments)]
+
 use alloy_primitives::{B256, Address, U256, Bytes};
 use alloy_sol_types::sol;
 use alloy_trie::TrieAccount;
@@ -72,5 +74,39 @@ sol! {
         bytes32 key;
         bytes32 value;
         address contractAddress;
+    }
+
+    #[allow(missing_docs)]
+    #[sol(rpc)]
+    contract SP1Helios {
+        bytes32 public immutable GENESIS_VALIDATORS_ROOT;
+        uint256 public immutable GENESIS_TIME;
+        uint256 public immutable SECONDS_PER_SLOT;
+        uint256 public immutable SLOTS_PER_PERIOD;
+        uint32 public immutable SOURCE_CHAIN_ID;
+        uint256 public head;
+        mapping(uint256 => bytes32) public syncCommittees;
+        mapping(uint256 => bytes32) public executionStateRoots;
+        mapping(uint256 => bytes32) public headers;
+        bytes32 public heliosProgramVkey;
+        address public verifier;
+
+        event HeadUpdate(uint256 indexed slot, bytes32 indexed root);
+        event SyncCommitteeUpdate(uint256 indexed period, bytes32 indexed root);
+
+        function update(
+            bytes calldata proof,
+            uint256 newHead,
+            bytes32 newHeader,
+            bytes32 executionStateRoot,
+            uint256 _executionBlockNumber,
+            bytes32 syncCommitteeHash,
+            bytes32 nextSyncCommitteeHash,
+            StorageSlot[] memory _storageSlots
+        ) external;
+
+        function getSyncCommitteePeriod(uint256 slot) internal view returns (uint256);
+        function getCurrentSlot() internal view returns (uint256);
+        function getCurrentEpoch() internal view returns (uint256);
     }
 }

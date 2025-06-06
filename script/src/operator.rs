@@ -1,10 +1,8 @@
-#![allow(clippy::too_many_arguments)]
-
 use crate::*;
 use alloy::providers::{Provider, WalletProvider};
 use alloy::sol_types::SolType;
 use alloy::transports::Transport;
-use alloy::{primitives::Address, sol};
+use alloy::primitives::Address;
 use anyhow::{Context, Result};
 use helios_consensus_core::consensus_spec::MainnetConsensusSpec;
 use helios_ethereum::consensus::Inner;
@@ -12,7 +10,7 @@ use helios_ethereum::rpc::http_rpc::HttpRpc;
 use helios_ethereum::rpc::ConsensusRpc;
 use log::{error, info};
 use sp1_helios_primitives::types::{
-    ContractStorage, ProofInputs, ProofOutputs, StorageSlotWithProof,
+    ContractStorage, ProofInputs, ProofOutputs, StorageSlotWithProof, SP1Helios,
 };
 use sp1_helios_primitives::verify_storage_slot_proofs;
 use sp1_sdk::{EnvProver, ProverClient, SP1ProofWithPublicValues, SP1ProvingKey, SP1Stdin};
@@ -21,41 +19,6 @@ use std::time::Duration;
 use tokio::sync::watch;
 
 const ELF: &[u8] = include_bytes!("../../elf/sp1-helios-elf");
-
-sol! {
-    #[allow(missing_docs)]
-    #[sol(rpc)]
-    contract SP1Helios {
-        bytes32 public immutable GENESIS_VALIDATORS_ROOT;
-        uint256 public immutable GENESIS_TIME;
-        uint256 public immutable SECONDS_PER_SLOT;
-        uint256 public immutable SLOTS_PER_PERIOD;
-        uint32 public immutable SOURCE_CHAIN_ID;
-        uint256 public head;
-        mapping(uint256 => bytes32) public syncCommittees;
-        mapping(uint256 => bytes32) public executionStateRoots;
-        mapping(uint256 => bytes32) public headers;
-        bytes32 public heliosProgramVkey;
-        address public verifier;
-
-        event HeadUpdate(uint256 indexed slot, bytes32 indexed root);
-        event SyncCommitteeUpdate(uint256 indexed period, bytes32 indexed root);
-
-        function update(
-            bytes calldata proof,
-            uint256 newHead,
-            bytes32 newHeader,
-            bytes32 executionStateRoot,
-            uint256 executionBlockNumber,
-            bytes32 syncCommitteeHash,
-            bytes32 nextSyncCommitteeHash
-        ) external;
-
-        function getSyncCommitteePeriod(uint256 slot) internal view returns (uint256);
-        function getCurrentSlot() internal view returns (uint256);
-        function getCurrentEpoch() internal view returns (uint256);
-    }
-}
 
 pub struct SP1HeliosOperator<P, T> {
     client: Arc<EnvProver>,
@@ -163,7 +126,7 @@ where
             let client = self.client.clone();
             let pk = self.pk.clone();
 
-            move || client.prove(&pk, &stdin).groth16().run()
+            move || client.prove(&pk, &stdin).plonk().run()
         })
         .await??;
 
@@ -186,7 +149,7 @@ where
 
         let po = ProofOutputs::abi_decode(proof.public_values.as_slice(), true)?;
 
-        let receipt = contract
+        let tx = contract
             .update(
                 proof.bytes().into(),
                 po.newHead,
@@ -195,7 +158,12 @@ where
                 po.executionBlockNumber,
                 po.syncCommitteeHash,
                 po.nextSyncCommitteeHash,
-            )
+                po.storageSlots,
+            );
+
+        println!("calldata: {:?}", tx.calldata());
+
+        let receipt = tx
             .nonce(nonce)
             .send()
             .await?
