@@ -1,5 +1,6 @@
-use alloy_primitives::B256;
+use alloy_primitives::{B256, Address, U256, Bytes};
 use alloy_sol_types::sol;
+use alloy_trie::TrieAccount;
 use helios_consensus_core::consensus_spec::MainnetConsensusSpec;
 use helios_consensus_core::types::Forks;
 use helios_consensus_core::types::{FinalityUpdate, LightClientStore, Update};
@@ -13,6 +14,7 @@ pub struct ProofInputs {
     pub store: LightClientStore<MainnetConsensusSpec>,
     pub genesis_root: B256,
     pub forks: Forks,
+    pub contract_storage: Vec<ContractStorage>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
@@ -22,6 +24,24 @@ pub struct ExecutionStateProof {
     #[serde(rename = "executionStateBranch")]
     pub execution_state_branch: Vec<B256>,
     pub gindex: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct StorageSlotWithProof {
+    pub key: B256,
+    pub value: U256,
+    /// The proof that this storage slot is correct
+    pub mpt_proof: Vec<Bytes>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ContractStorage {
+    pub address: Address,
+    pub value: TrieAccount,
+    /// The proof that this contracts storage root is correct
+    pub mpt_proof: Vec<Bytes>,
+    /// The storage slots that we want to prove
+    pub storage_slots: Vec<StorageSlotWithProof>,
 }
 
 sol! {
@@ -44,5 +64,13 @@ sol! {
         bytes32 syncCommitteeHash;
         /// The sync committee hash of the next period.
         bytes32 nextSyncCommitteeHash;
+        /// Attested storage slots for the given block.
+        StorageSlot[] storageSlots;
+    }
+
+    struct StorageSlot {
+        bytes32 key;
+        bytes32 value;
+        address contractAddress;
     }
 }

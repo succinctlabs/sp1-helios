@@ -34,6 +34,11 @@ serde_cbor = "0.11.2"
 hex = "0.4.3"
 serde_json = "1.0.125"
 alloy-sol-types = "0.8.15"
+alloy-trie = "0.7.9"
+alloy-rlp = { version = "0.3.9", default-features = false, features = [
+    "derive",
+    "arrayvec",
+] }
 clap = "4.5.9"
 log = "0.4.22"
 env_logger = "0.11.3"

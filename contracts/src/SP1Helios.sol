@@ -3,6 +3,53 @@ pragma solidity ^0.8.22;
 
 import {ISP1Verifier} from "@sp1-contracts/ISP1Verifier.sol";
 
+/// @notice Represents a storage slot in an Ethereum smart contract
+struct StorageSlot {
+    bytes32 key;
+    bytes32 value;
+    address contractAddress;
+}
+
+struct ProofOutputs {
+    /// The previous beacon block header hash.
+    bytes32 prevHeader;
+    /// The slot of the previous head.
+    uint256 prevHead;
+    /// The anchor sync committee hash which was used to verify the proof.
+    bytes32 prevSyncCommitteeHash;
+    /// The slot of the new head.
+    uint256 newHead;
+    /// The new beacon block header hash.
+    bytes32 newHeader;
+    /// The execution state root from the execution payload of the new beacon block.
+    bytes32 executionStateRoot;
+    /// The execution block number.
+    uint256 executionBlockNumber;
+    /// The sync committee hash of the current period.
+    bytes32 syncCommitteeHash;
+    /// The sync committee hash of the next period.
+    bytes32 nextSyncCommitteeHash;
+    /// Attested storage slots for the given block.
+    StorageSlot[] storageSlots;
+}
+
+struct InitParams {
+    bytes32 executionStateRoot;
+    uint256 executionBlockNumber;
+    uint256 genesisTime;
+    bytes32 genesisValidatorsRoot;
+    address guardian;
+    uint256 head;
+    bytes32 header;
+    bytes32 heliosProgramVkey;
+    uint256 secondsPerSlot;
+    uint256 slotsPerEpoch;
+    uint256 slotsPerPeriod;
+    uint256 sourceChainId;
+    bytes32 syncCommitteeHash;
+    address verifier;
+}
+
 /// @title SP1Helios
 /// @notice An Ethereum beacon chain light client, built with SP1 and Helios.
 contract SP1Helios {
@@ -33,6 +80,10 @@ contract SP1Helios {
     /// @notice Maps from a period to the hash for the sync committee.
     mapping(uint256 => bytes32) public syncCommittees;
 
+    /// @notice A mapping from keccak256([abi.encode(blockNumber) || abi.encode(contractAddress) || abi.encode(key)]) 
+    /// @notice to the storage slot value.
+    mapping(bytes32 => bytes32) public storageSlots;
+
     /// @notice The verification key for the SP1 Helios program.
     bytes32 public heliosProgramVkey;
 
@@ -45,44 +96,6 @@ contract SP1Helios {
     /// @notice Semantic version.
     /// @custom:semver v1.1.0
     string public constant version = "v1.1.0";
-
-    struct ProofOutputs {
-        /// The previous beacon block header hash.
-        bytes32 prevHeader;
-        /// The slot of the previous head.
-        uint256 prevHead;
-        /// The anchor sync committee hash which was used to verify the proof.
-        bytes32 prevSyncCommitteeHash;
-        /// The slot of the new head.
-        uint256 newHead;
-        /// The new beacon block header hash.
-        bytes32 newHeader;
-        /// The execution state root from the execution payload of the new beacon block.
-        bytes32 executionStateRoot;
-        /// The execution block number.
-        uint256 executionBlockNumber;
-        /// The sync committee hash of the current period.
-        bytes32 syncCommitteeHash;
-        /// The sync committee hash of the next period.
-        bytes32 nextSyncCommitteeHash;
-    }
-
-    struct InitParams {
-        bytes32 executionStateRoot;
-        uint256 executionBlockNumber;
-        uint256 genesisTime;
-        bytes32 genesisValidatorsRoot;
-        address guardian;
-        uint256 head;
-        bytes32 header;
-        bytes32 heliosProgramVkey;
-        uint256 secondsPerSlot;
-        uint256 slotsPerEpoch;
-        uint256 slotsPerPeriod;
-        uint256 sourceChainId;
-        bytes32 syncCommitteeHash;
-        address verifier;
-    }
 
     event HeadUpdate(uint256 indexed slot, bytes32 indexed root);
     event SyncCommitteeUpdate(uint256 indexed period, bytes32 indexed root);
@@ -129,7 +142,8 @@ contract SP1Helios {
         bytes32 executionStateRoot,
         uint256 _executionBlockNumber,
         bytes32 syncCommitteeHash,
-        bytes32 nextSyncCommitteeHash
+        bytes32 nextSyncCommitteeHash,
+        StorageSlot[] memory _storageSlots
     ) external {
         // Fill in the proof outputs with our expected values known by the contract.
         ProofOutputs memory po = ProofOutputs({
@@ -141,7 +155,8 @@ contract SP1Helios {
             executionStateRoot: executionStateRoot,
             executionBlockNumber: _executionBlockNumber,
             syncCommitteeHash: syncCommitteeHash,
-            nextSyncCommitteeHash: nextSyncCommitteeHash
+            nextSyncCommitteeHash: nextSyncCommitteeHash,
+            storageSlots: _storageSlots
         });
 
         // Verify the proof with the associated public values. This will revert if the proof is invalid.
@@ -205,6 +220,12 @@ contract SP1Helios {
             }
         }
 
+        // Set all the storage slots.
+        for (uint256 i = 0; i < po.storageSlots.length; i++) {
+            bytes32 key = computeStorageSlotKey(po.executionBlockNumber, po.storageSlots[i].contractAddress, po.storageSlots[i].key);
+            storageSlots[key] = po.storageSlots[i].value;
+        }
+
         emit HeadUpdate(po.newHead, po.newHeader);
     }
 
@@ -226,8 +247,18 @@ contract SP1Helios {
         return head / SLOTS_PER_EPOCH;
     }
 
+    /// @notice Gets the storage slot for a given block number, contract address, and key.
+    function getStorageSlot(uint256 blockNumber, address contractAddress, bytes32 key) external view returns (bytes32) {
+        return storageSlots[computeStorageSlotKey(blockNumber, contractAddress, key)];
+    }
+
     /// @notice Updates the Helios program verification key.
     function updateHeliosProgramVkey(bytes32 newVkey) external onlyGuardian {
         heliosProgramVkey = newVkey;
+    }
+
+    /// @notice Computes the corresponding key for a storage slot.
+    function computeStorageSlotKey(uint256 blockNumber, address contractAddress, bytes32 key) internal pure returns (bytes32) {
+        return keccak256(abi.encode(blockNumber, contractAddress, key));
     }
 }
