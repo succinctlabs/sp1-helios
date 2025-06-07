@@ -1,6 +1,6 @@
 #![allow(clippy::too_many_arguments)]
 
-use alloy_primitives::{B256, Address, U256, Bytes};
+use alloy_primitives::{Address, Bytes, B256, U256};
 use alloy_sol_types::sol;
 use alloy_trie::TrieAccount;
 use helios_consensus_core::consensus_spec::MainnetConsensusSpec;

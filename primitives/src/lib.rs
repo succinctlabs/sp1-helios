@@ -1,13 +1,13 @@
+use crate::types::{ContractStorage, StorageSlot};
 use alloy_primitives::{keccak256, Bytes, B256};
 use alloy_rlp::Encodable;
 use alloy_trie::{proof, Nibbles};
-use crate::types::{ContractStorage, StorageSlot};
 use anyhow::Result;
 
-pub mod types;  
+pub mod types;
 
 /// Verify the storage slot proofs for a given contract against the execution state root.
-/// 
+///
 /// This function will:
 /// - Verify the contracts [`alloy_trie::TrieAccount`] is correct and included in the execution state root.
 /// - Verify each storage slot is correct and included in the execution state root.
