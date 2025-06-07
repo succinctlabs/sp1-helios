@@ -1,8 +1,8 @@
 use crate::*;
+use alloy::primitives::Address;
 use alloy::providers::{Provider, WalletProvider};
 use alloy::sol_types::SolType;
 use alloy::transports::Transport;
-use alloy::primitives::Address;
 use anyhow::{Context, Result};
 use helios_consensus_core::consensus_spec::MainnetConsensusSpec;
 use helios_ethereum::consensus::Inner;
@@ -10,7 +10,7 @@ use helios_ethereum::rpc::http_rpc::HttpRpc;
 use helios_ethereum::rpc::ConsensusRpc;
 use log::{error, info};
 use sp1_helios_primitives::types::{
-    ContractStorage, ProofInputs, ProofOutputs, StorageSlotWithProof, SP1Helios,
+    ContractStorage, ProofInputs, ProofOutputs, SP1Helios, StorageSlotWithProof,
 };
 use sp1_helios_primitives::verify_storage_slot_proofs;
 use sp1_sdk::{EnvProver, ProverClient, SP1ProofWithPublicValues, SP1ProvingKey, SP1Stdin};
@@ -149,17 +149,16 @@ where
 
         let po = ProofOutputs::abi_decode(proof.public_values.as_slice(), true)?;
 
-        let tx = contract
-            .update(
-                proof.bytes().into(),
-                po.newHead,
-                po.newHeader,
-                po.executionStateRoot,
-                po.executionBlockNumber,
-                po.syncCommitteeHash,
-                po.nextSyncCommitteeHash,
-                po.storageSlots,
-            );
+        let tx = contract.update(
+            proof.bytes().into(),
+            po.newHead,
+            po.newHeader,
+            po.executionStateRoot,
+            po.executionBlockNumber,
+            po.syncCommitteeHash,
+            po.nextSyncCommitteeHash,
+            po.storageSlots,
+        );
 
         println!("calldata: {:?}", tx.calldata());
 
@@ -229,8 +228,12 @@ where
                     .collect(),
             };
 
-            verify_storage_slot_proofs(block.header.state_root, &contract_storage)
-                .context(format!("Preflight storage slot proofs failed to verify for contract {:?}", c.contract))?;
+            verify_storage_slot_proofs(block.header.state_root, &contract_storage).context(
+                format!(
+                    "Preflight storage slot proofs failed to verify for contract {:?}",
+                    c.contract
+                ),
+            )?;
 
             Result::<_, anyhow::Error>::Ok(contract_storage)
         });
