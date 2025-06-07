@@ -80,7 +80,7 @@ contract SP1Helios {
     /// @notice Maps from a period to the hash for the sync committee.
     mapping(uint256 => bytes32) public syncCommittees;
 
-    /// @notice A mapping from keccak256([abi.encode(blockNumber) || abi.encode(contractAddress) || abi.encode(key)]) 
+    /// @notice A mapping from keccak256([abi.encode(blockNumber) || abi.encode(contractAddress) || abi.encode(key)])
     /// @notice to the storage slot value.
     mapping(bytes32 => bytes32) public storageSlots;
 
@@ -188,11 +188,13 @@ contract SP1Helios {
             revert NonCheckpointSlot(po.newHead);
         }
 
-        // Update the new CL head, and execution values.
+        // Update the new CL information.
         head = po.newHead;
         headers[po.newHead] = po.newHeader;
-        executionStateRoots[po.executionBlockNumber] = po.executionStateRoot;
+
+        // Update the EL information.
         executionBlockNumber = po.executionBlockNumber;
+        executionStateRoots[po.executionBlockNumber] = po.executionStateRoot;
 
         // Get the new period associated with the new head.
         uint256 newPeriod = getSyncCommitteePeriod(po.newHead);
@@ -222,7 +224,9 @@ contract SP1Helios {
 
         // Set all the storage slots.
         for (uint256 i = 0; i < po.storageSlots.length; i++) {
-            bytes32 key = computeStorageSlotKey(po.executionBlockNumber, po.storageSlots[i].contractAddress, po.storageSlots[i].key);
+            bytes32 key = computeStorageSlotKey(
+                po.executionBlockNumber, po.storageSlots[i].contractAddress, po.storageSlots[i].key
+            );
             storageSlots[key] = po.storageSlots[i].value;
         }
 
@@ -248,7 +252,11 @@ contract SP1Helios {
     }
 
     /// @notice Gets the storage slot for a given block number, contract address, and key.
-    function getStorageSlot(uint256 blockNumber, address contractAddress, bytes32 key) external view returns (bytes32) {
+    function getStorageSlot(uint256 blockNumber, address contractAddress, bytes32 key)
+        external
+        view
+        returns (bytes32)
+    {
         return storageSlots[computeStorageSlotKey(blockNumber, contractAddress, key)];
     }
 
@@ -258,7 +266,11 @@ contract SP1Helios {
     }
 
     /// @notice Computes the corresponding key for a storage slot.
-    function computeStorageSlotKey(uint256 blockNumber, address contractAddress, bytes32 key) internal pure returns (bytes32) {
+    function computeStorageSlotKey(uint256 blockNumber, address contractAddress, bytes32 key)
+        internal
+        pure
+        returns (bytes32)
+    {
         return keccak256(abi.encode(blockNumber, contractAddress, key));
     }
 }
