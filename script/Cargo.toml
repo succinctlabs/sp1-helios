@@ -27,8 +27,6 @@ sp1-helios-primitives = { workspace = true }
 serde = { workspace = true }
 serde_cbor = { workspace = true }
 clap = { workspace = true }
-log = { workspace = true }
-env_logger = { workspace = true }
 alloy-primitives = { workspace = true }
 alloy-trie = { workspace = true }
 alloy = { workspace = true }
@@ -38,6 +36,8 @@ reqwest = { workspace = true }
 tree_hash = { workspace = true }
 serde_json = { workspace = true }
 futures = "0.3.31"
+tracing.workspace = true
+tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 
 [build-dependencies]
 sp1-build = { workspace = true }

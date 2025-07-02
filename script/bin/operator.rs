@@ -7,10 +7,9 @@ use std::env;
 use std::time::Duration;
 #[tokio::main]
 async fn main() {
-    // todo!(nhtyy): replace with tracing
     env::set_var("RUST_LOG", "info");
-    dotenv::dotenv().ok();
-    env_logger::init();
+    // todo!(nhtyy): replace with tracing
+    tracing_subscriber::fmt::init();
 
     let loop_delay_mins = env::var("LOOP_DELAY_MINS")
         .unwrap_or("5".to_string())
@@ -40,8 +39,12 @@ async fn main() {
         .wallet(wallet)
         .on_http(rpc_url);
 
-    let operator = SP1HeliosOperator::new(provider, contract_address, None).await;
+    let operator = SP1HeliosOperator::new(provider, contract_address).await;
 
-    // Run the operator indefinitely.
-    operator.run(loop_delay_mins).await
+    // Run the operator indefinitely, spawns a background task
+    let handle = operator.run(loop_delay_mins);
+
+    tokio::signal::ctrl_c().await.unwrap();
+
+    handle.shutdown().await;
 }

@@ -17,6 +17,7 @@ use tokio::sync::{mpsc::channel, watch};
 use tree_hash::TreeHash;
 
 pub mod operator;
+pub mod handle;
 
 pub const MAX_REQUEST_LIGHT_CLIENT_UPDATES: u8 = 128;
 

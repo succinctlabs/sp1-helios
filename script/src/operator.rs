@@ -1,5 +1,6 @@
-use crate::*;
-use alloy::primitives::Address;
+use crate::{get_client, get_updates};
+use crate::handle::{OperatorHandle, StorageProofRequest};
+use alloy::primitives::{Address, B256};
 use alloy::providers::{Provider, WalletProvider};
 use alloy::sol_types::SolType;
 use alloy::transports::Transport;
@@ -8,15 +9,18 @@ use helios_consensus_core::consensus_spec::MainnetConsensusSpec;
 use helios_ethereum::consensus::Inner;
 use helios_ethereum::rpc::http_rpc::HttpRpc;
 use helios_ethereum::rpc::ConsensusRpc;
-use log::{error, info};
 use sp1_helios_primitives::types::{
     ContractStorage, ProofInputs, ProofOutputs, SP1Helios, StorageSlotWithProof,
 };
 use sp1_helios_primitives::verify_storage_slot_proofs;
 use sp1_sdk::{EnvProver, ProverClient, SP1ProofWithPublicValues, SP1ProvingKey, SP1Stdin};
 use std::time::Duration;
+use tracing::{error, info};
+use std::sync::Arc;
+use crate::handle::ContractKeys;
 
-use tokio::sync::watch;
+use std::collections::{HashMap, HashSet};
+use tokio::sync::{mpsc, oneshot, Mutex};
 
 const ELF: &[u8] = include_bytes!("../../elf/sp1-helios-elf");
 
@@ -25,13 +29,8 @@ pub struct SP1HeliosOperator<P, T> {
     provider: P,
     pk: Arc<SP1ProvingKey>,
     contract_address: Address,
-    storage_slots_to_fetch: Option<watch::Receiver<Vec<StorageSlotConfig>>>,
-    _marker: std::marker::PhantomData<T>,
-}
-
-pub struct StorageSlotConfig {
-    pub contract: Address,
-    pub keys: Vec<B256>,
+    storage_slots_to_fetch: Arc<Mutex<HashMap<Address, HashSet<B256>>>>,
+    _transport: std::marker::PhantomData<T>,
 }
 
 impl<T, P> SP1HeliosOperator<P, T>
@@ -39,24 +38,6 @@ where
     T: Transport + Clone,
     P: Provider<T> + WalletProvider,
 {
-    pub async fn new(
-        provider: P,
-        contract_address: Address,
-        storage_slot_config: Option<watch::Receiver<Vec<StorageSlotConfig>>>,
-    ) -> Self {
-        let client = ProverClient::from_env();
-        let (pk, _) = client.setup(ELF);
-
-        Self {
-            client: Arc::new(client),
-            provider,
-            pk: Arc::new(pk),
-            contract_address,
-            storage_slots_to_fetch: storage_slot_config,
-            _marker: std::marker::PhantomData,
-        }
-    }
-
     /// Fetch values and generate an 'update' proof for the SP1 Helios contract.
     async fn request_update(
         &self,
@@ -100,12 +81,10 @@ where
             .expect("Failed to get (finalized) execution header from store")
             .block_number();
 
-        let contract_storage = if let Some(rx) = &self.storage_slots_to_fetch {
-            self.get_storage_slots(rx.borrow().as_slice(), *latest_execution_block_number)
-                .await?
-        } else {
-            vec![]
-        };
+        // Fetch the contract storage, if any.
+        let contract_storage = self
+            .get_storage_slots(*latest_execution_block_number)
+            .await?;
 
         // Create program inputs
         let expected_current_slot = client.expected_current_slot();
@@ -185,11 +164,12 @@ where
         Ok(())
     }
 
-    async fn get_storage_slots(
-        &self,
-        config: &[StorageSlotConfig],
-        block_number: u64,
-    ) -> Result<Vec<ContractStorage>> {
+    async fn get_storage_slots(&self, block_number: u64) -> Result<Vec<ContractStorage>> {
+        let storage_slots_to_fetch = self.storage_slots_to_fetch.lock().await;
+        if storage_slots_to_fetch.is_empty() {
+            return Ok(vec![]);
+        }
+
         let Some(block) = self
             .provider
             .get_block(
@@ -201,44 +181,99 @@ where
             anyhow::bail!("Failed to get block {block_number} from provider, this was expected to valid since the store claimed to have this block finalized.");
         };
 
-        let futs = config.iter().map(|c| async {
-            let proof = self
-                .provider
-                .get_proof(c.contract, c.keys.clone())
-                .number(block_number)
-                .await?;
-
-            let contract_storage = ContractStorage {
-                address: proof.address,
-                value: alloy_trie::TrieAccount {
-                    nonce: proof.nonce,
-                    balance: proof.balance,
-                    storage_root: proof.storage_hash,
-                    code_hash: proof.code_hash,
-                },
-                mpt_proof: proof.account_proof,
-                storage_slots: proof
-                    .storage_proof
-                    .into_iter()
-                    .map(|p| StorageSlotWithProof {
-                        key: p.key.as_b256(),
-                        value: p.value,
-                        mpt_proof: p.proof,
-                    })
-                    .collect(),
-            };
-
-            verify_storage_slot_proofs(block.header.state_root, &contract_storage).context(
-                format!(
-                    "Preflight storage slot proofs failed to verify for contract {:?}",
-                    c.contract
-                ),
-            )?;
-
-            Result::<_, anyhow::Error>::Ok(contract_storage)
+        let futs = storage_slots_to_fetch.iter().map(|(contract, keys)| {
+            self.get_storage_slot_proof_for_contract(
+                block.header.state_root,
+                block_number,
+                *contract,
+                keys.iter().copied().collect(),
+            )
         });
 
         futures::future::try_join_all(futs).await
+    }
+
+    async fn prove_storage_slot(
+        &self,
+        block_number: u64,
+        contract_keys: Vec<ContractKeys>,
+    ) -> Result<SP1ProofWithPublicValues> {
+        let Some(block) = self
+            .provider
+            .get_block(
+                block_number.into(),
+                alloy::rpc::types::BlockTransactionsKind::Hashes,
+            )
+            .await?
+        else {
+            anyhow::bail!("Failed to get block {block_number} from provider, this was expected to valid since the store claimed to have this block finalized.");
+        };
+
+        let proofs = contract_keys.iter().map(|keys| {
+            self.get_storage_slot_proof_for_contract(
+                block.header.state_root,
+                block_number,
+                keys.address,
+                keys.storage_slots.to_vec(),
+            )
+        });
+
+        let proofs = futures::future::try_join_all(proofs).await?;
+
+        let mut stdin = SP1Stdin::new();
+        stdin.write(&proofs);
+        stdin.write(&block.header.state_root);
+
+        let proof = tokio::task::spawn_blocking({
+            let client = self.client.clone();
+            let pk = self.pk.clone();
+
+            move || client.prove(&pk, &stdin).plonk().run()
+        })
+        .await??;
+
+        Ok(proof)
+    }
+
+    async fn get_storage_slot_proof_for_contract(
+        &self,
+        state_root: B256,
+        block_number: u64,
+        contract_address: Address,
+        keys: Vec<B256>,
+    ) -> Result<ContractStorage> {
+        let proof = self
+            .provider
+            .get_proof(contract_address, keys)
+            .number(block_number)
+            .await?;
+
+        let contract_storage = ContractStorage {
+            address: proof.address,
+            value: alloy_trie::TrieAccount {
+                nonce: proof.nonce,
+                balance: proof.balance,
+                storage_root: proof.storage_hash,
+                code_hash: proof.code_hash,
+            },
+            mpt_proof: proof.account_proof,
+            storage_slots: proof
+                .storage_proof
+                .into_iter()
+                .map(|p| StorageSlotWithProof {
+                    key: p.key.as_b256(),
+                    value: p.value,
+                    mpt_proof: p.proof,
+                })
+                .collect(),
+        };
+
+        verify_storage_slot_proofs(state_root, &contract_storage).context(format!(
+            "Preflight storage slot proofs failed to verify for contract {:?}",
+            contract_address
+        ))?;
+
+        Ok(contract_storage)
     }
 }
 
@@ -247,6 +282,22 @@ where
     P: Provider<T> + WalletProvider,
     T: Transport + Clone,
 {
+    /// Create a new SP1 Helios operator.
+    pub async fn new(provider: P, contract_address: Address) -> Self {
+        let client = ProverClient::from_env();
+        let (pk, _) = client.setup(ELF);
+
+        Self {
+            client: Arc::new(client),
+            provider,
+            pk: Arc::new(pk),
+            contract_address,
+            storage_slots_to_fetch: Arc::new(Mutex::new(HashMap::new())),
+            _transport: std::marker::PhantomData,
+        }
+    }
+
+    /// Run a single iteration of the operator, possibly posting a new update on chain.
     pub async fn run_once(&self) -> Result<()> {
         let contract = SP1Helios::new(self.contract_address, &self.provider);
 
@@ -284,28 +335,78 @@ where
 
         Ok(())
     }
+}
 
-    /// Start the operator, running indefinitely and retrying on failure.
-    pub async fn run(&self, loop_delay: Duration) {
+impl<T, P> SP1HeliosOperator<P, T>
+where
+    P: Provider<T> + WalletProvider + 'static,
+    T: Transport + Clone + 'static,
+{
+    /// Start the operator in [tokio] task, running indefinitely and retrying on failure.
+    pub fn run(self, loop_delay: Duration) -> OperatorHandle {
         info!("Starting SP1 Helios operator");
 
         // Make sure we cant hang indefinitely if something goes terribly wrong.
         const TIMEOUT: Duration = Duration::from_secs(60 * 15);
 
-        loop {
-            tokio::select! {
-                res = self.run_once() => {
-                    if let Err(e) = res {
-                        error!("Error running operator: {}", e);
-                    }
-                }
-                _ = tokio::time::sleep(TIMEOUT) => {
-                    error!("Operator timed out after {:?}", TIMEOUT);
-                }
+        let (shutdown_tx, mut shutdown_rx) = oneshot::channel();
+        let (storage_proof_tx, mut storage_proof_rx) = mpsc::unbounded_channel();
+        let mut tick = tokio::time::interval(loop_delay);
+
+        let operator_handle = OperatorHandle::new(
+            self.storage_slots_to_fetch.clone(),
+            shutdown_tx,
+            storage_proof_tx,
+        );
+
+        tokio::spawn(async move {
+            // Do the first iteration right away.
+            if let Err(e) = self.run_once().await {
+                error!("Error running operator: {}", e);
             }
 
-            info!("Sleeping for {:?} minutes", loop_delay.as_secs() / 60);
-            tokio::time::sleep(loop_delay).await;
-        }
+            let this = Arc::new(self);
+            loop {
+                let clone = this.clone();
+
+                tokio::select! {
+                    _ = tick.tick() => {
+                        tokio::spawn(async move {
+                            if let Err(e) = clone.run_once().await {
+                                error!("Error running operator: {:?}", e);
+                            }
+                        });
+                    }
+                    req = storage_proof_rx.recv() => {
+                        tokio::spawn(async move {
+                            match req {
+                                Some(StorageProofRequest { block_number, contract_keys, tx }) => {
+                                    let proof_result = clone.prove_storage_slot(block_number, contract_keys).await.inspect_err(|e| {
+                                        tracing::error!("Error proving storage slot: {:?}", e);
+                                    });
+
+                                    if let Err(e) = tx.send(proof_result) {
+                                        tracing::error!("Failed to send storage proof: {:?}", e);
+                                    }
+                                }
+                                None => {
+                                    tracing::error!("State proof channel closed");
+                                }
+                            }
+                        });
+
+                    }
+                    _ = tokio::time::sleep(TIMEOUT) => {
+                        error!("Operator timed out after {:?}", TIMEOUT);
+                    }
+                    _ = &mut shutdown_rx => {
+                        info!("Received shutdown signal, shutting down");
+                        break;
+                    }
+                }
+            }
+        });
+
+        operator_handle
     }
 }
