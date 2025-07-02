@@ -12,7 +12,8 @@ use std::{
 };
 use tree_hash::TreeHash;
 
-const HELIOS_ELF: &[u8] = include_bytes!("../../elf/sp1-helios-elf");
+const LIGHT_CLIENT_ELF: &[u8] = include_bytes!("../../elf/light_client");
+const STORAGE_ELF: &[u8] = include_bytes!("../../elf/storage");
 
 #[derive(Parser, Debug, Clone)]
 #[command(about = "Get the genesis parameters from a block.")]
@@ -33,7 +34,8 @@ pub struct GenesisConfig {
     pub guardian: String,
     pub head: u64,
     pub header: String,
-    pub helios_program_vkey: String,
+    pub lightclient_program_vkey: String,
+    pub storage_slots_program_vkey: String,
     pub seconds_per_slot: u64,
     pub slots_per_epoch: u64,
     pub slots_per_period: u64,
@@ -60,7 +62,8 @@ pub async fn main() -> Result<()> {
     }
 
     let client = ProverClient::builder().cpu().build();
-    let (_pk, vk) = client.setup(HELIOS_ELF);
+    let (_pk, lightclient_pk) = client.setup(LIGHT_CLIENT_ELF);
+    let (_pk, storage_slots_pk) = client.setup(STORAGE_ELF);
     let sp1_prover = env::var("SP1_PROVER").unwrap();
 
     let mut verifier = Address::ZERO;
@@ -132,7 +135,8 @@ pub async fn main() -> Result<()> {
         .execution()
         .expect("Execution payload doesn't exist.")
         .block_number();
-    genesis_config.helios_program_vkey = vk.bytes32();
+    genesis_config.lightclient_program_vkey = lightclient_pk.bytes32();
+    genesis_config.storage_slots_program_vkey = storage_slots_pk.bytes32();
     genesis_config.verifier = format!("0x{:x}", verifier);
 
     // Get the account associated with the private key.

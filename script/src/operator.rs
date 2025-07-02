@@ -22,12 +22,15 @@ use crate::handle::ContractKeys;
 use std::collections::{HashMap, HashSet};
 use tokio::sync::{mpsc, oneshot, Mutex};
 
-const ELF: &[u8] = include_bytes!("../../elf/sp1-helios-elf");
+const LIGHTCLIENT_ELF: &[u8] = include_bytes!("../../elf/light_client");
+const STORAGE_ELF: &[u8] = include_bytes!("../../elf/storage");
+
 
 pub struct SP1HeliosOperator<P, T> {
     client: Arc<EnvProver>,
     provider: P,
-    pk: Arc<SP1ProvingKey>,
+    lightclient_pk: Arc<SP1ProvingKey>,
+    storage_slots_pk: Arc<SP1ProvingKey>,
     contract_address: Address,
     storage_slots_to_fetch: Arc<Mutex<HashMap<Address, HashSet<B256>>>>,
     _transport: std::marker::PhantomData<T>,
@@ -103,7 +106,7 @@ where
         // Generate proof.
         let proof = tokio::task::spawn_blocking({
             let client = self.client.clone();
-            let pk = self.pk.clone();
+            let pk = self.lightclient_pk.clone();
 
             move || client.prove(&pk, &stdin).plonk().run()
         })
@@ -209,12 +212,12 @@ where
             anyhow::bail!("Failed to get block {block_number} from provider, this was expected to valid since the store claimed to have this block finalized.");
         };
 
-        let proofs = contract_keys.iter().map(|keys| {
+        let proofs = contract_keys.into_iter().map(|keys| {
             self.get_storage_slot_proof_for_contract(
                 block.header.state_root,
                 block_number,
                 keys.address,
-                keys.storage_slots.to_vec(),
+                keys.storage_slots
             )
         });
 
@@ -226,7 +229,7 @@ where
 
         let proof = tokio::task::spawn_blocking({
             let client = self.client.clone();
-            let pk = self.pk.clone();
+            let pk = self.storage_slots_pk.clone();
 
             move || client.prove(&pk, &stdin).plonk().run()
         })
@@ -285,12 +288,14 @@ where
     /// Create a new SP1 Helios operator.
     pub async fn new(provider: P, contract_address: Address) -> Self {
         let client = ProverClient::from_env();
-        let (pk, _) = client.setup(ELF);
+        let (lightclient_pk, _) = client.setup(LIGHTCLIENT_ELF);
+        let (storage_slots_pk, _) = client.setup(STORAGE_ELF);
 
         Self {
             client: Arc::new(client),
             provider,
-            pk: Arc::new(pk),
+            lightclient_pk: Arc::new(lightclient_pk),
+            storage_slots_pk: Arc::new(storage_slots_pk),
             contract_address,
             storage_slots_to_fetch: Arc::new(Mutex::new(HashMap::new())),
             _transport: std::marker::PhantomData,

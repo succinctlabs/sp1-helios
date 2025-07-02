@@ -17,6 +17,7 @@ pub(crate) struct StorageProofRequest {
     pub(crate) tx: oneshot::Sender<Result<SP1ProofWithPublicValues>>,
 }
 
+/// A list of contract and storage slots.
 pub struct ContractKeys {
     pub address: Address,
     pub storage_slots: Vec<B256>,
@@ -44,6 +45,7 @@ impl OperatorHandle {
             .insert(storage_slot);
     }
 
+    /// Remove a storage slot from the operator.
     pub async fn remove_storage_slot(&self, address: Address, storage_slot: B256) {
         let mut storage_slot_config = self.storage_slot_config.lock().await;
         storage_slot_config
@@ -52,11 +54,13 @@ impl OperatorHandle {
             .remove(&storage_slot);
     }
 
+    /// Remove an address from the operator.
     pub async fn remove_address(&self, address: Address) {
         let mut storage_slot_config = self.storage_slot_config.lock().await;
         storage_slot_config.remove(&address);
     }
 
+    /// Modify the storage slot config in place.
     pub async fn modify_storage_slots_in_place<F, Fut, Res>(&self, func: F) -> Res
     where
         F: Fn(&mut HashMap<Address, HashSet<B256>>) -> Fut,
@@ -66,6 +70,7 @@ impl OperatorHandle {
         func(&mut storage_slot_config).await
     }
 
+    /// Get a proof for a given address and storage slots.
     pub async fn get_proof_for(
         &self,
         block_number: u64,
@@ -90,6 +95,7 @@ impl OperatorHandle {
         rx.await?
     }
 
+    /// Get proofs for a given block number and a list of contract keys.
     pub async fn get_proofs_for(
         &self,
         block_number: u64,
@@ -110,6 +116,7 @@ impl OperatorHandle {
         rx.await?
     }
 
+    /// Shutdown the operator.
     pub async fn shutdown(self) {
         if self.shutdown.send(()).is_err() {
             tracing::error!("Failed to send shutdown signal");
