@@ -33,6 +33,11 @@ struct ProofOutputs {
     StorageSlot[] storageSlots;
 }
 
+struct StorageSlotProofOutputs {
+    bytes32 storageRoot;
+    StorageSlot[] storageSlots;
+}
+
 struct InitParams {
     bytes32 executionStateRoot;
     uint256 executionBlockNumber;
@@ -41,7 +46,8 @@ struct InitParams {
     address guardian;
     uint256 head;
     bytes32 header;
-    bytes32 heliosProgramVkey;
+    bytes32 lightClientVkey;
+    bytes32 storageSlotVkey;
     uint256 secondsPerSlot;
     uint256 slotsPerEpoch;
     uint256 slotsPerPeriod;
@@ -84,8 +90,11 @@ contract SP1Helios {
     /// @notice to the storage slot value.
     mapping(bytes32 => bytes32) public storageSlots;
 
-    /// @notice The verification key for the SP1 Helios program.
-    bytes32 public heliosProgramVkey;
+    /// @notice The verification key for the SP1 Helios light client program.
+    bytes32 public lightClientVkey;
+
+    /// @notice The verification key for the storage slot proof program.
+    bytes32 public storageSlotVkey;
 
     /// @notice The deployed SP1 verifier contract.
     address public verifier;
@@ -99,6 +108,8 @@ contract SP1Helios {
 
     event HeadUpdate(uint256 indexed slot, bytes32 indexed root);
     event SyncCommitteeUpdate(uint256 indexed period, bytes32 indexed root);
+    event GuardianUpdate(address indexed newGuardian);
+    event GuardianRelinquished();
 
     error PrevHeadMismatch(uint256 given, uint256 expected);
     error PrevHeaderMismatch(bytes32 given, bytes32 expected);
@@ -110,6 +121,7 @@ contract SP1Helios {
     error SyncCommitteeNotSet(uint256 period);
     error NextSyncCommitteeMismatch(bytes32 given, bytes32 expected);
     error NonCheckpointSlot(uint256 slot);
+    error MissingStateRoot(uint256 blockNumber);
 
     constructor(InitParams memory params) {
         GENESIS_VALIDATORS_ROOT = params.genesisValidatorsRoot;
@@ -119,7 +131,8 @@ contract SP1Helios {
         SLOTS_PER_EPOCH = params.slotsPerEpoch;
         SOURCE_CHAIN_ID = params.sourceChainId;
         syncCommittees[getSyncCommitteePeriod(params.head)] = params.syncCommitteeHash;
-        heliosProgramVkey = params.heliosProgramVkey;
+        lightClientVkey = params.lightClientVkey;
+        storageSlotVkey = params.storageSlotVkey;
         headers[params.head] = params.header;
         executionStateRoots[params.head] = params.executionStateRoot;
         head = params.head;
@@ -145,7 +158,8 @@ contract SP1Helios {
         bytes32 nextSyncCommitteeHash,
         StorageSlot[] memory _storageSlots
     ) external {
-        // Fill in the proof outputs with our expected values known by the contract.
+        // Fill in the proof outputs with our expected values known by the contract
+        // instead of explicity comparing against them, the proof will not verify if they arent correct.
         ProofOutputs memory po = ProofOutputs({
             prevHeader: headers[head],
             prevHead: head,
@@ -160,7 +174,7 @@ contract SP1Helios {
         });
 
         // Verify the proof with the associated public values. This will revert if the proof is invalid.
-        ISP1Verifier(verifier).verifyProof(heliosProgramVkey, abi.encode(po), proof);
+        ISP1Verifier(verifier).verifyProof(lightClientVkey, abi.encode(po), proof);
 
         // The sync committee for the current head should always be set.
         uint256 currentPeriod = getSyncCommitteePeriod(head);
@@ -233,6 +247,51 @@ contract SP1Helios {
         emit HeadUpdate(po.newHead, po.newHeader);
     }
 
+    /// @notice Verifies a storage slot proof, and saves the storage slots to the contract.
+    /// @dev Panics if the proof is invalid.
+    /// @param proof The proof bytes for the SP1 proof.
+    /// @param _storageSlots The storage slots to verify.
+    /// @param blockNumber The block number of the storage slot.
+    function updateStorageSlot(
+        bytes calldata proof,
+        StorageSlot[] memory _storageSlots,
+        uint256 blockNumber
+    ) external {
+        // Verify the proof with the associated public values. This will revert if the proof is invalid.
+        verifyStorageSlotsProof(proof, _storageSlots, blockNumber);
+
+        // Set all the storage slots.
+        for (uint256 i = 0; i < _storageSlots.length; i++) {
+            bytes32 key = computeStorageSlotKey(
+                blockNumber, _storageSlots[i].contractAddress, _storageSlots[i].key
+            );
+            storageSlots[key] = _storageSlots[i].value;
+        }
+    }
+
+    /// @notice Verifies a storage slot proof.
+    /// @dev Panics if the proof is invalid.
+    /// @param proof The proof bytes for the SP1 proof.
+    /// @param _storageSlots The storage slots to verify.
+    /// @param blockNumber The block number of the storage slot.
+    function verifyStorageSlotsProof(
+        bytes calldata proof,
+        StorageSlot[] memory _storageSlots,
+        uint256 blockNumber
+    ) public view {
+        bytes32 executionStateRoot = executionStateRoots[blockNumber];
+        if (executionStateRoot == bytes32(0)) {
+            revert MissingStateRoot(blockNumber);
+        }
+
+        // Fill in the proof outputs with our expected values known by the contract.
+        // Note: If the execution state root is not set, then the proof wil not verify.
+        StorageSlotProofOutputs memory sspo =
+            StorageSlotProofOutputs({storageRoot: executionStateRoot, storageSlots: _storageSlots});
+
+        ISP1Verifier(verifier).verifyProof(storageSlotVkey, abi.encode(sspo), proof);
+    }
+
     function latestExecutionStateRoot() public view returns (bytes32) {
         return executionStateRoots[executionBlockNumber];
     }
@@ -261,8 +320,30 @@ contract SP1Helios {
     }
 
     /// @notice Updates the Helios program verification key.
-    function updateHeliosProgramVkey(bytes32 newVkey) external onlyGuardian {
-        heliosProgramVkey = newVkey;
+    function updateLightClientVkey(bytes32 newVkey) external onlyGuardian {
+        lightClientVkey = newVkey;
+    }
+
+    /// @notice Updates the storage slot proof verification key.
+    function updateStorageSlotVkey(bytes32 newVkey) external onlyGuardian {
+        storageSlotVkey = newVkey;
+    }
+
+    function changeGuardian(address newGuardian) external onlyGuardian {
+        require(
+            newGuardian != address(0),
+            "New guardian cannot be the zero, use relinquishGuardian instead"
+        );
+
+        guardian = newGuardian;
+
+        emit GuardianUpdate(newGuardian);
+    }
+
+    function relinquishGuardian() external onlyGuardian {
+        guardian = address(0);
+
+        emit GuardianRelinquished();
     }
 
     /// @notice Computes the corresponding key for a storage slot.

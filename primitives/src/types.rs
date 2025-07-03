@@ -19,23 +19,6 @@ pub struct ProofInputs {
     pub contract_storage: Vec<ContractStorage>,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
-pub struct ExecutionStateProof {
-    #[serde(rename = "executionStateRoot")]
-    pub execution_state_root: B256,
-    #[serde(rename = "executionStateBranch")]
-    pub execution_state_branch: Vec<B256>,
-    pub gindex: String,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct StorageSlotWithProof {
-    pub key: B256,
-    pub value: U256,
-    /// The proof that this storage slot is correct
-    pub mpt_proof: Vec<Bytes>,
-}
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ContractStorage {
     pub address: Address,
@@ -44,6 +27,14 @@ pub struct ContractStorage {
     pub mpt_proof: Vec<Bytes>,
     /// The storage slots that we want to prove
     pub storage_slots: Vec<StorageSlotWithProof>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct StorageSlotWithProof {
+    pub key: B256,
+    pub value: U256,
+    /// The proof that this storage slot is correct
+    pub mpt_proof: Vec<Bytes>,
 }
 
 sol! {
@@ -67,6 +58,11 @@ sol! {
         /// The sync committee hash of the next period.
         bytes32 nextSyncCommitteeHash;
         /// Attested storage slots for the given block.
+        StorageSlot[] storageSlots;
+    }
+
+    struct StorageProofOutputs {
+        bytes32 stateRoot;
         StorageSlot[] storageSlots;
     }
 

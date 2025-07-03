@@ -16,4 +16,6 @@ docs/
 # Dotenv file
 .env
 
+genesis.json
+
 init.json

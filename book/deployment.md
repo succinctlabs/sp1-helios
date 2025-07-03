@@ -29,55 +29,27 @@ The RPC you just set up will be used as the `SOURCE_CONSENSUS_RPC_URL` in the ne
 
 In the root directory, create a file called `.env` (mirroring `.env.example`) and set the following environment variables:
 
-| Parameter | Description |
-|-----------|-------------|
-| `SOURCE_CHAIN_ID` | Chain ID for the source chain |
-| `SOURCE_CONSENSUS_RPC_URL` | RPC URL for the source chain |
-| `DEST_RPC_URL` | RPC URL for the destination chain |
-| `DEST_CHAIN_ID` | Chain ID for the destination chain |
-| `PRIVATE_KEY` | Private key for the account that will be deploying the contract |
-| `SP1_PROVER` | Default: `mock`. `network` will generate real proofs using the Succinct Prover Network |
-| `ETHERSCAN_API_KEY` | API key for Etherscan verification |
-
-#### Optional Parameters
-
-| Parameter | Description |
-|-----------|-------------|
-| `GUARDIAN_ADDRESS` | Defines the owner for the light client. Defaults to the account owner of `PRIVATE_KEY` |
-| `NETWORK_PRIVATE_KEY` | Required in `network` mode. The private key of the account that will be requesting proofs from the Succinct Prover Network |
-| `SP1_VERIFIER_ADDRESS` | Required in `network` mode. The address of the verifier contract |
-| `LOOP_DELAY_MINS` | The delay between each loop of the operator in minutes. Defaults to `5` |
 
 ### 3. Deploy Contract
 
-Deploy the SP1 Helios contract:
+Deploy the SP1 Helios contract, note, this requires [Foundry](https://getfoundry.sh/), and a [PLONK verifier gateway](https://docs.succinct.xyz/docs/sp1/verification/contract-addresses):
 
 ```bash
-# Load environment variables
-source .env
-
-cd contracts
-
-# Install dependencies
-forge install
-
-# Deploy contract
-forge script script/Deploy.s.sol --ffi --rpc-url $DEST_RPC_URL --private-key $PRIVATE_KEY --etherscan-api-key $ETHERSCAN_API_KEY --broadcast --verify
+cargo run --bin genesis -- [--private-key] [--ledger] [--etherscan-api-key] <--sp1-verifier-address> <--guardian-address> <--source-consensus-rpc> <--source-chain-id> 
 ```
 
-When the script completes, take note of the light client contract address printed by the script and add it to your `.env` file:
-
-| Parameter | Description |
-|-----------|-------------|
-| `CONTRACT_ADDRESS` | Address of the light client contract deployed |
+When the script completes, take note of the light client contract address printed to the terminal.
 
 ### 4. Run Light Client
 
 To run the operator, which generates proofs and keeps the light client updated with chain state:
 
 ```bash
-RUST_LOG=info cargo run --release --bin operator
+cargo run --release --bin operator -- <--rpc-url> <--contract-address> <--source-chain-id> <--source-consensus-rpc> <--private-key>
 ```
+
+Internally the Operator program uses the [SP1EnvProver](https://docs.rs/sp1-sdk/latest/sp1_sdk/env/struct.EnvProver.html#method.new), the docs will explain how to setup the ENV vars.
+
 
 If successful, you should see logs indicating that the consensus state is being updated:
 
@@ -91,5 +63,3 @@ If successful, you should see logs indicating that the consensus state is being 
 [2024-10-15T21:06:50Z INFO  operator] Transaction hash: 0x4a0dfa2922704295ed59bf16840454858a4d17225cdf613387de7605b5a41520
 [2024-10-15T21:06:50Z INFO  operator] Sleeping for 5 minutes
 ```
-
-> Note: When `SP1_PROVER=mock`, the operator will not generate real proofs.

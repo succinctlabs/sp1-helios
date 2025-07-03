@@ -5,6 +5,14 @@ edition.workspace = true
 license.workspace = true
 authors.workspace = true
 
+[[bin]]
+name = "light_client"
+path = "src/light_client.rs"
+
+[[bin]]
+name = "storage"
+path = "src/storage.rs"
+
 [dependencies]
 sp1-zkvm = "5.0.0"
 helios-consensus-core = { workspace = true }
