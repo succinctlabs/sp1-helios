@@ -32,6 +32,8 @@ pub struct SP1HeliosOperator<P, T> {
     storage_slots_pk: Arc<SP1ProvingKey>,
     contract_address: Address,
     storage_slots_to_fetch: Arc<Mutex<HashMap<Address, HashSet<B256>>>>,
+    source_chain_id: u64,
+    source_consensus_rpc: String,
     _transport: std::marker::PhantomData<T>,
 }
 
@@ -141,8 +143,6 @@ where
             po.storageSlots,
         );
 
-        println!("calldata: {:?}", tx.calldata());
-
         let receipt = tx
             .nonce(nonce)
             .send()
@@ -195,48 +195,6 @@ where
         futures::future::try_join_all(futs).await
     }
 
-    async fn prove_storage_slot(
-        &self,
-        block_number: u64,
-        contract_keys: Vec<ContractKeys>,
-    ) -> Result<SP1ProofWithPublicValues> {
-        let Some(block) = self
-            .provider
-            .get_block(
-                block_number.into(),
-                alloy::rpc::types::BlockTransactionsKind::Hashes,
-            )
-            .await?
-        else {
-            anyhow::bail!("Failed to get block {block_number} from provider, this was expected to valid since the store claimed to have this block finalized.");
-        };
-
-        let proofs = contract_keys.into_iter().map(|keys| {
-            self.get_storage_slot_proof_for_contract(
-                block.header.state_root,
-                block_number,
-                keys.address,
-                keys.storage_slots,
-            )
-        });
-
-        let proofs = futures::future::try_join_all(proofs).await?;
-
-        let mut stdin = SP1Stdin::new();
-        stdin.write(&proofs);
-        stdin.write(&block.header.state_root);
-
-        let proof = tokio::task::spawn_blocking({
-            let client = self.client.clone();
-            let pk = self.storage_slots_pk.clone();
-
-            move || client.prove(&pk, &stdin).plonk().run()
-        })
-        .await??;
-
-        Ok(proof)
-    }
-
     async fn get_storage_slot_proof_for_contract(
         &self,
         state_root: B256,
@@ -284,9 +242,17 @@ where
     T: Transport + Clone,
 {
     /// Create a new SP1 Helios operator.
-    pub async fn new(provider: P, contract_address: Address) -> Self {
+    pub async fn new(
+        provider: P,
+        contract_address: Address,
+        consensus_rpc: String,
+        chain_id: u64,
+    ) -> Self {
         let client = ProverClient::from_env();
+
+        tracing::info!("Setting up light client program...");
         let (lightclient_pk, _) = client.setup(LIGHTCLIENT_ELF);
+        tracing::info!("Setting up storage slots program...");
         let (storage_slots_pk, _) = client.setup(STORAGE_ELF);
 
         Self {
@@ -296,6 +262,8 @@ where
             storage_slots_pk: Arc::new(storage_slots_pk),
             contract_address,
             storage_slots_to_fetch: Arc::new(Mutex::new(HashMap::new())),
+            source_chain_id: chain_id,
+            source_consensus_rpc: consensus_rpc,
             _transport: std::marker::PhantomData,
         }
     }
@@ -315,7 +283,8 @@ where
             .expect("Failed to convert head to u64, this is a bug.");
 
         // Fetch the checkpoint at that slot
-        let client = get_client(Some(slot)).await?;
+        let client =
+            get_client(Some(slot), &self.source_consensus_rpc, self.source_chain_id).await?;
 
         assert_eq!(
             client.store.finalized_header.beacon().slot,
@@ -337,6 +306,48 @@ where
         }
 
         Ok(())
+    }
+
+    pub async fn prove_storage_slots(
+        &self,
+        block_number: u64,
+        contract_keys: Vec<ContractKeys>,
+    ) -> Result<SP1ProofWithPublicValues> {
+        let Some(block) = self
+            .provider
+            .get_block(
+                block_number.into(),
+                alloy::rpc::types::BlockTransactionsKind::Hashes,
+            )
+            .await?
+        else {
+            anyhow::bail!("Failed to get block {block_number} from provider, this was expected to valid since the store claimed to have this block finalized.");
+        };
+
+        let proofs = contract_keys.into_iter().map(|keys| {
+            self.get_storage_slot_proof_for_contract(
+                block.header.state_root,
+                block_number,
+                keys.address,
+                keys.storage_slots,
+            )
+        });
+
+        let proofs = futures::future::try_join_all(proofs).await?;
+
+        let mut stdin = SP1Stdin::new();
+        stdin.write(&proofs);
+        stdin.write(&block.header.state_root);
+
+        let proof = tokio::task::spawn_blocking({
+            let client = self.client.clone();
+            let pk = self.storage_slots_pk.clone();
+
+            move || client.prove(&pk, &stdin).plonk().run()
+        })
+        .await??;
+
+        Ok(proof)
     }
 }
 
@@ -381,7 +392,7 @@ where
                         tokio::spawn(async move {
                             match req {
                                 Some(StorageProofRequest { block_number, contract_keys, tx }) => {
-                                    let proof_result = clone.prove_storage_slot(block_number, contract_keys).await.inspect_err(|e| {
+                                    let proof_result = clone.prove_storage_slots(block_number, contract_keys).await.inspect_err(|e| {
                                         tracing::error!("Error proving storage slot: {:?}", e);
                                     });
 

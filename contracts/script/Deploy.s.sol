@@ -28,7 +28,7 @@ contract DeployScript is Script {
         return address(helios);
     }
 
-    function readGenesisConfig() public returns (InitParams memory) {
+    function readGenesisConfig() public view returns (InitParams memory) {
         string memory root = vm.projectRoot();
         string memory path = string.concat(root, "/", "genesis.json");
         string memory json = vm.readFile(path);
