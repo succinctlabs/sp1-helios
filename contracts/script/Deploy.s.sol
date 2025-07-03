@@ -15,9 +15,6 @@ contract DeployScript is Script {
     function run() public returns (address) {
         vm.startBroadcast();
 
-        // Update the rollup config to match the current chain. If the starting block number is 0, the latest block number and starting output root will be fetched.
-        updateGenesisConfig();
-
         InitParams memory params = readGenesisConfig();
 
         // If the verifier address is set to 0, set it to the address of the mock verifier.

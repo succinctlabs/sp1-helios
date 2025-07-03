@@ -147,7 +147,7 @@ pub async fn main() {
     // If the GUARDIAN_ADDRESS is not set, or is empty, the deployer address is used as the guardian address.
     let guardian = match env::var("GUARDIAN_ADDRESS") {
         Ok(guardian_addr) if !guardian_addr.is_empty() => guardian_addr,
-        _ => format!("0x{:x}", deployer_address),
+        _ => format!("0x{deployer_address:x}"),
     };
 
     // Read the Genesis config from the contracts directory.
@@ -168,18 +168,18 @@ pub async fn main() {
             .expect("Execution payload doesn't exist.")
             .block_number(),
         genesis_time,
-        genesis_validators_root: format!("0x{:x}", genesis_root),
+        genesis_validators_root: format!("0x{genesis_root:x}"),
         guardian,
         head,
-        header: format!("0x{:x}", finalized_header),
+        header: format!("0x{finalized_header:x}"),
         lightclient_program_vkey: lightclient_pk.bytes32(),
         storage_slots_program_vkey: storage_slots_pk.bytes32(),
         seconds_per_slot: SECONDS_PER_SLOT,
         slots_per_epoch: MainnetConsensusSpec::slots_per_epoch(),
         slots_per_period: MainnetConsensusSpec::slots_per_sync_committee_period(),
         source_chain_id,
-        sync_committee_hash: format!("0x{:x}", sync_committee_hash),
-        verifier: format!("0x{:x}", verifier),
+        sync_committee_hash: format!("0x{sync_committee_hash:x}"),
+        verifier: format!("0x{verifier:x}"),
     };
 
     write_genesis_config(&workspace_root, &genesis_config).expect("Failed to write genesis config");

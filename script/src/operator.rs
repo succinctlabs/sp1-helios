@@ -271,8 +271,7 @@ where
         };
 
         verify_storage_slot_proofs(state_root, &contract_storage).context(format!(
-            "Preflight storage slot proofs failed to verify for contract {:?}",
-            contract_address
+            "Preflight storage slot proofs failed to verify for contract {contract_address:?}"
         ))?;
 
         Ok(contract_storage)

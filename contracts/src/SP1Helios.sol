@@ -262,7 +262,9 @@ contract SP1Helios {
 
         // Set all the storage slots.
         for (uint256 i = 0; i < _storageSlots.length; i++) {
-            bytes32 key = computeStorageSlotKey(blockNumber, _storageSlots[i].contractAddress, _storageSlots[i].key);
+            bytes32 key = computeStorageSlotKey(
+                blockNumber, _storageSlots[i].contractAddress, _storageSlots[i].key
+            );
             storageSlots[key] = _storageSlots[i].value;
         }
     }
@@ -284,10 +286,8 @@ contract SP1Helios {
 
         // Fill in the proof outputs with our expected values known by the contract.
         // Note: If the execution state root is not set, then the proof wil not verify.
-        StorageSlotProofOutputs memory sspo = StorageSlotProofOutputs({
-            storageRoot: executionStateRoot,
-            storageSlots: _storageSlots
-        });
+        StorageSlotProofOutputs memory sspo =
+            StorageSlotProofOutputs({storageRoot: executionStateRoot, storageSlots: _storageSlots});
 
         ISP1Verifier(verifier).verifyProof(storageSlotVkey, abi.encode(sspo), proof);
     }
@@ -330,7 +330,10 @@ contract SP1Helios {
     }
 
     function changeGuardian(address newGuardian) external onlyGuardian {
-        require(newGuardian != address(0), "New guardian cannot be the zero, use relinquishGuardian instead");
+        require(
+            newGuardian != address(0),
+            "New guardian cannot be the zero, use relinquishGuardian instead"
+        );
 
         guardian = newGuardian;
 

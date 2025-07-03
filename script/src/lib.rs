@@ -47,7 +47,7 @@ pub async fn get_latest_checkpoint() -> Result<B256> {
     let chain_id = std::env::var("SOURCE_CHAIN_ID").expect("SOURCE_CHAIN_ID not set");
     let network = Network::from_chain_id(chain_id.parse().expect("Can parse SOURCE_CHAIN_ID"))
         .unwrap_or_else(|_| {
-            panic!("unknown network: {}", chain_id);
+            panic!("unknown network: {chain_id}");
         });
 
     cf.fetch_latest_checkpoint(&network)
