@@ -25,12 +25,7 @@ There are a few options for setting up a consensus RPC with "light sync" endpoin
 
 The RPC you just set up will be used as the `SOURCE_CONSENSUS_RPC_URL` in the next step.
 
-### 2. Environment Setup
-
-In the root directory, create a file called `.env` (mirroring `.env.example`) and set the following environment variables:
-
-
-### 3. Deploy Contract
+### 2. Deploy Contract
 
 Deploy the SP1 Helios contract, note, this requires [Foundry](https://getfoundry.sh/), and a [PLONK verifier gateway](https://docs.succinct.xyz/docs/sp1/verification/contract-addresses):
 
@@ -40,7 +35,7 @@ cargo run --bin genesis -- [--private-key] [--ledger] [--etherscan-api-key] <--s
 
 When the script completes, take note of the light client contract address printed to the terminal.
 
-### 4. Run Light Client
+### 3. Run Light Client
 
 To run the operator, which generates proofs and keeps the light client updated with chain state:
 
