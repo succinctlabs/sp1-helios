@@ -84,7 +84,11 @@ sol! {
         mapping(uint256 => bytes32) public syncCommittees;
         mapping(uint256 => bytes32) public executionStateRoots;
         mapping(uint256 => bytes32) public headers;
-        bytes32 public heliosProgramVkey;
+        /// @notice The verification key for the SP1 Helios light client program.
+        bytes32 public lightClientVkey;
+
+        /// @notice The verification key for the storage slot proof program.
+        bytes32 public storageSlotVkey;
         address public verifier;
 
         event HeadUpdate(uint256 indexed slot, bytes32 indexed root);

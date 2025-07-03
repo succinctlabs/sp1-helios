@@ -14,7 +14,7 @@ use sp1_helios_primitives::types::{
     ContractStorage, ProofInputs, ProofOutputs, SP1Helios, StorageSlotWithProof,
 };
 use sp1_helios_primitives::verify_storage_slot_proofs;
-use sp1_sdk::{EnvProver, ProverClient, SP1ProofWithPublicValues, SP1ProvingKey, SP1Stdin};
+use sp1_sdk::{EnvProver, ProverClient, SP1ProofWithPublicValues, SP1ProvingKey, SP1Stdin, HashableKey};
 use std::sync::Arc;
 use std::time::Duration;
 use tracing::{error, info};
@@ -234,6 +234,23 @@ where
 
         Ok(contract_storage)
     }
+
+    /// Check if the vkeys of the light client and storage slot programs are correct and match the ones in the contract.
+    async fn check_vkeys(&self) -> Result<()> {
+        let contract = SP1Helios::new(self.contract_address, &self.provider);
+        let contract_lightclient_vkey = contract.lightClientVkey().call().await?;
+        let contract_storage_slot_vkey = contract.storageSlotVkey().call().await?;
+        
+        if self.lightclient_pk.vk.bytes32_raw() != contract_lightclient_vkey.lightClientVkey {
+            return Err(anyhow::anyhow!("Light client vkey mismatch"));
+        }
+
+        if self.storage_slots_pk.vk.bytes32_raw() != contract_storage_slot_vkey.storageSlotVkey {
+            return Err(anyhow::anyhow!("Storage slot vkey mismatch"));
+        }
+        
+        Ok(())
+    }
 }
 
 impl<T, P> SP1HeliosOperator<P, T>
@@ -255,7 +272,7 @@ where
         tracing::info!("Setting up storage slots program...");
         let (storage_slots_pk, _) = client.setup(STORAGE_ELF);
 
-        Self {
+        let this = Self {
             client: Arc::new(client),
             provider,
             lightclient_pk: Arc::new(lightclient_pk),
@@ -265,7 +282,11 @@ where
             source_chain_id: chain_id,
             source_consensus_rpc: consensus_rpc,
             _transport: std::marker::PhantomData,
-        }
+        };
+
+        this.check_vkeys().await.expect("Failed to create operator: vkeys mismatch");
+
+        this
     }
 
     /// Run a single iteration of the operator, possibly posting a new update on chain.
