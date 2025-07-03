@@ -3,7 +3,7 @@ use alloy_primitives::Address;
 use anyhow::Result;
 /// Generate genesis parameters for light client contract
 use clap::Parser;
-use helios_consensus_core::consensus_spec::{MainnetConsensusSpec, ConsensusSpec};
+use helios_consensus_core::consensus_spec::{ConsensusSpec, MainnetConsensusSpec};
 use serde::{Deserialize, Serialize};
 use sp1_helios_script::get_client;
 use sp1_sdk::{utils, HashableKey, Prover, ProverClient};
@@ -34,17 +34,13 @@ pub struct GenesisArgs {
     pub rpc_url: String,
 
     /// The private key to use for the deployer account.
-    #[arg(
-        long, 
-        conflicts_with = "ledger", 
-        required_unless_present = "ledger"
-    )]
+    #[arg(long, conflicts_with = "ledger", required_unless_present = "ledger")]
     pub private_key: Option<String>,
 
     /// Whether to use a ledger for deployment.
     #[arg(
-        long, 
-        conflicts_with = "private_key", 
+        long,
+        conflicts_with = "private_key",
         required_unless_present = "private_key"
     )]
     pub ledger: bool,
@@ -103,7 +99,9 @@ pub async fn main() {
         verifier = env::var("SP1_VERIFIER_ADDRESS").unwrap().parse().unwrap();
     }
 
-    let helios_client = get_client(args.slot).await.expect("Failed to create genesis client");
+    let helios_client = get_client(args.slot)
+        .await
+        .expect("Failed to create genesis client");
     let finalized_header = helios_client
         .store
         .finalized_header
@@ -202,7 +200,9 @@ fn find_project_root() -> Option<PathBuf> {
 fn forge_install() -> Result<()> {
     let project_root = find_project_root().expect("Failed to find project root");
     let mut command = std::process::Command::new("forge");
-    command.arg("install").current_dir(project_root.join("contracts"));
+    command
+        .arg("install")
+        .current_dir(project_root.join("contracts"));
 
     let output = command.status()?;
 
@@ -229,7 +229,10 @@ fn deploy_via_forge(args: &GenesisArgs) -> Result<()> {
         .current_dir(project_root.join("contracts"));
 
     if let Some(ref private_key) = args.private_key {
-        assert!(private_key.len() == 66, "Expecting private key to be of the from 0x...");
+        assert!(
+            private_key.len() == 66,
+            "Expecting private key to be of the from 0x..."
+        );
 
         command.arg("--private-key").arg(private_key);
     }
@@ -252,7 +255,10 @@ fn deploy_via_forge(args: &GenesisArgs) -> Result<()> {
 }
 
 fn panic_if_forge_not_installed() {
-    let output = std::process::Command::new("which").arg("forge").status().expect("failed to run `which forge`");
+    let output = std::process::Command::new("which")
+        .arg("forge")
+        .status()
+        .expect("failed to run `which forge`");
 
     if !output.success() {
         panic!("Forge is not installed, please see https://getfoundry.sh/");

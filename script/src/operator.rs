@@ -1,5 +1,6 @@
-use crate::{get_client, get_updates};
+use crate::handle::ContractKeys;
 use crate::handle::{OperatorHandle, StorageProofRequest};
+use crate::{get_client, get_updates};
 use alloy::primitives::{Address, B256};
 use alloy::providers::{Provider, WalletProvider};
 use alloy::sol_types::SolType;
@@ -14,10 +15,9 @@ use sp1_helios_primitives::types::{
 };
 use sp1_helios_primitives::verify_storage_slot_proofs;
 use sp1_sdk::{EnvProver, ProverClient, SP1ProofWithPublicValues, SP1ProvingKey, SP1Stdin};
+use std::sync::Arc;
 use std::time::Duration;
 use tracing::{error, info};
-use std::sync::Arc;
-use crate::handle::ContractKeys;
 
 use std::collections::{HashMap, HashSet};
 use tokio::sync::{mpsc, oneshot, Mutex};
@@ -216,7 +216,7 @@ where
                 block.header.state_root,
                 block_number,
                 keys.address,
-                keys.storage_slots
+                keys.storage_slots,
             )
         });
 

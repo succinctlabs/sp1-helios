@@ -1,7 +1,7 @@
 use alloy::primitives::{Address, B256};
 use anyhow::Result;
 use sp1_sdk::SP1ProofWithPublicValues;
-use std::collections::{HashSet, HashMap};
+use std::collections::{HashMap, HashSet};
 use std::{future::Future, sync::Arc};
 use tokio::sync::{mpsc, oneshot, Mutex};
 
@@ -78,17 +78,14 @@ impl OperatorHandle {
         storage_slot: &[B256],
     ) -> Result<SP1ProofWithPublicValues> {
         let (tx, rx) = oneshot::channel();
-        if let Err(e) = self
-            .storage_proof_tx
-            .send(StorageProofRequest {
-                block_number,
-                contract_keys: vec![ContractKeys {
-                    address,
-                    storage_slots: storage_slot.to_vec(),
-                }],
-                tx,
-            })
-        {
+        if let Err(e) = self.storage_proof_tx.send(StorageProofRequest {
+            block_number,
+            contract_keys: vec![ContractKeys {
+                address,
+                storage_slots: storage_slot.to_vec(),
+            }],
+            tx,
+        }) {
             tracing::error!("Failed to send storage proof request: {:?}", e);
         }
 
@@ -102,14 +99,11 @@ impl OperatorHandle {
         contract_keys: Vec<ContractKeys>,
     ) -> Result<SP1ProofWithPublicValues> {
         let (tx, rx) = oneshot::channel();
-        if let Err(e) = self
-            .storage_proof_tx
-            .send(StorageProofRequest {
-                block_number,
-                contract_keys,
-                tx,
-            })
-        {
+        if let Err(e) = self.storage_proof_tx.send(StorageProofRequest {
+            block_number,
+            contract_keys,
+            tx,
+        }) {
             tracing::error!("Failed to send storage proof request: {:?}", e);
         }
 
