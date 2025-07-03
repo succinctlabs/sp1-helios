@@ -3,6 +3,7 @@ use alloy_primitives::Address;
 use anyhow::Result;
 /// Generate genesis parameters for light client contract
 use clap::Parser;
+use helios_consensus_core::consensus_spec::{MainnetConsensusSpec, ConsensusSpec};
 use serde::{Deserialize, Serialize};
 use sp1_helios_script::get_client;
 use sp1_sdk::{utils, HashableKey, Prover, ProverClient};
@@ -14,14 +15,43 @@ use tree_hash::TreeHash;
 
 const LIGHT_CLIENT_ELF: &[u8] = include_bytes!("../../elf/light_client");
 const STORAGE_ELF: &[u8] = include_bytes!("../../elf/storage");
+const SECONDS_PER_SLOT: u64 = 12;
 
 #[derive(Parser, Debug, Clone)]
 #[command(about = "Get the genesis parameters from a block.")]
 pub struct GenesisArgs {
+    /// The optional slot to use for the genesis client.
     #[arg(long)]
     pub slot: Option<u64>,
+
+    /// The path to the .env file to use for the genesis client,
+    /// relative to the project root.
     #[arg(long, default_value = ".env")]
     pub env_file: String,
+
+    /// The RPC URL to deploy the contract too.
+    #[arg(long)]
+    pub rpc_url: String,
+
+    /// The private key to use for the deployer account.
+    #[arg(
+        long, 
+        conflicts_with = "ledger", 
+        required_unless_present = "ledger"
+    )]
+    pub private_key: Option<String>,
+
+    /// Whether to use a ledger for deployment.
+    #[arg(
+        long, 
+        conflicts_with = "private_key", 
+        required_unless_present = "private_key"
+    )]
+    pub ledger: bool,
+
+    /// The Etherscan API key to use for the deployer account.
+    #[arg(long)]
+    pub etherscan_api_key: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -45,15 +75,17 @@ pub struct GenesisConfig {
 }
 
 #[tokio::main]
-pub async fn main() -> Result<()> {
+pub async fn main() {
     utils::setup_logger();
+
+    panic_if_forge_not_installed();
 
     let args = GenesisArgs::parse();
 
     // This fetches the .env file from the project root. If the command is invoked in the contracts/ directory,
     // the .env file in the root of the repo is used.
     if let Some(root) = find_project_root() {
-        dotenv::from_path(root.join(args.env_file)).ok();
+        dotenv::from_path(root.join(&args.env_file)).expect("Failed to load .env file");
     } else {
         eprintln!(
             "Warning: Could not find project root. {} file not loaded.",
@@ -71,7 +103,7 @@ pub async fn main() -> Result<()> {
         verifier = env::var("SP1_VERIFIER_ADDRESS").unwrap().parse().unwrap();
     }
 
-    let helios_client = get_client(args.slot).await?;
+    let helios_client = get_client(args.slot).await.expect("Failed to create genesis client");
     let finalized_header = helios_client
         .store
         .finalized_header
@@ -80,7 +112,10 @@ pub async fn main() -> Result<()> {
         .tree_hash_root();
     let head = helios_client.store.finalized_header.clone().beacon().slot;
 
-    assert!(head % 32 == 0, "Head is not a checkpoint slot.");
+    assert!(
+        head % 32 == 0,
+        "Head is not a checkpoint slot, please deploy again."
+    );
 
     let sync_committee_hash = helios_client
         .store
@@ -89,11 +124,8 @@ pub async fn main() -> Result<()> {
         .tree_hash_root();
     let genesis_time = helios_client.config.chain.genesis_time;
     let genesis_root = helios_client.config.chain.genesis_root;
-    const SECONDS_PER_SLOT: u64 = 12;
-    const SLOTS_PER_EPOCH: u64 = 32;
-    const SLOTS_PER_PERIOD: u64 = SLOTS_PER_EPOCH * 256;
     let source_chain_id: u64 = match env::var("SOURCE_CHAIN_ID") {
-        Ok(val) => val.parse().unwrap(),
+        Ok(val) => val.parse().expect("Failed to parse SOURCE_CHAIN_ID as u64"),
         Err(_) => {
             eprintln!("SOURCE_CHAIN_ID not set, defaulting to mainnet");
             1 // Mainnet chain ID
@@ -108,37 +140,6 @@ pub async fn main() -> Result<()> {
             .workspace_root,
     );
 
-    // Read the Genesis config from the contracts directory.
-    let mut genesis_config = get_existing_genesis_config(&workspace_root)?;
-
-    genesis_config.genesis_validators_root = format!("0x{:x}", genesis_root);
-    genesis_config.genesis_time = genesis_time;
-    genesis_config.seconds_per_slot = SECONDS_PER_SLOT;
-    genesis_config.slots_per_period = SLOTS_PER_PERIOD;
-    genesis_config.slots_per_epoch = SLOTS_PER_EPOCH;
-    genesis_config.source_chain_id = source_chain_id;
-    genesis_config.sync_committee_hash = format!("0x{:x}", sync_committee_hash);
-    genesis_config.header = format!("0x{:x}", finalized_header);
-    genesis_config.execution_state_root = format!(
-        "0x{:x}",
-        helios_client
-            .store
-            .finalized_header
-            .execution()
-            .expect("Execution payload doesn't exist.")
-            .state_root()
-    );
-    genesis_config.head = head;
-    genesis_config.execution_block_number = *helios_client
-        .store
-        .finalized_header
-        .execution()
-        .expect("Execution payload doesn't exist.")
-        .block_number();
-    genesis_config.lightclient_program_vkey = lightclient_pk.bytes32();
-    genesis_config.storage_slots_program_vkey = storage_slots_pk.bytes32();
-    genesis_config.verifier = format!("0x{:x}", verifier);
-
     // Get the account associated with the private key.
     let private_key = env::var("PRIVATE_KEY").unwrap();
     let signer: PrivateKeySigner = private_key.parse().expect("Failed to parse private key");
@@ -151,11 +152,41 @@ pub async fn main() -> Result<()> {
         _ => format!("0x{:x}", deployer_address),
     };
 
-    genesis_config.guardian = guardian;
+    // Read the Genesis config from the contracts directory.
+    let genesis_config = GenesisConfig {
+        execution_state_root: format!(
+            "0x{:x}",
+            *helios_client
+                .store
+                .finalized_header
+                .execution()
+                .expect("Execution payload doesn't exist.")
+                .state_root()
+        ),
+        execution_block_number: *helios_client
+            .store
+            .finalized_header
+            .execution()
+            .expect("Execution payload doesn't exist.")
+            .block_number(),
+        genesis_time,
+        genesis_validators_root: format!("0x{:x}", genesis_root),
+        guardian,
+        head,
+        header: format!("0x{:x}", finalized_header),
+        lightclient_program_vkey: lightclient_pk.bytes32(),
+        storage_slots_program_vkey: storage_slots_pk.bytes32(),
+        seconds_per_slot: SECONDS_PER_SLOT,
+        slots_per_epoch: MainnetConsensusSpec::slots_per_epoch(),
+        slots_per_period: MainnetConsensusSpec::slots_per_sync_committee_period(),
+        source_chain_id,
+        sync_committee_hash: format!("0x{:x}", sync_committee_hash),
+        verifier: format!("0x{:x}", verifier),
+    };
 
-    write_genesis_config(&workspace_root, &genesis_config)?;
+    write_genesis_config(&workspace_root, &genesis_config).expect("Failed to write genesis config");
 
-    Ok(())
+    deploy_via_forge(&args).expect("Failed to call forge script");
 }
 
 fn find_project_root() -> Option<PathBuf> {
@@ -168,12 +199,64 @@ fn find_project_root() -> Option<PathBuf> {
     Some(path)
 }
 
-/// Get the existing genesis config from the contracts directory.
-fn get_existing_genesis_config(workspace_root: &Path) -> Result<GenesisConfig> {
-    let genesis_config_path = workspace_root.join("contracts").join("genesis.json");
-    let genesis_config_content = std::fs::read_to_string(genesis_config_path)?;
-    let genesis_config: GenesisConfig = serde_json::from_str(&genesis_config_content)?;
-    Ok(genesis_config)
+fn forge_install() -> Result<()> {
+    let project_root = find_project_root().expect("Failed to find project root");
+    let mut command = std::process::Command::new("forge");
+    command.arg("install").current_dir(project_root.join("contracts"));
+
+    let output = command.status()?;
+
+    if !output.success() {
+        return Err(anyhow::anyhow!("Forge install failed to run"));
+    }
+
+    Ok(())
+}
+
+fn deploy_via_forge(args: &GenesisArgs) -> Result<()> {
+    forge_install()?;
+
+    let project_root = find_project_root().expect("Failed to find project root");
+    let mut command = std::process::Command::new("forge");
+    command
+        .args([
+            "script",
+            "script/Deploy.s.sol",
+            "--rpc-url",
+            &args.rpc_url,
+            "--broadcast",
+        ])
+        .current_dir(project_root.join("contracts"));
+
+    if let Some(ref private_key) = args.private_key {
+        assert!(private_key.len() == 66, "Expecting private key to be of the from 0x...");
+
+        command.arg("--private-key").arg(private_key);
+    }
+
+    if args.ledger {
+        command.arg("--ledger");
+    }
+
+    if let Some(ref etherscan_api_key) = args.etherscan_api_key {
+        command.arg("--etherscan-api-key").arg(etherscan_api_key);
+    }
+
+    let output = command.status()?;
+
+    if !output.success() {
+        return Err(anyhow::anyhow!("Forge script failed to run"));
+    }
+
+    Ok(())
+}
+
+fn panic_if_forge_not_installed() {
+    let output = std::process::Command::new("which").arg("forge").status().expect("failed to run `which forge`");
+
+    if !output.success() {
+        panic!("Forge is not installed, please see https://getfoundry.sh/");
+    }
 }
 
 /// Write the genesis config to the contracts directory.

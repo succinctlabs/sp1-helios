@@ -25,7 +25,6 @@ use tokio::sync::{mpsc, oneshot, Mutex};
 const LIGHTCLIENT_ELF: &[u8] = include_bytes!("../../elf/light_client");
 const STORAGE_ELF: &[u8] = include_bytes!("../../elf/storage");
 
-
 pub struct SP1HeliosOperator<P, T> {
     client: Arc<EnvProver>,
     provider: P,
@@ -351,9 +350,6 @@ where
     pub fn run(self, loop_delay: Duration) -> OperatorHandle {
         info!("Starting SP1 Helios operator");
 
-        // Make sure we cant hang indefinitely if something goes terribly wrong.
-        const TIMEOUT: Duration = Duration::from_secs(60 * 15);
-
         let (shutdown_tx, mut shutdown_rx) = oneshot::channel();
         let (storage_proof_tx, mut storage_proof_rx) = mpsc::unbounded_channel();
         let mut tick = tokio::time::interval(loop_delay);
@@ -400,9 +396,6 @@ where
                             }
                         });
 
-                    }
-                    _ = tokio::time::sleep(TIMEOUT) => {
-                        error!("Operator timed out after {:?}", TIMEOUT);
                     }
                     _ = &mut shutdown_rx => {
                         info!("Received shutdown signal, shutting down");
