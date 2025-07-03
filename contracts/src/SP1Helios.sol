@@ -110,6 +110,8 @@ contract SP1Helios {
     event SyncCommitteeUpdate(uint256 indexed period, bytes32 indexed root);
     event GuardianUpdate(address indexed newGuardian);
     event GuardianRelinquished();
+    event LightClientVkeyUpdate(bytes32 indexed newVkey);
+    event StorageSlotVkeyUpdate(bytes32 indexed newVkey);
 
     error PrevHeadMismatch(uint256 given, uint256 expected);
     error PrevHeaderMismatch(bytes32 given, bytes32 expected);
@@ -322,11 +324,15 @@ contract SP1Helios {
     /// @notice Updates the Helios program verification key.
     function updateLightClientVkey(bytes32 newVkey) external onlyGuardian {
         lightClientVkey = newVkey;
+
+        emit LightClientVkeyUpdate(newVkey);
     }
 
     /// @notice Updates the storage slot proof verification key.
     function updateStorageSlotVkey(bytes32 newVkey) external onlyGuardian {
         storageSlotVkey = newVkey;
+
+        emit StorageSlotVkeyUpdate(newVkey);
     }
 
     function changeGuardian(address newGuardian) external onlyGuardian {
