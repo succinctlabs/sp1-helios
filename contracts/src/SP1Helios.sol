@@ -113,12 +113,7 @@ contract SP1Helios {
     event LightClientVkeyUpdate(bytes32 indexed newVkey);
     event StorageSlotVkeyUpdate(bytes32 indexed newVkey);
 
-    error PrevHeadMismatch(uint256 given, uint256 expected);
-    error PrevHeaderMismatch(bytes32 given, bytes32 expected);
     error SlotBehindHead(uint256 slot);
-    error SyncCommitteeAlreadySet(uint256 period);
-    error HeaderRootAlreadySet(uint256 slot);
-    error StateRootAlreadySet(uint256 slot);
     error SyncCommitteeStartMismatch(bytes32 given, bytes32 expected);
     error SyncCommitteeNotSet(uint256 period);
     error NextSyncCommitteeMismatch(bytes32 given, bytes32 expected);
@@ -136,7 +131,8 @@ contract SP1Helios {
         lightClientVkey = params.lightClientVkey;
         storageSlotVkey = params.storageSlotVkey;
         headers[params.head] = params.header;
-        executionStateRoots[params.head] = params.executionStateRoot;
+        executionStateRoots[params.executionBlockNumber] = params.executionStateRoot;
+        executionBlockNumber = params.executionBlockNumber;
         head = params.head;
         verifier = params.verifier;
         guardian = params.guardian;
