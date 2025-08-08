@@ -32,7 +32,25 @@ contract DeployScript is Script {
         string memory root = vm.projectRoot();
         string memory path = string.concat(root, "/", "genesis.json");
         string memory json = vm.readFile(path);
-        bytes memory data = vm.parseJson(json);
-        return abi.decode(data, (InitParams));
+        
+        InitParams memory params = InitParams({
+            executionStateRoot: vm.parseJsonBytes32(json, ".executionStateRoot"),
+            executionBlockNumber: vm.parseJsonUint(json, ".executionBlockNumber"),
+            genesisTime: vm.parseJsonUint(json, ".genesisTime"),
+            genesisValidatorsRoot: vm.parseJsonBytes32(json, ".genesisValidatorsRoot"),
+            guardian: vm.parseJsonAddress(json, ".guardian"),
+            head: vm.parseJsonUint(json, ".head"),
+            header: vm.parseJsonBytes32(json, ".header"),
+            lightClientVkey: vm.parseJsonBytes32(json, ".lightClientVkey"),
+            storageSlotVkey: vm.parseJsonBytes32(json, ".storageSlotVkey"),
+            secondsPerSlot: vm.parseJsonUint(json, ".secondsPerSlot"),
+            slotsPerEpoch: vm.parseJsonUint(json, ".slotsPerEpoch"),
+            slotsPerPeriod: vm.parseJsonUint(json, ".slotsPerPeriod"),
+            sourceChainId: vm.parseJsonUint(json, ".sourceChainId"),
+            syncCommitteeHash: vm.parseJsonBytes32(json, ".syncCommitteeHash"),
+            verifier: vm.parseJsonAddress(json, ".verifier")
+        });
+
+        return params;
     }
 }
