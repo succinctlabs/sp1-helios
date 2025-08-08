@@ -156,12 +156,18 @@ contract SP1Helios {
         bytes32 nextSyncCommitteeHash,
         StorageSlot[] memory _storageSlots
     ) external {
+        // The sync committee for the current head should always be set.
+        bytes32 currentSyncCommitteeHash = syncCommittees[getSyncCommitteePeriod(head)];
+        if (currentSyncCommitteeHash == bytes32(0)) {
+            revert SyncCommitteeNotSet(getSyncCommitteePeriod(head));
+        }
+
         // Fill in the proof outputs with our expected values known by the contract
         // instead of explicity comparing against them, the proof will not verify if they arent correct.
         ProofOutputs memory po = ProofOutputs({
             prevHeader: headers[head],
             prevHead: head,
-            prevSyncCommitteeHash: syncCommittees[getSyncCommitteePeriod(head)],
+            prevSyncCommitteeHash: currentSyncCommitteeHash,
             newHead: newHead,
             newHeader: newHeader,
             executionStateRoot: executionStateRoot,
@@ -173,18 +179,6 @@ contract SP1Helios {
 
         // Verify the proof with the associated public values. This will revert if the proof is invalid.
         ISP1Verifier(verifier).verifyProof(lightClientVkey, abi.encode(po), proof);
-
-        // The sync committee for the current head should always be set.
-        uint256 currentPeriod = getSyncCommitteePeriod(head);
-        bytes32 currentSyncCommitteeHash = syncCommittees[currentPeriod];
-        if (currentSyncCommitteeHash == bytes32(0)) {
-            revert SyncCommitteeNotSet(currentPeriod);
-        }
-
-        // The sync committee hash used in the proof should match the current sync committee.
-        if (currentSyncCommitteeHash != po.prevSyncCommitteeHash) {
-            revert SyncCommitteeStartMismatch(po.prevSyncCommitteeHash, currentSyncCommitteeHash);
-        }
 
         // Confirm that the new slot is greater than the current head.
         if (po.newHead <= head) {
@@ -222,15 +216,15 @@ contract SP1Helios {
         // Set the next sync committee if it is defined and not set.
         if (po.nextSyncCommitteeHash != bytes32(0)) {
             uint256 nextPeriod = newPeriod + 1;
-            if (syncCommittees[nextPeriod] == bytes32(0)) {
+            
+            bytes32 _nextSyncCommitteeHash = syncCommittees[nextPeriod];
+            if (_nextSyncCommitteeHash == bytes32(0)) {
                 // If the next sync committee is not set, set it.
                 syncCommittees[nextPeriod] = po.nextSyncCommitteeHash;
                 emit SyncCommitteeUpdate(nextPeriod, po.nextSyncCommitteeHash);
-            } else if (syncCommittees[nextPeriod] != po.nextSyncCommitteeHash) {
+            } else if (_nextSyncCommitteeHash != po.nextSyncCommitteeHash) {
                 // If the next sync committee is non-zero, it should match the expected value.
-                revert NextSyncCommitteeMismatch(
-                    syncCommittees[nextPeriod], po.nextSyncCommitteeHash
-                );
+                revert NextSyncCommitteeMismatch(nextSyncCommitteeHash, po.nextSyncCommitteeHash);
             }
         }
 
