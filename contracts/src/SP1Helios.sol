@@ -216,7 +216,7 @@ contract SP1Helios {
         // Set the next sync committee if it is defined and not set.
         if (po.nextSyncCommitteeHash != bytes32(0)) {
             uint256 nextPeriod = newPeriod + 1;
-            
+
             bytes32 _nextSyncCommitteeHash = syncCommittees[nextPeriod];
             if (_nextSyncCommitteeHash == bytes32(0)) {
                 // If the next sync committee is not set, set it.

@@ -32,7 +32,7 @@ contract DeployScript is Script {
         string memory root = vm.projectRoot();
         string memory path = string.concat(root, "/", "genesis.json");
         string memory json = vm.readFile(path);
-        
+
         InitParams memory params = InitParams({
             executionStateRoot: vm.parseJsonBytes32(json, ".executionStateRoot"),
             executionBlockNumber: vm.parseJsonUint(json, ".executionBlockNumber"),

@@ -93,25 +93,6 @@ pub struct GenesisConfig {
     pub verifier: String,
 }
 
-
-// struct InitParams {
-//     bytes32 executionStateRoot;
-//     uint256 executionBlockNumber;
-//     uint256 genesisTime;
-//     bytes32 genesisValidatorsRoot;
-//     address guardian;
-//     uint256 head;
-//     bytes32 header;
-//     bytes32 lightClientVkey;
-//     bytes32 storageSlotVkey;
-//     uint256 secondsPerSlot;
-//     uint256 slotsPerEpoch;
-//     uint256 slotsPerPeriod;
-//     uint256 sourceChainId;
-//     bytes32 syncCommitteeHash;
-//     address verifier;
-// }
-
 #[tokio::main]
 pub async fn main() {
     tracing_subscriber::registry()
@@ -177,7 +158,7 @@ pub async fn main() {
         Some(guardian_address) => guardian_address,
         None => deployer_address,
     };
-    
+
     let genesis_config = GenesisConfig {
         execution_state_root: format!(
             "0x{:x}",
