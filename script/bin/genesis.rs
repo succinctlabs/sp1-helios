@@ -283,7 +283,7 @@ fn write_genesis_config(workspace_root: &Path, genesis_config: &GenesisConfig) -
         genesis_config_path,
         serde_json::to_string_pretty(&genesis_config)?,
     )?;
-    
+
     Ok(())
 }
 
