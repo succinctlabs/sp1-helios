@@ -83,12 +83,12 @@ pub struct GenesisConfig {
     pub guardian: String,
     pub head: u64,
     pub header: String,
-    pub lightclient_program_vkey: String,
-    pub storage_slots_program_vkey: String,
+    pub light_client_vkey: String,
     pub seconds_per_slot: u64,
     pub slots_per_epoch: u64,
     pub slots_per_period: u64,
     pub source_chain_id: u64,
+    pub storage_slot_vkey: String,
     pub sync_committee_hash: String,
     pub verifier: String,
 }
@@ -133,7 +133,7 @@ pub async fn main() {
         "Head is not a checkpoint slot, please deploy again."
     );
 
-    let sync_committee_hash = helios_client
+    let sync_committee_hash: alloy_primitives::FixedBytes<32> = helios_client
         .store
         .current_sync_committee
         .clone()
@@ -159,7 +159,6 @@ pub async fn main() {
         None => deployer_address,
     };
 
-    // Read the Genesis config from the contracts directory.
     let genesis_config = GenesisConfig {
         execution_state_root: format!(
             "0x{:x}",
@@ -181,8 +180,8 @@ pub async fn main() {
         guardian: guardian.to_string(),
         head,
         header: format!("0x{finalized_header:x}"),
-        lightclient_program_vkey: lightclient_pk.bytes32(),
-        storage_slots_program_vkey: storage_slots_pk.bytes32(),
+        light_client_vkey: lightclient_pk.bytes32(),
+        storage_slot_vkey: storage_slots_pk.bytes32(),
         seconds_per_slot: SECONDS_PER_SLOT,
         slots_per_epoch: MainnetConsensusSpec::slots_per_epoch(),
         slots_per_period: MainnetConsensusSpec::slots_per_sync_committee_period(),
@@ -284,6 +283,7 @@ fn write_genesis_config(workspace_root: &Path, genesis_config: &GenesisConfig) -
         genesis_config_path,
         serde_json::to_string_pretty(&genesis_config)?,
     )?;
+
     Ok(())
 }
 

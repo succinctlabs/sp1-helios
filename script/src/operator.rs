@@ -14,7 +14,9 @@ use sp1_helios_primitives::types::{
     ContractStorage, ProofInputs, ProofOutputs, SP1Helios, StorageSlotWithProof,
 };
 use sp1_helios_primitives::verify_storage_slot_proofs;
-use sp1_sdk::{EnvProver, ProverClient, SP1ProofWithPublicValues, SP1ProvingKey, SP1Stdin, HashableKey};
+use sp1_sdk::{
+    EnvProver, HashableKey, ProverClient, SP1ProofWithPublicValues, SP1ProvingKey, SP1Stdin,
+};
 use std::sync::Arc;
 use std::time::Duration;
 use tracing::{error, info};
@@ -240,7 +242,7 @@ where
         let contract = SP1Helios::new(self.contract_address, &self.provider);
         let contract_lightclient_vkey = contract.lightClientVkey().call().await?;
         let contract_storage_slot_vkey = contract.storageSlotVkey().call().await?;
-        
+
         if self.lightclient_pk.vk.bytes32_raw() != contract_lightclient_vkey.lightClientVkey {
             return Err(anyhow::anyhow!("Light client vkey mismatch"));
         }
@@ -248,7 +250,7 @@ where
         if self.storage_slots_pk.vk.bytes32_raw() != contract_storage_slot_vkey.storageSlotVkey {
             return Err(anyhow::anyhow!("Storage slot vkey mismatch"));
         }
-        
+
         Ok(())
     }
 }
@@ -284,7 +286,9 @@ where
             _transport: std::marker::PhantomData,
         };
 
-        this.check_vkeys().await.expect("Failed to create operator: vkeys mismatch");
+        this.check_vkeys()
+            .await
+            .expect("Failed to create operator: vkeys mismatch");
 
         this
     }
