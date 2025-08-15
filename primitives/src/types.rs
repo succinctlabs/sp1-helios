@@ -81,14 +81,14 @@ sol! {
         uint256 public immutable SLOTS_PER_PERIOD;
         uint32 public immutable SOURCE_CHAIN_ID;
         uint256 public head;
+        /// @notice The latest execution block number the light client has a finalized execution state root for.
+        uint256 public executionBlockNumber;
         mapping(uint256 => bytes32) public syncCommittees;
         mapping(uint256 => bytes32) public executionStateRoots;
         mapping(uint256 => bytes32) public headers;
-        /// @notice The verification key for the SP1 Helios light client program.
         bytes32 public lightClientVkey;
-
-        /// @notice The verification key for the storage slot proof program.
         bytes32 public storageSlotVkey;
+
         address public verifier;
 
         event HeadUpdate(uint256 indexed slot, bytes32 indexed root);
@@ -106,7 +106,6 @@ sol! {
         ) external;
 
         function getSyncCommitteePeriod(uint256 slot) internal view returns (uint256);
-        function getCurrentSlot() internal view returns (uint256);
         function getCurrentEpoch() internal view returns (uint256);
     }
 }
