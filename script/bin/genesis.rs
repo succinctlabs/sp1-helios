@@ -129,7 +129,7 @@ pub async fn main() {
 
     // Handle an edge-case where we end up on a slot that is not a checkpoint slot.
     assert!(
-        head % 32 == 0,
+        head.is_multiple_of(32),
         "Head is not a checkpoint slot, please deploy again."
     );
 

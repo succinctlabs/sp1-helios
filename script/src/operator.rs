@@ -4,7 +4,6 @@ use crate::{get_client, get_updates};
 use alloy::primitives::{Address, B256};
 use alloy::providers::{Provider, WalletProvider};
 use alloy::sol_types::SolType;
-use alloy::transports::Transport;
 use anyhow::{Context, Result};
 use helios_consensus_core::consensus_spec::MainnetConsensusSpec;
 use helios_ethereum::consensus::Inner;
@@ -27,7 +26,7 @@ use tokio::sync::{mpsc, oneshot, Mutex};
 const LIGHTCLIENT_ELF: &[u8] = include_bytes!("../../elf/light_client");
 const STORAGE_ELF: &[u8] = include_bytes!("../../elf/storage");
 
-pub struct SP1HeliosOperator<P, T> {
+pub struct SP1HeliosOperator<P> {
     client: Arc<EnvProver>,
     provider: P,
     lightclient_pk: Arc<SP1ProvingKey>,
@@ -36,13 +35,11 @@ pub struct SP1HeliosOperator<P, T> {
     storage_slots_to_fetch: Arc<Mutex<HashMap<Address, HashSet<B256>>>>,
     source_chain_id: u64,
     source_consensus_rpc: String,
-    _transport: std::marker::PhantomData<T>,
 }
 
-impl<T, P> SP1HeliosOperator<P, T>
+impl<P> SP1HeliosOperator<P>
 where
-    T: Transport + Clone,
-    P: Provider<T> + WalletProvider,
+    P: Provider + WalletProvider,
 {
     /// Fetch values and generate an 'update' proof for the SP1 Helios contract.
     async fn request_update(
@@ -55,7 +52,6 @@ where
             .call()
             .await
             .context("Failed to get head from contract")?
-            .head
             .try_into()
             .expect("Failed to convert head to u64, this is a bug.");
 
@@ -70,7 +66,7 @@ where
         if latest_block <= head {
             info!("Contract is up to date. Nothing to update.");
             return Ok(None);
-        } else if latest_block % 32 > 0 {
+        } else if !latest_block.is_multiple_of(32) {
             info!("Attempted to commit to a non-checkpoint slot: {latest_block}. Skipping update.");
             return Ok(None);
         }
@@ -132,7 +128,7 @@ where
         const NUM_CONFIRMATIONS: u64 = 3;
         const TIMEOUT_SECONDS: u64 = 60;
 
-        let po = ProofOutputs::abi_decode(proof.public_values.as_slice(), true)?;
+        let po = ProofOutputs::abi_decode(proof.public_values.as_slice())?;
 
         let tx = contract.update(
             proof.bytes().into(),
@@ -174,14 +170,7 @@ where
             return Ok(vec![]);
         }
 
-        let Some(block) = self
-            .provider
-            .get_block(
-                block_number.into(),
-                alloy::rpc::types::BlockTransactionsKind::Hashes,
-            )
-            .await?
-        else {
+        let Some(block) = self.provider.get_block(block_number.into()).await? else {
             anyhow::bail!("Failed to get block {block_number} from provider, this was expected to valid since the store claimed to have this block finalized.");
         };
 
@@ -243,11 +232,11 @@ where
         let contract_lightclient_vkey = contract.lightClientVkey().call().await?;
         let contract_storage_slot_vkey = contract.storageSlotVkey().call().await?;
 
-        if self.lightclient_pk.vk.bytes32_raw() != contract_lightclient_vkey.lightClientVkey {
+        if self.lightclient_pk.vk.bytes32_raw() != contract_lightclient_vkey {
             return Err(anyhow::anyhow!("Light client vkey mismatch"));
         }
 
-        if self.storage_slots_pk.vk.bytes32_raw() != contract_storage_slot_vkey.storageSlotVkey {
+        if self.storage_slots_pk.vk.bytes32_raw() != contract_storage_slot_vkey {
             return Err(anyhow::anyhow!("Storage slot vkey mismatch"));
         }
 
@@ -255,10 +244,9 @@ where
     }
 }
 
-impl<T, P> SP1HeliosOperator<P, T>
+impl<P> SP1HeliosOperator<P>
 where
-    P: Provider<T> + WalletProvider,
-    T: Transport + Clone,
+    P: Provider + WalletProvider,
 {
     /// Create a new SP1 Helios operator.
     pub async fn new(
@@ -283,7 +271,6 @@ where
             storage_slots_to_fetch: Arc::new(Mutex::new(HashMap::new())),
             source_chain_id: chain_id,
             source_consensus_rpc: consensus_rpc,
-            _transport: std::marker::PhantomData,
         };
 
         this.check_vkeys()
@@ -303,7 +290,6 @@ where
             .call()
             .await
             .context("Failed to get head from contract")?
-            .head
             .try_into()
             .expect("Failed to convert head to u64, this is a bug.");
 
@@ -338,14 +324,7 @@ where
         block_number: u64,
         contract_keys: Vec<ContractKeys>,
     ) -> Result<SP1ProofWithPublicValues> {
-        let Some(block) = self
-            .provider
-            .get_block(
-                block_number.into(),
-                alloy::rpc::types::BlockTransactionsKind::Hashes,
-            )
-            .await?
-        else {
+        let Some(block) = self.provider.get_block(block_number.into()).await? else {
             anyhow::bail!("Failed to get block {block_number} from provider, this was expected to valid since the store claimed to have this block finalized.");
         };
 
@@ -376,10 +355,9 @@ where
     }
 }
 
-impl<T, P> SP1HeliosOperator<P, T>
+impl<P> SP1HeliosOperator<P>
 where
-    P: Provider<T> + WalletProvider + 'static,
-    T: Transport + Clone + 'static,
+    P: Provider + WalletProvider + 'static,
 {
     /// Start the operator in [tokio] task, running indefinitely and retrying on failure.
     pub fn run(self, loop_delay: Duration) -> OperatorHandle {

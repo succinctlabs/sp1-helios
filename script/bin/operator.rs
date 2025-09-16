@@ -59,9 +59,8 @@ async fn main() {
     );
 
     let provider = ProviderBuilder::new()
-        .with_recommended_fillers()
         .wallet(wallet)
-        .on_http(args.rpc_url.parse().expect("Failed to parse RPC URL"));
+        .connect_http(args.rpc_url.parse().expect("Failed to parse RPC URL"));
 
     let operator = SP1HeliosOperator::new(
         provider,
