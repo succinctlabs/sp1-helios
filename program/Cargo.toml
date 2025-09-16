@@ -14,7 +14,7 @@ name = "storage"
 path = "src/storage.rs"
 
 [dependencies]
-sp1-zkvm = "5.0.0"
+sp1-zkvm = "5.2.1"
 helios-consensus-core = { workspace = true }
 serde_cbor = { workspace = true }
 sp1-helios-primitives = { workspace = true }

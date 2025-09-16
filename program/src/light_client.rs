@@ -68,7 +68,7 @@ pub fn main() {
         "New head is not greater than previous head."
     );
     assert!(
-        store.finalized_header.beacon().slot % 32 == 0,
+        store.finalized_header.beacon().slot.is_multiple_of(32),
         "New head is not a checkpoint slot."
     );
 

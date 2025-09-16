@@ -65,7 +65,7 @@ pub async fn get_client(
     let base_config = network.to_base_config();
 
     let config = Config {
-        consensus_rpc: consensus_rpc.to_string(),
+        consensus_rpc: consensus_rpc.parse()?,
         execution_rpc: None,
         chain: base_config.chain,
         forks: base_config.forks,
