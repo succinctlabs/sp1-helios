@@ -16,9 +16,9 @@ sp1-helios-program = { path = "program" }
 sp1-helios-primitives = { path = "primitives" }
 
 # helios
-helios = { git = "https://github.com/a16z/helios", tag = "0.9.1" }
-helios-consensus-core = { git = "https://github.com/a16z/helios", tag = "0.9.1" }
-helios-ethereum = { git = "https://github.com/a16z/helios", tag = "0.9.1" }
+helios = { git = "https://github.com/a16z/helios", tag = "0.9.4" }
+helios-consensus-core = { git = "https://github.com/a16z/helios", tag = "0.9.4" }
+helios-ethereum = { git = "https://github.com/a16z/helios", tag = "0.9.4" }
 
 # general
 dotenv = "0.15.0"
@@ -34,7 +34,7 @@ serde_cbor = "0.11.2"
 hex = "0.4.3"
 serde_json = "1.0.125"
 alloy-sol-types = "1.3.0"
-alloy-trie = "0.9"
+alloy-trie = "0.9.1"
 alloy-rlp = { version = "0.3.9", default-features = false, features = [
     "derive",
     "arrayvec",
@@ -43,8 +43,8 @@ clap = "4.5.9"
 log = "0.4.22"
 env_logger = "0.11.3"
 alloy-primitives = "1.3.0"
-alloy-contract = "1.0.3"
-alloy = { version = "1.0.3", features = ["full", "signer-ledger"] }
+alloy-contract = "1.0.37"
+alloy = { version = "1.0.37", features = ["full", "signer-ledger"] }
 anyhow = "1.0.86"
 reqwest = "0.12.5"
 tree_hash = "0.10.0"
