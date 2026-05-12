@@ -6,7 +6,7 @@ use clap::Parser;
 use helios_consensus_core::consensus_spec::{ConsensusSpec, MainnetConsensusSpec};
 use serde::{Deserialize, Serialize};
 use sp1_helios_script::get_client;
-use sp1_sdk::{HashableKey, Prover, ProverClient};
+use sp1_sdk::{HashableKey, Prover, ProverClient, ProvingKey};
 use std::{
     fmt::Debug,
     fs,
@@ -110,11 +110,17 @@ pub async fn main() {
     let args = GenesisArgs::parse();
 
     // Compute the Vkeys.
-    let client = ProverClient::builder().cpu().build();
+    let client = ProverClient::builder().cpu().build().await;
     tracing::info!("Setting up light client program...");
-    let (_, lightclient_pk) = client.setup(LIGHT_CLIENT_ELF);
+    let lightclient_pk = client
+        .setup(LIGHT_CLIENT_ELF.into())
+        .await
+        .expect("Failed to setup light client program");
     tracing::info!("Setting up storage slots program...");
-    let (_, storage_slots_pk) = client.setup(STORAGE_ELF);
+    let storage_slots_pk = client
+        .setup(STORAGE_ELF.into())
+        .await
+        .expect("Failed to setup storage slots program");
 
     let helios_client = get_client(args.slot, &args.source_consensus_rpc, args.source_chain_id)
         .await
@@ -180,8 +186,8 @@ pub async fn main() {
         guardian: guardian.to_string(),
         head,
         header: format!("0x{finalized_header:x}"),
-        light_client_vkey: lightclient_pk.bytes32(),
-        storage_slot_vkey: storage_slots_pk.bytes32(),
+        light_client_vkey: lightclient_pk.verifying_key().bytes32(),
+        storage_slot_vkey: storage_slots_pk.verifying_key().bytes32(),
         seconds_per_slot: SECONDS_PER_SLOT,
         slots_per_epoch: MainnetConsensusSpec::slots_per_epoch(),
         slots_per_period: MainnetConsensusSpec::slots_per_sync_committee_period(),

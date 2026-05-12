@@ -13,8 +13,9 @@ use sp1_helios_primitives::types::{
     ContractStorage, ProofInputs, ProofOutputs, SP1Helios, StorageSlotWithProof,
 };
 use sp1_helios_primitives::verify_storage_slot_proofs;
+use sp1_sdk::env::{EnvProver, EnvProvingKey};
 use sp1_sdk::{
-    EnvProver, HashableKey, ProverClient, SP1ProofWithPublicValues, SP1ProvingKey, SP1Stdin,
+    HashableKey, ProveRequest, Prover, ProverClient, ProvingKey, SP1ProofWithPublicValues, SP1Stdin,
 };
 use std::sync::Arc;
 use std::time::Duration;
@@ -29,8 +30,8 @@ const STORAGE_ELF: &[u8] = include_bytes!("../../elf/storage");
 pub struct SP1HeliosOperator<P> {
     client: Arc<EnvProver>,
     provider: P,
-    lightclient_pk: Arc<SP1ProvingKey>,
-    storage_slots_pk: Arc<SP1ProvingKey>,
+    lightclient_pk: Arc<EnvProvingKey>,
+    storage_slots_pk: Arc<EnvProvingKey>,
     contract_address: Address,
     storage_slots_to_fetch: Arc<Mutex<HashMap<Address, HashSet<B256>>>>,
     source_chain_id: u64,
@@ -103,13 +104,11 @@ where
         stdin.write_slice(&encoded_proof_inputs);
 
         // Generate proof.
-        let proof = tokio::task::spawn_blocking({
-            let client = self.client.clone();
-            let pk = self.lightclient_pk.clone();
-
-            move || client.prove(&pk, &stdin).plonk().run()
-        })
-        .await??;
+        let proof = self
+            .client
+            .prove(&self.lightclient_pk, stdin)
+            .plonk()
+            .await?;
 
         info!("Attempting to update to new head block: {:?}", latest_block);
         Ok(Some(proof))
@@ -232,11 +231,11 @@ where
         let contract_lightclient_vkey = contract.lightClientVkey().call().await?;
         let contract_storage_slot_vkey = contract.storageSlotVkey().call().await?;
 
-        if self.lightclient_pk.vk.bytes32_raw() != contract_lightclient_vkey {
+        if self.lightclient_pk.verifying_key().bytes32_raw() != contract_lightclient_vkey {
             return Err(anyhow::anyhow!("Light client vkey mismatch"));
         }
 
-        if self.storage_slots_pk.vk.bytes32_raw() != contract_storage_slot_vkey {
+        if self.storage_slots_pk.verifying_key().bytes32_raw() != contract_storage_slot_vkey {
             return Err(anyhow::anyhow!("Storage slot vkey mismatch"));
         }
 
@@ -255,12 +254,18 @@ where
         consensus_rpc: String,
         chain_id: u64,
     ) -> Self {
-        let client = ProverClient::from_env();
+        let client = ProverClient::from_env().await;
 
         tracing::info!("Setting up light client program...");
-        let (lightclient_pk, _) = client.setup(LIGHTCLIENT_ELF);
+        let lightclient_pk = client
+            .setup(LIGHTCLIENT_ELF.into())
+            .await
+            .expect("Failed to setup light client program");
         tracing::info!("Setting up storage slots program...");
-        let (storage_slots_pk, _) = client.setup(STORAGE_ELF);
+        let storage_slots_pk = client
+            .setup(STORAGE_ELF.into())
+            .await
+            .expect("Failed to setup storage slots program");
 
         let this = Self {
             client: Arc::new(client),
@@ -343,13 +348,11 @@ where
         stdin.write(&proofs);
         stdin.write(&block.header.state_root);
 
-        let proof = tokio::task::spawn_blocking({
-            let client = self.client.clone();
-            let pk = self.storage_slots_pk.clone();
-
-            move || client.prove(&pk, &stdin).plonk().run()
-        })
-        .await??;
+        let proof = self
+            .client
+            .prove(&self.storage_slots_pk, stdin)
+            .plonk()
+            .await?;
 
         Ok(proof)
     }

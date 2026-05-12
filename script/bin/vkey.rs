@@ -1,16 +1,23 @@
 use anyhow::Result;
-use sp1_sdk::{HashableKey, Prover, ProverClient};
+use sp1_sdk::{HashableKey, Prover, ProverClient, ProvingKey};
 
 const STORAGE_ELF: &[u8] = include_bytes!("../../elf/storage");
 const LIGHT_CLIENT_ELF: &[u8] = include_bytes!("../../elf/light_client");
 
-fn main() -> Result<()> {
-    let client = ProverClient::builder().cpu().build();
+#[tokio::main]
+async fn main() -> Result<()> {
+    let client = ProverClient::builder().cpu().build().await;
 
-    let (_pk, vk) = client.setup(STORAGE_ELF);
-    println!("SP1 Helios Storage Verifying Key: {:?}", vk.bytes32());
+    let pk = client.setup(STORAGE_ELF.into()).await?;
+    println!(
+        "SP1 Helios Storage Verifying Key: {:?}",
+        pk.verifying_key().bytes32()
+    );
 
-    let (_pk, vk) = client.setup(LIGHT_CLIENT_ELF);
-    println!("SP1 Helios Light Client Verifying Key: {:?}", vk.bytes32());
+    let pk = client.setup(LIGHT_CLIENT_ELF.into()).await?;
+    println!(
+        "SP1 Helios Light Client Verifying Key: {:?}",
+        pk.verifying_key().bytes32()
+    );
     Ok(())
 }
