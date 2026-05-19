@@ -51,6 +51,10 @@ sol! {
         bytes32 newHeader;
         /// The execution state root from the execution payload of the new beacon block.
         bytes32 executionStateRoot;
+        /// The execution block hash from the execution payload of the new beacon block.
+        bytes32 executionBlockHash;
+        /// The execution receipts root from the execution payload of the new beacon block.
+        bytes32 executionReceiptsRoot;
         /// The execution block number.
         uint256 executionBlockNumber;
         /// The sync committee hash of the current period.
@@ -85,6 +89,8 @@ sol! {
         uint256 public executionBlockNumber;
         mapping(uint256 => bytes32) public syncCommittees;
         mapping(uint256 => bytes32) public executionStateRoots;
+        mapping(uint256 => bytes32) public executionBlockHashes;
+        mapping(uint256 => bytes32) public executionReceiptsRoots;
         mapping(uint256 => bytes32) public headers;
         bytes32 public lightClientVkey;
         bytes32 public storageSlotVkey;
@@ -99,6 +105,8 @@ sol! {
             uint256 newHead,
             bytes32 newHeader,
             bytes32 executionStateRoot,
+            bytes32 executionBlockHash,
+            bytes32 executionReceiptsRoot,
             uint256 _executionBlockNumber,
             bytes32 syncCommitteeHash,
             bytes32 nextSyncCommitteeHash,

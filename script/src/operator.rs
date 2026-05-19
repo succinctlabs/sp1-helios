@@ -134,6 +134,8 @@ where
             po.newHead,
             po.newHeader,
             po.executionStateRoot,
+            po.executionBlockHash,
+            po.executionReceiptsRoot,
             po.executionBlockNumber,
             po.syncCommitteeHash,
             po.nextSyncCommitteeHash,

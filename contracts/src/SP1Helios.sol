@@ -23,6 +23,10 @@ struct ProofOutputs {
     bytes32 newHeader;
     /// The execution state root from the execution payload of the new beacon block.
     bytes32 executionStateRoot;
+    /// The execution block hash from the execution payload of the new beacon block.
+    bytes32 executionBlockHash;
+    /// The execution receipts root from the execution payload of the new beacon block.
+    bytes32 executionReceiptsRoot;
     /// The execution block number.
     uint256 executionBlockNumber;
     /// The sync committee hash of the current period.
@@ -82,6 +86,12 @@ contract SP1Helios {
 
     /// @notice Maps from a slot to the current finalized ethereum1 execution state root.
     mapping(uint256 => bytes32) public executionStateRoots;
+
+    /// @notice Maps from an execution block number to the corresponding execution block hash.
+    mapping(uint256 => bytes32) public executionBlockHashes;
+
+    /// @notice Maps from an execution block number to the corresponding execution receipts root.
+    mapping(uint256 => bytes32) public executionReceiptsRoots;
 
     /// @notice Maps from a period to the hash for the sync committee.
     mapping(uint256 => bytes32) public syncCommittees;
@@ -143,6 +153,8 @@ contract SP1Helios {
     /// @param newHead The slot of the new head.
     /// @param newHeader The new beacon block header hash.
     /// @param executionStateRoot The execution state root from the execution payload of the new beacon block.
+    /// @param executionBlockHash The execution block hash from the execution payload of the new beacon block.
+    /// @param executionReceiptsRoot The execution receipts root from the execution payload of the new beacon block.
     /// @param _executionBlockNumber The execution block number.
     /// @param syncCommitteeHash The sync committee hash of the current period.
     /// @param nextSyncCommitteeHash The sync committee hash of the next period.
@@ -151,6 +163,8 @@ contract SP1Helios {
         uint256 newHead,
         bytes32 newHeader,
         bytes32 executionStateRoot,
+        bytes32 executionBlockHash,
+        bytes32 executionReceiptsRoot,
         uint256 _executionBlockNumber,
         bytes32 syncCommitteeHash,
         bytes32 nextSyncCommitteeHash,
@@ -171,6 +185,8 @@ contract SP1Helios {
             newHead: newHead,
             newHeader: newHeader,
             executionStateRoot: executionStateRoot,
+            executionBlockHash: executionBlockHash,
+            executionReceiptsRoot: executionReceiptsRoot,
             executionBlockNumber: _executionBlockNumber,
             syncCommitteeHash: syncCommitteeHash,
             nextSyncCommitteeHash: nextSyncCommitteeHash,
@@ -178,7 +194,7 @@ contract SP1Helios {
         });
 
         // Verify the proof with the associated public values. This will revert if the proof is invalid.
-        ISP1Verifier(verifier).verifyProof(lightClientVkey, abi.encode(po), proof);
+        verifyUpdateProof(proof, po);
 
         // Confirm that the new slot is greater than the current head.
         if (po.newHead <= head) {
@@ -201,6 +217,8 @@ contract SP1Helios {
         // Update the EL information.
         executionBlockNumber = po.executionBlockNumber;
         executionStateRoots[po.executionBlockNumber] = po.executionStateRoot;
+        executionBlockHashes[po.executionBlockNumber] = po.executionBlockHash;
+        executionReceiptsRoots[po.executionBlockNumber] = po.executionReceiptsRoot;
 
         // Get the new period associated with the new head.
         uint256 newPeriod = getSyncCommitteePeriod(po.newHead);
@@ -237,6 +255,10 @@ contract SP1Helios {
         }
 
         emit HeadUpdate(po.newHead, po.newHeader);
+    }
+
+    function verifyUpdateProof(bytes calldata proof, ProofOutputs memory po) private view {
+        ISP1Verifier(verifier).verifyProof(lightClientVkey, abi.encode(po), proof);
     }
 
     /// @notice Verifies a storage slot proof, and saves the storage slots to the contract.
