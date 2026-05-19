@@ -95,6 +95,8 @@ pub fn main() {
 
     let proof_outputs = ProofOutputs {
         executionStateRoot: *execution.state_root(),
+        executionBlockHash: *execution.block_hash(),
+        executionReceiptsRoot: *execution.receipts_root(),
         newHeader: header,
         executionBlockNumber: U256::from(*execution.block_number()),
         nextSyncCommitteeHash: next_sync_committee_hash,
