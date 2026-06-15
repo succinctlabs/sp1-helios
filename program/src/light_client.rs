@@ -34,6 +34,25 @@ pub fn main() {
         contract_storage,
     } = serde_cbor::from_slice(&encoded_inputs).unwrap();
 
+    // SECURITY: the entire `store` is deserialized from prover-controlled input, so any field that
+    // is not re-derived from verified data inside this program must not be trusted. Unlike
+    // `current_sync_committee` (which the contract anchors on-chain via `prevSyncCommitteeHash`),
+    // `next_sync_committee` has no on-chain anchor. If we trusted the supplied value, a malicious
+    // prover could:
+    //   1. commit an arbitrary `nextSyncCommitteeHash` — e.g. with `updates` empty the loop below
+    //      never runs, so nothing constrains it — which the contract then stores as the canonical
+    //      committee for the next period; and
+    //   2. have `verify_update` check an update's signature against this attacker-chosen committee
+    //      (helios verifies updates whose signature period is `store_period + 1` against
+    //      `store.next_sync_committee`), enabling outright beacon-header / execution-state-root
+    //      forgery in a single proof.
+    // A legitimate `next_sync_committee` is only ever produced by `apply_update` after
+    // `verify_update` validates the update's `next_sync_committee` against its Merkle branch (rooted
+    // in a header signed by the trusted current committee). A fresh helios bootstrap also always
+    // starts with `next_sync_committee = None` (see `apply_bootstrap`), so resetting it here is a
+    // no-op for honest provers and the only safe starting point.
+    store.next_sync_committee = None;
+
     // Get the initial sync committee hash. When verifying the proof, this is secured by the
     // `prevSyncCommitteeHash` field in the `ProofOutputs` struct.
     let prev_sync_committee_hash = store.current_sync_committee.tree_hash_root();
