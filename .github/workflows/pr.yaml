@@ -41,3 +41,29 @@ jobs:
         run: cargo clippy --all-features --all-targets -- -D warnings -A incomplete-features
         env:
           CARGO_INCREMENTAL: 1
+
+  test:
+    name: Test
+    runs-on: [runs-on, runner=4cpu-linux-arm64, "run-id=${{ github.run_id }}"]
+    env:
+      CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+
+      - name: Install protobuf compiler
+        run: sudo apt-get update && sudo apt-get install -y protobuf-compiler
+
+      # Runs the next_sync_committee regression test (GHSA-83q5-vwj7-gxww) by
+      # executing the committed light-client ELF in the SP1 executor. No prover
+      # build needed, so the ELF is taken as-is.
+      - name: Run regression test
+        run: cargo test --release -p sp1-helios-script --test execute
+        env:
+          SP1_SKIP_PROGRAM_BUILD: "true"
