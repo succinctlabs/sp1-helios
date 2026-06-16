@@ -1,7 +1,7 @@
 //! Generate the `ProofInputs` fixture used by the light-client executor regression test.
 //!
 //! Mirrors `operator::request_update` / `lib::{get_client, get_updates}`: bootstrap a helios
-//! client a few sync-committee periods behind the latest finalized checkpoint, fetch the
+//! client a few checkpoints behind the latest finalized checkpoint (same sync-committee period), fetch the
 //! committee `updates` and the latest `finality_update`, and serialize the resulting
 //! `ProofInputs` (with no contract storage) to CBOR.
 //!
