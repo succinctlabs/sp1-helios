@@ -17,6 +17,10 @@ path = "./bin/operator.rs"
 name = "vkey"
 path = "./bin/vkey.rs"
 
+[[bin]]
+name = "gen_fixture"
+path = "./bin/gen_fixture.rs"
+
 [dependencies]
 dotenv = { workspace = true }
 sp1-sdk = { workspace = true }
