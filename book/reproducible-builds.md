@@ -1,45 +1,54 @@
 # Reproducible Builds
 
-## Overview
-
-When deploying SP1 Helios in production, it's important to ensure that the program used when generating proofs is reproducible.
+The two guest ELFs in `elf/` (`light_client` and `storage`) determine
+the vkeys stored in `SP1Helios`. For a deployment to be auditable, those
+ELFs must be reproducible from source.
 
 ## Prerequisites
 
-You first need to install the [cargo prove](https://docs.succinct.xyz/getting-started/install.html#option-1-prebuilt-binaries-recommended) toolchain.
-
-Ensure that you have the latest version of the toolchain by running:
+The [`cargo prove`](https://docs.succinct.xyz/docs/sp1/getting-started/install)
+toolchain. Install or update with:
 
 ```bash
+curl -L https://sp1.succinct.xyz | bash
 sp1up
-```
-
-Confirm that you have the toolchain installed by running:
-
-```bash
 cargo prove --version
 ```
 
-## Verify the SP1 Helios binary
-
-To build the SP1 Helios binary, first ensure that Docker is running.
+Reproducible builds happen inside a Docker image, so a working Docker
+daemon is required:
 
 ```bash
 docker ps
 ```
 
-Then build the binaries:
+## Build
+
+Build both guests with the SP1 toolchain version pinned to the one
+declared in the workspace `Cargo.toml` (`sp1-sdk` / `sp1-build`). Run
+from the workspace root:
 
 ```bash
 cd program
-
-# Builds the SP1 Helios binary using the corresponding Docker tag, output directory and ELF name.
-cargo prove build --docker --tag v4.1.7 --elf-name sp1-helios-elf --output-directory ../elf
+cargo prove build --docker --tag v<SP1_VERSION> --output-directory ../elf
 ```
 
-Now, verify the binaries by confirming the output of `vkey` matches the vkeys on the contract. The `vkey` program outputs the verification key
-based on the ELF in `/elf`.
+Replace `<SP1_VERSION>` with the version in `Cargo.toml` (for example,
+`v5.2.4`). Both `light_client` and `storage` binaries will be written
+to `../elf/`. The output should be byte-identical across machines.
+
+## Verify the vkeys
+
+The `vkey` script reads each ELF and prints its verification key:
 
 ```bash
 cargo run --bin vkey --release
 ```
+
+The printed `Light Client Verifying Key` must equal `SP1Helios.lightClientVkey()`
+on the deployed contract, and `Storage Verifying Key` must equal
+`SP1Helios.storageSlotVkey()`. If they do not match, the deployment is
+either using a different guest version or a non-reproducible build — do
+not trust it without resolving the discrepancy (e.g. by asking the
+guardian to rotate the vkeys via `updateLightClientVkey` /
+`updateStorageSlotVkey`).
