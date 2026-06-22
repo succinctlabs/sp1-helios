@@ -17,6 +17,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use tree_hash::TreeHash;
 
 const LIGHT_CLIENT_ELF: &[u8] = include_bytes!("../../elf/light_client");
+const EXECUTION_HEADER_ELF: &[u8] = include_bytes!("../../elf/execution_header");
 const STORAGE_ELF: &[u8] = include_bytes!("../../elf/storage");
 const SECONDS_PER_SLOT: u64 = 12;
 
@@ -78,8 +79,11 @@ pub struct GenesisArgs {
 pub struct GenesisConfig {
     pub execution_state_root: String,
     pub execution_block_number: u64,
+    pub execution_block_hash: String,
+    pub execution_receipts_root: String,
     pub genesis_time: u64,
     pub genesis_validators_root: String,
+    pub execution_header_vkey: String,
     pub guardian: String,
     pub head: u64,
     pub header: String,
@@ -116,6 +120,11 @@ pub async fn main() {
         .setup(LIGHT_CLIENT_ELF.into())
         .await
         .expect("Failed to setup light client program");
+    tracing::info!("Setting up execution header program...");
+    let execution_header_pk = client
+        .setup(EXECUTION_HEADER_ELF.into())
+        .await
+        .expect("Failed to setup execution header program");
     tracing::info!("Setting up storage slots program...");
     let storage_slots_pk = client
         .setup(STORAGE_ELF.into())
@@ -146,6 +155,11 @@ pub async fn main() {
         .tree_hash_root();
     let genesis_time = helios_client.config.chain.genesis_time;
     let genesis_root = helios_client.config.chain.genesis_root;
+    let execution = helios_client
+        .store
+        .finalized_header
+        .execution()
+        .expect("Execution payload doesn't exist.");
 
     // Get the workspace root with cargo metadata to make the paths.
     let workspace_root = PathBuf::from(
@@ -166,23 +180,13 @@ pub async fn main() {
     };
 
     let genesis_config = GenesisConfig {
-        execution_state_root: format!(
-            "0x{:x}",
-            *helios_client
-                .store
-                .finalized_header
-                .execution()
-                .expect("Execution payload doesn't exist.")
-                .state_root()
-        ),
-        execution_block_number: *helios_client
-            .store
-            .finalized_header
-            .execution()
-            .expect("Execution payload doesn't exist.")
-            .block_number(),
+        execution_state_root: format!("0x{:x}", *execution.state_root()),
+        execution_block_number: *execution.block_number(),
+        execution_block_hash: format!("0x{:x}", *execution.block_hash()),
+        execution_receipts_root: format!("0x{:x}", *execution.receipts_root()),
         genesis_time,
         genesis_validators_root: format!("0x{genesis_root:x}"),
+        execution_header_vkey: execution_header_pk.verifying_key().bytes32(),
         guardian: guardian.to_string(),
         head,
         header: format!("0x{finalized_header:x}"),
