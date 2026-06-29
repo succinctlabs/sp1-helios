@@ -28,13 +28,26 @@ pub async fn get_updates(
     let period =
         calc_sync_period::<MainnetConsensusSpec>(client.store.finalized_header.beacon().slot);
 
-    let updates = client
+    let mut updates = client
         .rpc
         .get_updates(period, MAX_REQUEST_LIGHT_CLIENT_UPDATES)
         .await
         .unwrap();
 
-    updates.clone()
+    updates.retain(|update| {
+        let signature_period = calc_sync_period::<MainnetConsensusSpec>(*update.signature_slot());
+        update_period_in_requested_window(
+            signature_period,
+            period,
+            MAX_REQUEST_LIGHT_CLIENT_UPDATES,
+        )
+    });
+    updates.sort_by_key(|update| *update.signature_slot());
+    updates
+}
+
+fn update_period_in_requested_window(signature_period: u64, start_period: u64, count: u8) -> bool {
+    signature_period >= start_period && signature_period < start_period + u64::from(count)
 }
 
 /// Fetch latest checkpoint from chain to bootstrap client to the latest state.
@@ -104,4 +117,21 @@ pub async fn get_client(
         .map_err(|e| anyhow!("error bootstrapping client: {}", e.to_string()))?;
 
     Ok(client)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::update_period_in_requested_window;
+
+    #[test]
+    fn accepts_requested_update_window() {
+        assert!(update_period_in_requested_window(1289, 1289, 128));
+        assert!(update_period_in_requested_window(1416, 1289, 128));
+    }
+
+    #[test]
+    fn rejects_out_of_window_update_periods() {
+        assert!(!update_period_in_requested_window(1288, 1289, 128));
+        assert!(!update_period_in_requested_window(1417, 1289, 128));
+    }
 }

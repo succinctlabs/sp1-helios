@@ -2,7 +2,7 @@ use alloy::network::EthereumWallet;
 use alloy::primitives::Address;
 use alloy::providers::ProviderBuilder;
 use alloy::signers::local::PrivateKeySigner;
-use sp1_helios_script::operator::SP1HeliosOperator;
+use sp1_helios_script::operator::{SP1HeliosOperator, UpdateMode};
 use std::time::Duration;
 use tracing_subscriber::fmt;
 use tracing_subscriber::layer::SubscriberExt;
@@ -36,6 +36,10 @@ pub struct OperatorArgs {
     /// The delay between operator runs in minutes.
     #[arg(long, default_value = "5")]
     pub loop_delay_mins: u64,
+
+    /// Use the V2 execution-header update path instead of the legacy light-client path.
+    #[arg(long, default_value_t = false)]
+    pub execution_header: bool,
 }
 
 #[tokio::main]
@@ -62,11 +66,18 @@ async fn main() {
         .wallet(wallet)
         .connect_http(args.rpc_url.parse().expect("Failed to parse RPC URL"));
 
+    let update_mode = if args.execution_header {
+        UpdateMode::ExecutionHeader
+    } else {
+        UpdateMode::Legacy
+    };
+
     let operator = SP1HeliosOperator::new(
         provider,
         args.contract_address,
         args.source_consensus_rpc,
         args.source_chain_id,
+        update_mode,
     )
     .await;
 

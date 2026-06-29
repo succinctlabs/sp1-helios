@@ -10,6 +10,10 @@ name = "light_client"
 path = "src/light_client.rs"
 
 [[bin]]
+name = "execution_header"
+path = "src/execution_header.rs"
+
+[[bin]]
 name = "storage"
 path = "src/storage.rs"
 
