@@ -15,14 +15,8 @@ use sp1_helios_primitives::types::{
 };
 use sp1_helios_primitives::verify_storage_slot_proofs;
 use sp1_sdk::env::{EnvProver, EnvProvingKey};
-#[cfg(feature = "reserved-network")]
 use sp1_sdk::{
-    network::{FulfillmentStrategy, NetworkMode},
-    NetworkProver, SP1ProvingKey,
-};
-use sp1_sdk::{
-    Elf, HashableKey, ProveRequest, Prover, ProverClient, ProvingKey, SP1ProofWithPublicValues,
-    SP1Stdin, SP1VerifyingKey,
+    HashableKey, ProveRequest, Prover, ProverClient, ProvingKey, SP1ProofWithPublicValues, SP1Stdin,
 };
 use std::sync::Arc;
 use std::time::Duration;
@@ -57,88 +51,11 @@ impl UpdateMode {
     }
 }
 
-enum OperatorProver {
-    Env(EnvProver),
-    #[cfg(feature = "reserved-network")]
-    Reserved(NetworkProver),
-}
-
-#[derive(Clone)]
-enum OperatorProvingKey {
-    Env(EnvProvingKey),
-    #[cfg(feature = "reserved-network")]
-    Reserved(SP1ProvingKey),
-}
-
-impl ProvingKey for OperatorProvingKey {
-    fn verifying_key(&self) -> &SP1VerifyingKey {
-        match self {
-            Self::Env(pk) => pk.verifying_key(),
-            #[cfg(feature = "reserved-network")]
-            Self::Reserved(pk) => pk.verifying_key(),
-        }
-    }
-
-    fn elf(&self) -> &Elf {
-        match self {
-            Self::Env(pk) => pk.elf(),
-            #[cfg(feature = "reserved-network")]
-            Self::Reserved(pk) => pk.elf(),
-        }
-    }
-}
-
-impl OperatorProver {
-    async fn from_env() -> Result<Self> {
-        #[cfg(feature = "reserved-network")]
-        if std::env::var("SP1_PROVER").as_deref() == Ok("reserved") {
-            let private_key = std::env::var("SP1_PRIVATE_KEY")
-                .context("SP1_PRIVATE_KEY is required for SP1_PROVER=reserved")?;
-            let client = ProverClient::builder()
-                .network_for(NetworkMode::Reserved)
-                .private_key(&private_key)
-                .build()
-                .await;
-            return Ok(Self::Reserved(client));
-        }
-
-        Ok(Self::Env(ProverClient::from_env().await))
-    }
-
-    async fn setup(&self, elf: Elf) -> Result<OperatorProvingKey> {
-        match self {
-            Self::Env(client) => Ok(OperatorProvingKey::Env(client.setup(elf).await?)),
-            #[cfg(feature = "reserved-network")]
-            Self::Reserved(client) => Ok(OperatorProvingKey::Reserved(client.setup(elf).await?)),
-        }
-    }
-
-    async fn prove_plonk(
-        &self,
-        pk: &OperatorProvingKey,
-        stdin: SP1Stdin,
-    ) -> Result<SP1ProofWithPublicValues> {
-        match (self, pk) {
-            (Self::Env(client), OperatorProvingKey::Env(pk)) => {
-                Ok(client.prove(pk, stdin).plonk().await?)
-            }
-            #[cfg(feature = "reserved-network")]
-            (Self::Reserved(client), OperatorProvingKey::Reserved(pk)) => Ok(client
-                .prove(pk, stdin)
-                .strategy(FulfillmentStrategy::Reserved)
-                .plonk()
-                .await?),
-            #[cfg(feature = "reserved-network")]
-            _ => anyhow::bail!("prover and proving key variants do not match"),
-        }
-    }
-}
-
 pub struct SP1HeliosOperator<P> {
-    client: Arc<OperatorProver>,
+    client: Arc<EnvProver>,
     provider: P,
-    update_pk: Arc<OperatorProvingKey>,
-    storage_slots_pk: Arc<OperatorProvingKey>,
+    update_pk: Arc<EnvProvingKey>,
+    storage_slots_pk: Arc<EnvProvingKey>,
     contract_address: Address,
     storage_slots_to_fetch: Arc<Mutex<HashMap<Address, HashSet<B256>>>>,
     source_chain_id: u64,
@@ -212,10 +129,7 @@ where
         stdin.write_slice(&encoded_proof_inputs);
 
         // Generate proof.
-        let proof = self
-            .client
-            .prove_plonk(self.update_pk.as_ref(), stdin)
-            .await?;
+        let proof = self.client.prove(&self.update_pk, stdin).plonk().await?;
 
         info!("Attempting to update to new head block: {:?}", latest_block);
         Ok(Some(proof))
@@ -382,9 +296,7 @@ where
         chain_id: u64,
         update_mode: UpdateMode,
     ) -> Self {
-        let client = OperatorProver::from_env()
-            .await
-            .expect("Failed to initialize prover");
+        let client = ProverClient::from_env().await;
 
         tracing::info!("Setting up {} program...", update_mode.label());
         let update_pk = client
@@ -481,7 +393,8 @@ where
 
         let proof = self
             .client
-            .prove_plonk(self.storage_slots_pk.as_ref(), stdin)
+            .prove(&self.storage_slots_pk, stdin)
+            .plonk()
             .await?;
 
         Ok(proof)
