@@ -14,9 +14,10 @@ use sp1_helios_primitives::types::{
     StorageSlotWithProof,
 };
 use sp1_helios_primitives::verify_storage_slot_proofs;
-use sp1_sdk::env::{EnvProver, EnvProvingKey};
 use sp1_sdk::{
-    HashableKey, ProveRequest, Prover, ProverClient, ProvingKey, SP1ProofWithPublicValues, SP1Stdin,
+    network::{signer::NetworkSigner, FulfillmentStrategy, NetworkMode},
+    HashableKey, NetworkProver, ProveRequest, Prover, ProverClient, ProvingKey, SP1ProofMode,
+    SP1ProofWithPublicValues, SP1ProvingKey, SP1Stdin,
 };
 use std::sync::Arc;
 use std::time::Duration;
@@ -52,15 +53,52 @@ impl ExecutionCommitment {
 }
 
 pub struct SP1HeliosOperator<P> {
-    client: Arc<EnvProver>,
+    client: Arc<NetworkProver>,
     provider: P,
-    update_pk: Arc<EnvProvingKey>,
-    storage_slots_pk: Arc<EnvProvingKey>,
+    update_pk: Arc<SP1ProvingKey>,
+    storage_slots_pk: Arc<SP1ProvingKey>,
     contract_address: Address,
     storage_slots_to_fetch: Arc<Mutex<HashMap<Address, HashSet<B256>>>>,
     source_chain_id: u64,
     source_consensus_rpc: String,
     execution_commitment: ExecutionCommitment,
+    fulfillment_strategy: FulfillmentStrategy,
+    proof_mode: SP1ProofMode,
+}
+
+pub struct ProverSettings {
+    pub network_signer: NetworkSigner,
+    pub fulfillment_strategy: FulfillmentStrategy,
+    pub proof_mode: SP1ProofMode,
+}
+
+pub fn parse_fulfillment_strategy(value: &str) -> Result<FulfillmentStrategy> {
+    match value.to_ascii_lowercase().as_str() {
+        "auction" => Ok(FulfillmentStrategy::Auction),
+        "hosted" => Ok(FulfillmentStrategy::Hosted),
+        "reserved" => Ok(FulfillmentStrategy::Reserved),
+        _ => anyhow::bail!(
+            "invalid SP1_HELIOS_FULFILLMENT_STRATEGY '{value}'; expected auction, hosted, or reserved"
+        ),
+    }
+}
+
+pub fn network_mode_for(strategy: FulfillmentStrategy) -> NetworkMode {
+    match strategy {
+        FulfillmentStrategy::Auction => NetworkMode::Mainnet,
+        FulfillmentStrategy::Hosted | FulfillmentStrategy::Reserved => NetworkMode::Reserved,
+        FulfillmentStrategy::UnspecifiedFulfillmentStrategy => {
+            unreachable!("parse_fulfillment_strategy rejects unspecified")
+        }
+    }
+}
+
+pub fn parse_proof_mode(value: &str) -> Result<SP1ProofMode> {
+    match value.to_ascii_lowercase().as_str() {
+        "plonk" => Ok(SP1ProofMode::Plonk),
+        "groth16" => Ok(SP1ProofMode::Groth16),
+        _ => anyhow::bail!("invalid SP1_HELIOS_PROOF_MODE '{value}'; expected plonk or groth16"),
+    }
 }
 
 impl<P> SP1HeliosOperator<P>
@@ -129,7 +167,12 @@ where
         stdin.write_slice(&encoded_proof_inputs);
 
         // Generate proof.
-        let proof = self.client.prove(&self.update_pk, stdin).plonk().await?;
+        let proof = self
+            .client
+            .prove(&self.update_pk, stdin)
+            .mode(self.proof_mode)
+            .strategy(self.fulfillment_strategy)
+            .await?;
 
         info!("Attempting to update to new head block: {:?}", latest_block);
         Ok(Some(proof))
@@ -297,8 +340,13 @@ where
         consensus_rpc: String,
         chain_id: u64,
         execution_commitment: ExecutionCommitment,
+        prover_settings: ProverSettings,
     ) -> Self {
-        let client = ProverClient::from_env().await;
+        let client = ProverClient::builder()
+            .network_for(network_mode_for(prover_settings.fulfillment_strategy))
+            .signer(prover_settings.network_signer)
+            .build()
+            .await;
 
         tracing::info!("Setting up {} program...", execution_commitment.label());
         let update_pk = client
@@ -321,6 +369,8 @@ where
             source_chain_id: chain_id,
             source_consensus_rpc: consensus_rpc,
             execution_commitment,
+            fulfillment_strategy: prover_settings.fulfillment_strategy,
+            proof_mode: prover_settings.proof_mode,
         };
 
         this.check_vkeys()
@@ -396,7 +446,8 @@ where
         let proof = self
             .client
             .prove(&self.storage_slots_pk, stdin)
-            .plonk()
+            .mode(self.proof_mode)
+            .strategy(self.fulfillment_strategy)
             .await?;
 
         Ok(proof)
@@ -467,5 +518,38 @@ where
         });
 
         operator_handle
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parses_operator_prover_config() {
+        assert_eq!(
+            parse_fulfillment_strategy("auction").unwrap(),
+            FulfillmentStrategy::Auction
+        );
+        assert_eq!(
+            parse_fulfillment_strategy("HOSTED").unwrap(),
+            FulfillmentStrategy::Hosted
+        );
+        assert_eq!(
+            parse_fulfillment_strategy("reserved").unwrap(),
+            FulfillmentStrategy::Reserved
+        );
+        assert_eq!(
+            network_mode_for(FulfillmentStrategy::Auction),
+            NetworkMode::Mainnet
+        );
+        assert_eq!(
+            network_mode_for(FulfillmentStrategy::Reserved),
+            NetworkMode::Reserved
+        );
+        assert_eq!(parse_proof_mode("plonk").unwrap(), SP1ProofMode::Plonk);
+        assert_eq!(parse_proof_mode("GROTH16").unwrap(), SP1ProofMode::Groth16);
+        assert!(parse_fulfillment_strategy("network").is_err());
+        assert!(parse_proof_mode("compressed").is_err());
     }
 }

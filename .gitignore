@@ -21,6 +21,7 @@ pgo-data.profdata
 /script/examples/*
 
 # AI
+agents/
 .claude/
 .codex/
 .shellbrain/

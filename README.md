@@ -8,7 +8,11 @@ SP1 Helios verifies the consensus of a source chain in the execution environment
 
 ## Operator
 
-The operator has two commitment modes: (1) default mode and (2) execution-header mode.
+The operator keeps an on-chain SP1 Helios light client updated by proving finalized source-chain consensus updates and submitting them to the destination-chain SP1 Helios contract.
+
+Proof requests are fulfilled through the [Succinct Prover Network](https://docs.succinct.xyz/docs/sp1/prover-network/quickstart). See `.env.example` for additional configuration.
+
+The operator supports two commitment modes: (1) default mode and (2) execution-header mode.
 
 ### 1. Default mode
 
