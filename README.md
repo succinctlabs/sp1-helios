@@ -8,8 +8,11 @@ SP1 Helios verifies the consensus of a source chain in the execution environment
 
 ## Operator
 
-By default, the operator commits finalized light-client state and the execution
-state root:
+The operator has two commitment modes: (1) default mode and (2) execution-header mode.
+
+### 1. Default mode
+
+This mode commits only finalized light-client state and the execution state root.
 
 ```sh
 cargo run -p sp1-helios-script --bin operator -- \
@@ -20,8 +23,13 @@ cargo run -p sp1-helios-script --bin operator -- \
   --private-key "$DESTINATION_PRIVATE_KEY"
 ```
 
-Receipt/log consumers also need the finalized execution block hash and receipts
-root. Use `--commit-execution-header` for that path:
+### 2. Execution-header mode
+
+This mode commits everything from the default mode, plus the finalized execution
+block hash and finalized execution receipts root. Use this when a consumer needs
+receipt or log inclusion.
+
+**NOTE:** This adds about 45k gas per successful operator update, mostly from two extra storage writes.
 
 ```sh
 cargo run -p sp1-helios-script --bin operator -- \
@@ -32,5 +40,3 @@ cargo run -p sp1-helios-script --bin operator -- \
   --private-key "$DESTINATION_PRIVATE_KEY" \
   --commit-execution-header
 ```
-
-This writes extra on-chain storage for each update.
