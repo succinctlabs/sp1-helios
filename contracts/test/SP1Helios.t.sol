@@ -71,15 +71,15 @@ contract SP1HeliosTest {
         );
     }
 
-    function test_LegacyUpdatePreservesExistingPath() public {
+    function test_UpdateStoresStateRootOnly() public {
         verifier.expectProof(LIGHT_CLIENT_VKEY, PROOF);
         helios.update(
             PROOF, 64, NEW_HEADER, NEW_STATE_ROOT, 101, SYNC_COMMITTEE, bytes32(0), _emptySlots()
         );
 
         _assertEq(helios.latestExecutionStateRoot(), NEW_STATE_ROOT, "latest state root");
-        _assertEq(helios.executionBlockHashes(101), bytes32(0), "legacy block hash unset");
-        _assertEq(helios.executionReceiptsRoots(101), bytes32(0), "legacy receipts root unset");
+        _assertEq(helios.executionBlockHashes(101), bytes32(0), "block hash unset");
+        _assertEq(helios.executionReceiptsRoots(101), bytes32(0), "receipts root unset");
     }
 
     function test_UpdateExecutionHeaderStoresExecutionCommitments() public {

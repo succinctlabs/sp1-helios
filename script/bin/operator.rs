@@ -2,7 +2,7 @@ use alloy::network::EthereumWallet;
 use alloy::primitives::Address;
 use alloy::providers::ProviderBuilder;
 use alloy::signers::local::PrivateKeySigner;
-use sp1_helios_script::operator::{SP1HeliosOperator, UpdateMode};
+use sp1_helios_script::operator::{ExecutionCommitment, SP1HeliosOperator};
 use std::time::Duration;
 use tracing_subscriber::fmt;
 use tracing_subscriber::layer::SubscriberExt;
@@ -37,9 +37,9 @@ pub struct OperatorArgs {
     #[arg(long, default_value = "5")]
     pub loop_delay_mins: u64,
 
-    /// Use the V2 execution-header update path instead of the legacy light-client path.
+    /// Commit finalized execution block hash and receipts root in addition to the state root.
     #[arg(long, default_value_t = false)]
-    pub execution_header: bool,
+    pub commit_execution_header: bool,
 }
 
 #[tokio::main]
@@ -66,10 +66,10 @@ async fn main() {
         .wallet(wallet)
         .connect_http(args.rpc_url.parse().expect("Failed to parse RPC URL"));
 
-    let update_mode = if args.execution_header {
-        UpdateMode::ExecutionHeader
+    let execution_commitment = if args.commit_execution_header {
+        ExecutionCommitment::HeaderWithReceipts
     } else {
-        UpdateMode::Legacy
+        ExecutionCommitment::StateRootOnly
     };
 
     let operator = SP1HeliosOperator::new(
@@ -77,7 +77,7 @@ async fn main() {
         args.contract_address,
         args.source_consensus_rpc,
         args.source_chain_id,
-        update_mode,
+        execution_commitment,
     )
     .await;
 

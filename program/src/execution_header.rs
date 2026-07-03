@@ -27,8 +27,8 @@ pub fn main() {
         contract_storage,
     } = serde_cbor::from_slice(&encoded_inputs).unwrap();
 
-    // SECURITY: `store` is prover-controlled input. Keep this in sync with the legacy light-client
-    // program so V2 does not reopen GHSA-83q5-vwj7-gxww.
+    // SECURITY: `store` is prover-controlled input. Keep this in sync with the light-client
+    // program so this path does not reopen GHSA-83q5-vwj7-gxww.
     store.next_sync_committee = None;
 
     let prev_sync_committee_hash = store.current_sync_committee.tree_hash_root();

@@ -25,28 +25,28 @@ use tracing::{error, info};
 use std::collections::{HashMap, HashSet};
 use tokio::sync::{mpsc, oneshot, Mutex};
 
-const LIGHTCLIENT_ELF: &[u8] = include_bytes!("../../elf/light_client");
+const LIGHT_CLIENT_ELF: &[u8] = include_bytes!("../../elf/light_client");
 const EXECUTION_HEADER_ELF: &[u8] = include_bytes!("../../elf/execution_header");
 const STORAGE_ELF: &[u8] = include_bytes!("../../elf/storage");
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum UpdateMode {
-    Legacy,
-    ExecutionHeader,
+pub enum ExecutionCommitment {
+    StateRootOnly,
+    HeaderWithReceipts,
 }
 
-impl UpdateMode {
+impl ExecutionCommitment {
     fn elf(self) -> &'static [u8] {
         match self {
-            Self::Legacy => LIGHTCLIENT_ELF,
-            Self::ExecutionHeader => EXECUTION_HEADER_ELF,
+            Self::StateRootOnly => LIGHT_CLIENT_ELF,
+            Self::HeaderWithReceipts => EXECUTION_HEADER_ELF,
         }
     }
 
     fn label(self) -> &'static str {
         match self {
-            Self::Legacy => "light client",
-            Self::ExecutionHeader => "execution header",
+            Self::StateRootOnly => "state root only",
+            Self::HeaderWithReceipts => "header with receipts",
         }
     }
 }
@@ -60,7 +60,7 @@ pub struct SP1HeliosOperator<P> {
     storage_slots_to_fetch: Arc<Mutex<HashMap<Address, HashSet<B256>>>>,
     source_chain_id: u64,
     source_consensus_rpc: String,
-    update_mode: UpdateMode,
+    execution_commitment: ExecutionCommitment,
 }
 
 impl<P> SP1HeliosOperator<P>
@@ -148,8 +148,8 @@ where
         const NUM_CONFIRMATIONS: u64 = 3;
         const TIMEOUT_SECONDS: u64 = 60;
 
-        let receipt = match self.update_mode {
-            UpdateMode::Legacy => {
+        let receipt = match self.execution_commitment {
+            ExecutionCommitment::StateRootOnly => {
                 let po = ProofOutputs::abi_decode(proof.public_values.as_slice())?;
                 contract
                     .update(
@@ -170,7 +170,7 @@ where
                     .get_receipt()
                     .await?
             }
-            UpdateMode::ExecutionHeader => {
+            ExecutionCommitment::HeaderWithReceipts => {
                 let po = ExecutionHeaderProofOutputs::abi_decode(proof.public_values.as_slice())?;
                 contract
                     .updateExecutionHeader(proof.bytes().into(), po)
@@ -263,16 +263,18 @@ where
     /// Check if the vkeys of the light client and storage slot programs are correct and match the ones in the contract.
     async fn check_vkeys(&self) -> Result<()> {
         let contract = SP1Helios::new(self.contract_address, &self.provider);
-        let contract_update_vkey = match self.update_mode {
-            UpdateMode::Legacy => contract.lightClientVkey().call().await?,
-            UpdateMode::ExecutionHeader => contract.executionHeaderVkey().call().await?,
+        let contract_update_vkey = match self.execution_commitment {
+            ExecutionCommitment::StateRootOnly => contract.lightClientVkey().call().await?,
+            ExecutionCommitment::HeaderWithReceipts => {
+                contract.executionHeaderVkey().call().await?
+            }
         };
         let contract_storage_slot_vkey = contract.storageSlotVkey().call().await?;
 
         if self.update_pk.verifying_key().bytes32_raw() != contract_update_vkey {
             return Err(anyhow::anyhow!(
                 "{} vkey mismatch",
-                self.update_mode.label()
+                self.execution_commitment.label()
             ));
         }
 
@@ -294,13 +296,13 @@ where
         contract_address: Address,
         consensus_rpc: String,
         chain_id: u64,
-        update_mode: UpdateMode,
+        execution_commitment: ExecutionCommitment,
     ) -> Self {
         let client = ProverClient::from_env().await;
 
-        tracing::info!("Setting up {} program...", update_mode.label());
+        tracing::info!("Setting up {} program...", execution_commitment.label());
         let update_pk = client
-            .setup(update_mode.elf().into())
+            .setup(execution_commitment.elf().into())
             .await
             .expect("Failed to setup update program");
         tracing::info!("Setting up storage slots program...");
@@ -318,7 +320,7 @@ where
             storage_slots_to_fetch: Arc::new(Mutex::new(HashMap::new())),
             source_chain_id: chain_id,
             source_consensus_rpc: consensus_rpc,
-            update_mode,
+            execution_commitment,
         };
 
         this.check_vkeys()
