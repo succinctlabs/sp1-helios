@@ -52,8 +52,6 @@ serde_with = { version = "3.4.0", features = ["hex"] }
 cargo_metadata = "0.18"
 
 [patch.crates-io]
-# Local patch for the Rust ARM64 recursion-depth failure in alloy-signer-aws 1.0.41.
-alloy-signer-aws = { path = "patches/alloy-signer-aws" }
 sha2-v0-9-9 = { git = "https://github.com/sp1-patches/RustCrypto-hashes", package = "sha2", tag = "patch-sha2-0.9.9-sp1-6.0.0" }
 sha2-v0-10-9 = { git = "https://github.com/sp1-patches/RustCrypto-hashes", package = "sha2", tag = "patch-sha2-0.10.9-sp1-6.0.0" }
 sha3-v0-10-8 = { git = "https://github.com/sp1-patches/RustCrypto-hashes", package = "sha3", tag = "patch-sha3-0.10.8-sp1-6.0.0" }
