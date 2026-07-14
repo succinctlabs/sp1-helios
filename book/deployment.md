@@ -43,7 +43,7 @@ To run the operator, which generates proofs and keeps the light client updated w
 cargo run --release --bin operator -- <--rpc-url> <--contract-address> <--source-chain-id> <--source-consensus-rpc> <--private-key>
 ```
 
-Internally the Operator program uses the [SP1EnvProver](https://docs.rs/sp1-sdk/latest/sp1_sdk/env/struct.EnvProver.html#method.new), the docs will explain how to setup the ENV vars.
+The operator requests proofs through the Succinct Prover Network. Configure the requester key, fulfillment strategy, and proof mode in `.env`; see `.env.example` for the supported values.
 
 
 If successful, you should see logs indicating that the consensus state is being updated:
