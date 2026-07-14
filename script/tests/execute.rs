@@ -58,6 +58,12 @@ async fn execute_execution_header(cbor_inputs: &[u8]) -> ExecutionHeaderProofOut
 ///
 /// Without the fix this would commit `tree_hash_root()` of the poisoned committee instead.
 #[tokio::test]
+async fn executor_regressions() {
+    next_sync_committee_poisoning_is_dropped().await;
+    verified_next_sync_committee_is_committed().await;
+    execution_header_drops_poisoned_next_sync_committee().await;
+}
+
 async fn next_sync_committee_poisoning_is_dropped() {
     let mut inputs: ProofInputs =
         serde_cbor::from_slice(FIXTURE).expect("failed to deserialize fixture");
@@ -85,7 +91,6 @@ async fn next_sync_committee_poisoning_is_dropped() {
 /// POSITIVE / liveness: the unmodified fixture's `updates` legitimately populate
 /// `next_sync_committee` via `verify_update`/`apply_update`, so the committed hash must be
 /// non-zero. This proves the fix does not break the honest update path.
-#[tokio::test]
 async fn verified_next_sync_committee_is_committed() {
     let inputs: ProofInputs =
         serde_cbor::from_slice(FIXTURE).expect("failed to deserialize fixture");
@@ -120,7 +125,6 @@ async fn verified_next_sync_committee_is_committed() {
     );
 }
 
-#[tokio::test]
 async fn execution_header_drops_poisoned_next_sync_committee() {
     let mut inputs: ProofInputs =
         serde_cbor::from_slice(FIXTURE).expect("failed to deserialize fixture");
