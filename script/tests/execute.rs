@@ -13,26 +13,41 @@
 
 use alloy::primitives::B256;
 use alloy::sol_types::SolType;
-use sp1_helios_primitives::types::{ProofInputs, ProofOutputs};
+use sp1_helios_primitives::types::{ExecutionHeaderProofOutputs, ProofInputs, ProofOutputs};
 use sp1_sdk::{Elf, Prover, ProverClient, SP1Stdin};
 use tree_hash::TreeHash;
 
 const LIGHT_CLIENT_ELF: &[u8] = include_bytes!("../../elf/light_client");
+const EXECUTION_HEADER_ELF: &[u8] = include_bytes!("../../elf/execution_header");
 const FIXTURE: &[u8] = include_bytes!("fixtures/proof_inputs.cbor");
 
-/// Execute the light-client ELF over the given CBOR-encoded `ProofInputs` and decode the
-/// committed `ProofOutputs`.
-async fn execute(cbor_inputs: &[u8]) -> ProofOutputs {
+/// Execute an ELF over the given CBOR-encoded `ProofInputs` and return the committed public values.
+async fn execute_elf(elf: &'static [u8], cbor_inputs: &[u8]) -> Vec<u8> {
     let mut stdin = SP1Stdin::new();
     stdin.write_slice(cbor_inputs);
 
     let client = ProverClient::builder().cpu().build().await;
     let (public_values, _report) = client
-        .execute(Elf::Static(LIGHT_CLIENT_ELF), stdin)
+        .execute(Elf::Static(elf), stdin)
         .await
-        .expect("light client execution failed");
+        .expect("execution failed");
 
+    public_values.to_vec()
+}
+
+/// Execute the light-client ELF over the given CBOR-encoded `ProofInputs` and decode the
+/// committed `ProofOutputs`.
+async fn execute_light_client(cbor_inputs: &[u8]) -> ProofOutputs {
+    let public_values = execute_elf(LIGHT_CLIENT_ELF, cbor_inputs).await;
     ProofOutputs::abi_decode(public_values.as_slice()).expect("failed to decode ProofOutputs")
+}
+
+/// Execute the execution-header ELF over the given CBOR-encoded `ProofInputs` and decode the
+/// committed `ExecutionHeaderProofOutputs`.
+async fn execute_execution_header(cbor_inputs: &[u8]) -> ExecutionHeaderProofOutputs {
+    let public_values = execute_elf(EXECUTION_HEADER_ELF, cbor_inputs).await;
+    ExecutionHeaderProofOutputs::abi_decode(public_values.as_slice())
+        .expect("failed to decode ExecutionHeaderProofOutputs")
 }
 
 /// NEGATIVE / regression guard: a prover supplies an empty `updates` list and a poisoned
@@ -43,6 +58,12 @@ async fn execute(cbor_inputs: &[u8]) -> ProofOutputs {
 ///
 /// Without the fix this would commit `tree_hash_root()` of the poisoned committee instead.
 #[tokio::test]
+async fn executor_regressions() {
+    next_sync_committee_poisoning_is_dropped().await;
+    verified_next_sync_committee_is_committed().await;
+    execution_header_drops_poisoned_next_sync_committee().await;
+}
+
 async fn next_sync_committee_poisoning_is_dropped() {
     let mut inputs: ProofInputs =
         serde_cbor::from_slice(FIXTURE).expect("failed to deserialize fixture");
@@ -54,7 +75,7 @@ async fn next_sync_committee_poisoning_is_dropped() {
     inputs.store.next_sync_committee = Some(inputs.store.current_sync_committee.clone());
 
     let cbor = serde_cbor::to_vec(&inputs).expect("failed to reserialize inputs");
-    let outputs = execute(&cbor).await;
+    let outputs = execute_light_client(&cbor).await;
 
     println!(
         "negative: nextSyncCommitteeHash = {}",
@@ -70,7 +91,6 @@ async fn next_sync_committee_poisoning_is_dropped() {
 /// POSITIVE / liveness: the unmodified fixture's `updates` legitimately populate
 /// `next_sync_committee` via `verify_update`/`apply_update`, so the committed hash must be
 /// non-zero. This proves the fix does not break the honest update path.
-#[tokio::test]
 async fn verified_next_sync_committee_is_committed() {
     let inputs: ProofInputs =
         serde_cbor::from_slice(FIXTURE).expect("failed to deserialize fixture");
@@ -88,7 +108,7 @@ async fn verified_next_sync_committee_is_committed() {
         .next_sync_committee()
         .tree_hash_root();
 
-    let outputs = execute(FIXTURE).await;
+    let outputs = execute_light_client(FIXTURE).await;
 
     println!(
         "positive: nextSyncCommitteeHash = {} (expected {expected})",
@@ -102,5 +122,32 @@ async fn verified_next_sync_committee_is_committed() {
     assert_eq!(
         outputs.nextSyncCommitteeHash, expected,
         "committed next_sync_committee hash does not match the verified update's committee"
+    );
+}
+
+async fn execution_header_drops_poisoned_next_sync_committee() {
+    let mut inputs: ProofInputs =
+        serde_cbor::from_slice(FIXTURE).expect("failed to deserialize fixture");
+
+    inputs.updates = vec![];
+    inputs.store.next_sync_committee = Some(inputs.store.current_sync_committee.clone());
+
+    let cbor = serde_cbor::to_vec(&inputs).expect("failed to reserialize inputs");
+    let outputs = execute_execution_header(&cbor).await;
+
+    assert_eq!(
+        outputs.nextSyncCommitteeHash,
+        B256::ZERO,
+        "poisoned next_sync_committee leaked through the execution-header program"
+    );
+    assert_ne!(
+        outputs.executionBlockHash,
+        B256::ZERO,
+        "execution-header output did not commit an execution block hash"
+    );
+    assert_ne!(
+        outputs.executionReceiptsRoot,
+        B256::ZERO,
+        "execution-header output did not commit a receipts root"
     );
 }

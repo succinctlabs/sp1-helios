@@ -18,6 +18,9 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.ref }}
       - name: Install SP1 toolchain
+        env:
+          # sp1up queries api.github.com; unauthenticated calls get rate-limited on shared runners
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           curl -L https://sp1.succinct.xyz | bash
           ~/.sp1/bin/sp1up 

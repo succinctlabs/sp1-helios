@@ -61,6 +61,33 @@ sol! {
         StorageSlot[] storageSlots;
     }
 
+    struct ExecutionHeaderProofOutputs {
+        /// The previous beacon block header hash.
+        bytes32 prevHeader;
+        /// The slot of the previous head.
+        uint256 prevHead;
+        /// The anchor sync committee hash which was used to verify the proof.
+        bytes32 prevSyncCommitteeHash;
+        /// The slot of the new head.
+        uint256 newHead;
+        /// The new beacon block header hash.
+        bytes32 newHeader;
+        /// The execution state root from the execution payload of the new beacon block.
+        bytes32 executionStateRoot;
+        /// The execution block number.
+        uint256 executionBlockNumber;
+        /// The execution block hash.
+        bytes32 executionBlockHash;
+        /// The execution receipts root.
+        bytes32 executionReceiptsRoot;
+        /// The sync committee hash of the current period.
+        bytes32 syncCommitteeHash;
+        /// The sync committee hash of the next period.
+        bytes32 nextSyncCommitteeHash;
+        /// Attested storage slots for the given block.
+        StorageSlot[] storageSlots;
+    }
+
     struct StorageProofOutputs {
         bytes32 stateRoot;
         StorageSlot[] storageSlots;
@@ -86,8 +113,11 @@ sol! {
         mapping(uint256 => bytes32) public syncCommittees;
         mapping(uint256 => bytes32) public executionStateRoots;
         mapping(uint256 => bytes32) public headers;
+        mapping(uint256 => bytes32) public executionBlockHashes;
+        mapping(uint256 => bytes32) public executionReceiptsRoots;
         bytes32 public lightClientVkey;
         bytes32 public storageSlotVkey;
+        bytes32 public executionHeaderVkey;
 
         address public verifier;
 
@@ -103,6 +133,11 @@ sol! {
             bytes32 syncCommitteeHash,
             bytes32 nextSyncCommitteeHash,
             StorageSlot[] memory _storageSlots
+        ) external;
+
+        function updateExecutionHeader(
+            bytes calldata proof,
+            ExecutionHeaderProofOutputs calldata po
         ) external;
 
         function getSyncCommitteePeriod(uint256 slot) internal view returns (uint256);

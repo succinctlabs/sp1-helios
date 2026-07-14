@@ -10,12 +10,14 @@ use helios_ethereum::consensus::Inner;
 use helios_ethereum::rpc::http_rpc::HttpRpc;
 use helios_ethereum::rpc::ConsensusRpc;
 use sp1_helios_primitives::types::{
-    ContractStorage, ProofInputs, ProofOutputs, SP1Helios, StorageSlotWithProof,
+    ContractStorage, ExecutionHeaderProofOutputs, ProofInputs, ProofOutputs, SP1Helios,
+    StorageSlotWithProof,
 };
 use sp1_helios_primitives::verify_storage_slot_proofs;
-use sp1_sdk::env::{EnvProver, EnvProvingKey};
 use sp1_sdk::{
-    HashableKey, ProveRequest, Prover, ProverClient, ProvingKey, SP1ProofWithPublicValues, SP1Stdin,
+    network::{signer::NetworkSigner, FulfillmentStrategy, NetworkMode},
+    HashableKey, NetworkProver, ProveRequest, Prover, ProverClient, ProvingKey, SP1ProofMode,
+    SP1ProofWithPublicValues, SP1ProvingKey, SP1Stdin,
 };
 use std::sync::Arc;
 use std::time::Duration;
@@ -24,18 +26,79 @@ use tracing::{error, info};
 use std::collections::{HashMap, HashSet};
 use tokio::sync::{mpsc, oneshot, Mutex};
 
-const LIGHTCLIENT_ELF: &[u8] = include_bytes!("../../elf/light_client");
+const LIGHT_CLIENT_ELF: &[u8] = include_bytes!("../../elf/light_client");
+const EXECUTION_HEADER_ELF: &[u8] = include_bytes!("../../elf/execution_header");
 const STORAGE_ELF: &[u8] = include_bytes!("../../elf/storage");
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum ExecutionCommitment {
+    StateRootOnly,
+    HeaderWithReceipts,
+}
+
+impl ExecutionCommitment {
+    fn elf(self) -> &'static [u8] {
+        match self {
+            Self::StateRootOnly => LIGHT_CLIENT_ELF,
+            Self::HeaderWithReceipts => EXECUTION_HEADER_ELF,
+        }
+    }
+
+    fn label(self) -> &'static str {
+        match self {
+            Self::StateRootOnly => "state root only",
+            Self::HeaderWithReceipts => "header with receipts",
+        }
+    }
+}
+
 pub struct SP1HeliosOperator<P> {
-    client: Arc<EnvProver>,
+    client: Arc<NetworkProver>,
     provider: P,
-    lightclient_pk: Arc<EnvProvingKey>,
-    storage_slots_pk: Arc<EnvProvingKey>,
+    update_pk: Arc<SP1ProvingKey>,
+    storage_slots_pk: Arc<SP1ProvingKey>,
     contract_address: Address,
     storage_slots_to_fetch: Arc<Mutex<HashMap<Address, HashSet<B256>>>>,
     source_chain_id: u64,
     source_consensus_rpc: String,
+    execution_commitment: ExecutionCommitment,
+    fulfillment_strategy: FulfillmentStrategy,
+    proof_mode: SP1ProofMode,
+}
+
+pub struct ProverSettings {
+    pub network_signer: NetworkSigner,
+    pub fulfillment_strategy: FulfillmentStrategy,
+    pub proof_mode: SP1ProofMode,
+}
+
+pub fn parse_fulfillment_strategy(value: &str) -> Result<FulfillmentStrategy> {
+    match value.to_ascii_lowercase().as_str() {
+        "auction" => Ok(FulfillmentStrategy::Auction),
+        "hosted" => Ok(FulfillmentStrategy::Hosted),
+        "reserved" => Ok(FulfillmentStrategy::Reserved),
+        _ => anyhow::bail!(
+            "invalid SP1_HELIOS_FULFILLMENT_STRATEGY '{value}'; expected auction, hosted, or reserved"
+        ),
+    }
+}
+
+pub fn network_mode_for(strategy: FulfillmentStrategy) -> NetworkMode {
+    match strategy {
+        FulfillmentStrategy::Auction => NetworkMode::Mainnet,
+        FulfillmentStrategy::Hosted | FulfillmentStrategy::Reserved => NetworkMode::Reserved,
+        FulfillmentStrategy::UnspecifiedFulfillmentStrategy => {
+            unreachable!("parse_fulfillment_strategy rejects unspecified")
+        }
+    }
+}
+
+pub fn parse_proof_mode(value: &str) -> Result<SP1ProofMode> {
+    match value.to_ascii_lowercase().as_str() {
+        "plonk" => Ok(SP1ProofMode::Plonk),
+        "groth16" => Ok(SP1ProofMode::Groth16),
+        _ => anyhow::bail!("invalid SP1_HELIOS_PROOF_MODE '{value}'; expected plonk or groth16"),
+    }
 }
 
 impl<P> SP1HeliosOperator<P>
@@ -106,8 +169,9 @@ where
         // Generate proof.
         let proof = self
             .client
-            .prove(&self.lightclient_pk, stdin)
-            .plonk()
+            .prove(&self.update_pk, stdin)
+            .mode(self.proof_mode)
+            .strategy(self.fulfillment_strategy)
             .await?;
 
         info!("Attempting to update to new head block: {:?}", latest_block);
@@ -127,27 +191,41 @@ where
         const NUM_CONFIRMATIONS: u64 = 3;
         const TIMEOUT_SECONDS: u64 = 60;
 
-        let po = ProofOutputs::abi_decode(proof.public_values.as_slice())?;
-
-        let tx = contract.update(
-            proof.bytes().into(),
-            po.newHead,
-            po.newHeader,
-            po.executionStateRoot,
-            po.executionBlockNumber,
-            po.syncCommitteeHash,
-            po.nextSyncCommitteeHash,
-            po.storageSlots,
-        );
-
-        let receipt = tx
-            .nonce(nonce)
-            .send()
-            .await?
-            .with_required_confirmations(NUM_CONFIRMATIONS)
-            .with_timeout(Some(Duration::from_secs(TIMEOUT_SECONDS)))
-            .get_receipt()
-            .await?;
+        let receipt = match self.execution_commitment {
+            ExecutionCommitment::StateRootOnly => {
+                let po = ProofOutputs::abi_decode(proof.public_values.as_slice())?;
+                contract
+                    .update(
+                        proof.bytes().into(),
+                        po.newHead,
+                        po.newHeader,
+                        po.executionStateRoot,
+                        po.executionBlockNumber,
+                        po.syncCommitteeHash,
+                        po.nextSyncCommitteeHash,
+                        po.storageSlots,
+                    )
+                    .nonce(nonce)
+                    .send()
+                    .await?
+                    .with_required_confirmations(NUM_CONFIRMATIONS)
+                    .with_timeout(Some(Duration::from_secs(TIMEOUT_SECONDS)))
+                    .get_receipt()
+                    .await?
+            }
+            ExecutionCommitment::HeaderWithReceipts => {
+                let po = ExecutionHeaderProofOutputs::abi_decode(proof.public_values.as_slice())?;
+                contract
+                    .updateExecutionHeader(proof.bytes().into(), po)
+                    .nonce(nonce)
+                    .send()
+                    .await?
+                    .with_required_confirmations(NUM_CONFIRMATIONS)
+                    .with_timeout(Some(Duration::from_secs(TIMEOUT_SECONDS)))
+                    .get_receipt()
+                    .await?
+            }
+        };
 
         // If status is false, it reverted.
         if !receipt.status() {
@@ -228,11 +306,19 @@ where
     /// Check if the vkeys of the light client and storage slot programs are correct and match the ones in the contract.
     async fn check_vkeys(&self) -> Result<()> {
         let contract = SP1Helios::new(self.contract_address, &self.provider);
-        let contract_lightclient_vkey = contract.lightClientVkey().call().await?;
+        let contract_update_vkey = match self.execution_commitment {
+            ExecutionCommitment::StateRootOnly => contract.lightClientVkey().call().await?,
+            ExecutionCommitment::HeaderWithReceipts => {
+                contract.executionHeaderVkey().call().await?
+            }
+        };
         let contract_storage_slot_vkey = contract.storageSlotVkey().call().await?;
 
-        if self.lightclient_pk.verifying_key().bytes32_raw() != contract_lightclient_vkey {
-            return Err(anyhow::anyhow!("Light client vkey mismatch"));
+        if self.update_pk.verifying_key().bytes32_raw() != contract_update_vkey {
+            return Err(anyhow::anyhow!(
+                "{} vkey mismatch",
+                self.execution_commitment.label()
+            ));
         }
 
         if self.storage_slots_pk.verifying_key().bytes32_raw() != contract_storage_slot_vkey {
@@ -253,14 +339,20 @@ where
         contract_address: Address,
         consensus_rpc: String,
         chain_id: u64,
+        execution_commitment: ExecutionCommitment,
+        prover_settings: ProverSettings,
     ) -> Self {
-        let client = ProverClient::from_env().await;
+        let client = ProverClient::builder()
+            .network_for(network_mode_for(prover_settings.fulfillment_strategy))
+            .signer(prover_settings.network_signer)
+            .build()
+            .await;
 
-        tracing::info!("Setting up light client program...");
-        let lightclient_pk = client
-            .setup(LIGHTCLIENT_ELF.into())
+        tracing::info!("Setting up {} program...", execution_commitment.label());
+        let update_pk = client
+            .setup(execution_commitment.elf().into())
             .await
-            .expect("Failed to setup light client program");
+            .expect("Failed to setup update program");
         tracing::info!("Setting up storage slots program...");
         let storage_slots_pk = client
             .setup(STORAGE_ELF.into())
@@ -270,12 +362,15 @@ where
         let this = Self {
             client: Arc::new(client),
             provider,
-            lightclient_pk: Arc::new(lightclient_pk),
+            update_pk: Arc::new(update_pk),
             storage_slots_pk: Arc::new(storage_slots_pk),
             contract_address,
             storage_slots_to_fetch: Arc::new(Mutex::new(HashMap::new())),
             source_chain_id: chain_id,
             source_consensus_rpc: consensus_rpc,
+            execution_commitment,
+            fulfillment_strategy: prover_settings.fulfillment_strategy,
+            proof_mode: prover_settings.proof_mode,
         };
 
         this.check_vkeys()
@@ -351,7 +446,8 @@ where
         let proof = self
             .client
             .prove(&self.storage_slots_pk, stdin)
-            .plonk()
+            .mode(self.proof_mode)
+            .strategy(self.fulfillment_strategy)
             .await?;
 
         Ok(proof)
@@ -422,5 +518,38 @@ where
         });
 
         operator_handle
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parses_operator_prover_config() {
+        assert_eq!(
+            parse_fulfillment_strategy("auction").unwrap(),
+            FulfillmentStrategy::Auction
+        );
+        assert_eq!(
+            parse_fulfillment_strategy("HOSTED").unwrap(),
+            FulfillmentStrategy::Hosted
+        );
+        assert_eq!(
+            parse_fulfillment_strategy("reserved").unwrap(),
+            FulfillmentStrategy::Reserved
+        );
+        assert_eq!(
+            network_mode_for(FulfillmentStrategy::Auction),
+            NetworkMode::Mainnet
+        );
+        assert_eq!(
+            network_mode_for(FulfillmentStrategy::Reserved),
+            NetworkMode::Reserved
+        );
+        assert_eq!(parse_proof_mode("plonk").unwrap(), SP1ProofMode::Plonk);
+        assert_eq!(parse_proof_mode("GROTH16").unwrap(), SP1ProofMode::Groth16);
+        assert!(parse_fulfillment_strategy("network").is_err());
+        assert!(parse_proof_mode("compressed").is_err());
     }
 }

@@ -19,3 +19,9 @@ pgo-data.profdata
 
 # Generated inputs
 /script/examples/*
+
+# AI
+agents/
+.claude/
+.codex/
+.shellbrain/

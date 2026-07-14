@@ -33,6 +33,33 @@ struct ProofOutputs {
     StorageSlot[] storageSlots;
 }
 
+struct ExecutionHeaderProofOutputs {
+    /// The previous beacon block header hash.
+    bytes32 prevHeader;
+    /// The slot of the previous head.
+    uint256 prevHead;
+    /// The anchor sync committee hash which was used to verify the proof.
+    bytes32 prevSyncCommitteeHash;
+    /// The slot of the new head.
+    uint256 newHead;
+    /// The new beacon block header hash.
+    bytes32 newHeader;
+    /// The execution state root from the execution payload of the new beacon block.
+    bytes32 executionStateRoot;
+    /// The execution block number.
+    uint256 executionBlockNumber;
+    /// The execution block hash.
+    bytes32 executionBlockHash;
+    /// The execution receipts root.
+    bytes32 executionReceiptsRoot;
+    /// The sync committee hash of the current period.
+    bytes32 syncCommitteeHash;
+    /// The sync committee hash of the next period.
+    bytes32 nextSyncCommitteeHash;
+    /// Attested storage slots for the given block.
+    StorageSlot[] storageSlots;
+}
+
 struct StorageSlotProofOutputs {
     bytes32 storageRoot;
     StorageSlot[] storageSlots;
@@ -41,12 +68,15 @@ struct StorageSlotProofOutputs {
 struct InitParams {
     bytes32 executionStateRoot;
     uint256 executionBlockNumber;
+    bytes32 executionBlockHash;
+    bytes32 executionReceiptsRoot;
     uint256 genesisTime;
     bytes32 genesisValidatorsRoot;
     address guardian;
     uint256 head;
     bytes32 header;
     bytes32 lightClientVkey;
+    bytes32 executionHeaderVkey;
     bytes32 storageSlotVkey;
     uint256 secondsPerSlot;
     uint256 slotsPerEpoch;
@@ -83,6 +113,12 @@ contract SP1Helios {
     /// @notice Maps from a slot to the current finalized ethereum1 execution state root.
     mapping(uint256 => bytes32) public executionStateRoots;
 
+    /// @notice Maps from an execution block number to the finalized execution block hash.
+    mapping(uint256 => bytes32) public executionBlockHashes;
+
+    /// @notice Maps from an execution block number to the finalized execution receipts root.
+    mapping(uint256 => bytes32) public executionReceiptsRoots;
+
     /// @notice Maps from a period to the hash for the sync committee.
     mapping(uint256 => bytes32) public syncCommittees;
 
@@ -96,6 +132,9 @@ contract SP1Helios {
     /// @notice The verification key for the storage slot proof program.
     bytes32 public storageSlotVkey;
 
+    /// @notice The verification key for the SP1 Helios execution header program.
+    bytes32 public executionHeaderVkey;
+
     /// @notice The deployed SP1 verifier contract.
     address public verifier;
 
@@ -103,18 +142,21 @@ contract SP1Helios {
     address public guardian;
 
     /// @notice Semantic version.
-    /// @custom:semver v1.1.0
-    string public constant version = "v1.1.0";
+    /// @custom:semver v1.3.0
+    string public constant version = "v1.3.0";
 
     event HeadUpdate(uint256 indexed slot, bytes32 indexed root);
     event SyncCommitteeUpdate(uint256 indexed period, bytes32 indexed root);
     event GuardianUpdate(address indexed newGuardian);
     event GuardianRelinquished();
     event LightClientVkeyUpdate(bytes32 indexed newVkey);
+    event ExecutionHeaderVkeyUpdate(bytes32 indexed newVkey);
     event StorageSlotVkeyUpdate(bytes32 indexed newVkey);
 
     error SlotBehindHead(uint256 slot);
     error SyncCommitteeStartMismatch(bytes32 given, bytes32 expected);
+    error ProofHeadMismatch(uint256 given, uint256 expected);
+    error ProofHeaderMismatch(bytes32 given, bytes32 expected);
     error SyncCommitteeNotSet(uint256 period);
     error NextSyncCommitteeMismatch(bytes32 given, bytes32 expected);
     error NonCheckpointSlot(uint256 slot);
@@ -130,8 +172,11 @@ contract SP1Helios {
         syncCommittees[getSyncCommitteePeriod(params.head)] = params.syncCommitteeHash;
         lightClientVkey = params.lightClientVkey;
         storageSlotVkey = params.storageSlotVkey;
+        executionHeaderVkey = params.executionHeaderVkey;
         headers[params.head] = params.header;
         executionStateRoots[params.executionBlockNumber] = params.executionStateRoot;
+        executionBlockHashes[params.executionBlockNumber] = params.executionBlockHash;
+        executionReceiptsRoots[params.executionBlockNumber] = params.executionReceiptsRoot;
         executionBlockNumber = params.executionBlockNumber;
         head = params.head;
         verifier = params.verifier;
@@ -180,9 +225,77 @@ contract SP1Helios {
         // Verify the proof with the associated public values. This will revert if the proof is invalid.
         ISP1Verifier(verifier).verifyProof(lightClientVkey, abi.encode(po), proof);
 
+        _applyUpdate(
+            po.newHead,
+            po.newHeader,
+            po.executionStateRoot,
+            po.executionBlockNumber,
+            po.syncCommitteeHash,
+            po.nextSyncCommitteeHash,
+            po.storageSlots
+        );
+    }
+
+    /// @notice Updates the light client and stores finalized execution block hash and receipts root.
+    /// @param proof The proof bytes for the SP1 proof.
+    /// @param po The public values emitted by the execution header program.
+    function updateExecutionHeader(bytes calldata proof, ExecutionHeaderProofOutputs calldata po)
+        external
+    {
+        _validateProofStart(po.prevHeader, po.prevHead, po.prevSyncCommitteeHash);
+
+        // Verify the proof with the associated public values. This will revert if the proof is invalid.
+        ISP1Verifier(verifier).verifyProof(executionHeaderVkey, abi.encode(po), proof);
+
+        _applyUpdate(
+            po.newHead,
+            po.newHeader,
+            po.executionStateRoot,
+            po.executionBlockNumber,
+            po.syncCommitteeHash,
+            po.nextSyncCommitteeHash,
+            po.storageSlots
+        );
+
+        executionBlockHashes[po.executionBlockNumber] = po.executionBlockHash;
+        executionReceiptsRoots[po.executionBlockNumber] = po.executionReceiptsRoot;
+    }
+
+    function _validateProofStart(
+        bytes32 prevHeader,
+        uint256 prevHead,
+        bytes32 prevSyncCommitteeHash
+    ) internal view {
+        if (prevHead != head) {
+            revert ProofHeadMismatch(prevHead, head);
+        }
+
+        bytes32 expectedHeader = headers[head];
+        if (prevHeader != expectedHeader) {
+            revert ProofHeaderMismatch(prevHeader, expectedHeader);
+        }
+
+        bytes32 currentSyncCommitteeHash = syncCommittees[getSyncCommitteePeriod(head)];
+        if (currentSyncCommitteeHash == bytes32(0)) {
+            revert SyncCommitteeNotSet(getSyncCommitteePeriod(head));
+        }
+        if (prevSyncCommitteeHash != currentSyncCommitteeHash) {
+            revert SyncCommitteeStartMismatch(prevSyncCommitteeHash, currentSyncCommitteeHash);
+        }
+    }
+
+    function _applyUpdate(
+        uint256 newHead,
+        bytes32 newHeader,
+        bytes32 executionStateRoot,
+        uint256 _executionBlockNumber,
+        bytes32 syncCommitteeHash,
+        bytes32 nextSyncCommitteeHash,
+        StorageSlot[] memory _storageSlots
+    ) internal {
         // Confirm that the new slot is greater than the current head.
-        if (po.newHead <= head) {
-            revert SlotBehindHead(po.newHead);
+        if (newHead <= head) {
+            revert SlotBehindHead(newHead);
         }
 
         // Confirm that the new slot is a checkpoint slot.
@@ -190,53 +303,53 @@ contract SP1Helios {
         // as CL nodes typically only store checkpoint slot proofs.
         //
         // This condition is actually checked by the proof, but we include it here for clarity.
-        if (po.newHead % 32 != 0) {
-            revert NonCheckpointSlot(po.newHead);
+        if (newHead % 32 != 0) {
+            revert NonCheckpointSlot(newHead);
         }
 
         // Update the new CL information.
-        head = po.newHead;
-        headers[po.newHead] = po.newHeader;
+        head = newHead;
+        headers[newHead] = newHeader;
 
         // Update the EL information.
-        executionBlockNumber = po.executionBlockNumber;
-        executionStateRoots[po.executionBlockNumber] = po.executionStateRoot;
+        executionBlockNumber = _executionBlockNumber;
+        executionStateRoots[_executionBlockNumber] = executionStateRoot;
 
         // Get the new period associated with the new head.
-        uint256 newPeriod = getSyncCommitteePeriod(po.newHead);
+        uint256 newPeriod = getSyncCommitteePeriod(newHead);
 
         // Set the sync committee for the new period if it is not set.
         // This can happen if the light client was very behind and had a lot of updates.
         // Note: Only the latest sync committee is stored, not the intermediate ones from every update.
         if (syncCommittees[newPeriod] == bytes32(0)) {
-            syncCommittees[newPeriod] = po.syncCommitteeHash;
-            emit SyncCommitteeUpdate(newPeriod, po.syncCommitteeHash);
+            syncCommittees[newPeriod] = syncCommitteeHash;
+            emit SyncCommitteeUpdate(newPeriod, syncCommitteeHash);
         }
 
         // Set the next sync committee if it is defined and not set.
-        if (po.nextSyncCommitteeHash != bytes32(0)) {
+        if (nextSyncCommitteeHash != bytes32(0)) {
             uint256 nextPeriod = newPeriod + 1;
 
             bytes32 _nextSyncCommitteeHash = syncCommittees[nextPeriod];
             if (_nextSyncCommitteeHash == bytes32(0)) {
                 // If the next sync committee is not set, set it.
-                syncCommittees[nextPeriod] = po.nextSyncCommitteeHash;
-                emit SyncCommitteeUpdate(nextPeriod, po.nextSyncCommitteeHash);
-            } else if (_nextSyncCommitteeHash != po.nextSyncCommitteeHash) {
+                syncCommittees[nextPeriod] = nextSyncCommitteeHash;
+                emit SyncCommitteeUpdate(nextPeriod, nextSyncCommitteeHash);
+            } else if (_nextSyncCommitteeHash != nextSyncCommitteeHash) {
                 // If the next sync committee is non-zero, it should match the expected value.
-                revert NextSyncCommitteeMismatch(nextSyncCommitteeHash, po.nextSyncCommitteeHash);
+                revert NextSyncCommitteeMismatch(_nextSyncCommitteeHash, nextSyncCommitteeHash);
             }
         }
 
         // Set all the storage slots.
-        for (uint256 i = 0; i < po.storageSlots.length; i++) {
+        for (uint256 i = 0; i < _storageSlots.length; i++) {
             bytes32 key = computeStorageSlotKey(
-                po.executionBlockNumber, po.storageSlots[i].contractAddress, po.storageSlots[i].key
+                _executionBlockNumber, _storageSlots[i].contractAddress, _storageSlots[i].key
             );
-            storageSlots[key] = po.storageSlots[i].value;
+            storageSlots[key] = _storageSlots[i].value;
         }
 
-        emit HeadUpdate(po.newHead, po.newHeader);
+        emit HeadUpdate(newHead, newHeader);
     }
 
     /// @notice Verifies a storage slot proof, and saves the storage slots to the contract.
@@ -288,6 +401,14 @@ contract SP1Helios {
         return executionStateRoots[executionBlockNumber];
     }
 
+    function latestExecutionBlockHash() public view returns (bytes32) {
+        return executionBlockHashes[executionBlockNumber];
+    }
+
+    function latestExecutionReceiptsRoot() public view returns (bytes32) {
+        return executionReceiptsRoots[executionBlockNumber];
+    }
+
     function latestExecutionBlockNumber() public view returns (uint256) {
         return executionBlockNumber;
     }
@@ -316,6 +437,13 @@ contract SP1Helios {
         lightClientVkey = newVkey;
 
         emit LightClientVkeyUpdate(newVkey);
+    }
+
+    /// @notice Updates the execution header program verification key.
+    function updateExecutionHeaderVkey(bytes32 newVkey) external onlyGuardian {
+        executionHeaderVkey = newVkey;
+
+        emit ExecutionHeaderVkeyUpdate(newVkey);
     }
 
     /// @notice Updates the storage slot proof verification key.
