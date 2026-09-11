@@ -14,6 +14,40 @@ Proof requests are fulfilled through the [Succinct Prover Network](https://docs.
 
 The operator supports two commitment modes: (1) default mode and (2) execution-header mode.
 
+### Docker
+
+Build the operator from the repository root:
+
+```sh
+docker build --platform linux/amd64 -t sp1-helios:operator .
+docker run --rm sp1-helios:operator operator --help
+```
+
+The image embeds the checked-in ELFs and runs as user `10001:10001`.
+It uses the Prover Network and needs outbound access to the configured RPC endpoints.
+
+Pass configuration at runtime:
+
+```sh
+docker run --rm --env-file .env sp1-helios:operator operator \
+  --rpc-url "$DESTINATION_RPC_URL" \
+  --contract-address "$SP1_HELIOS" \
+  --source-chain-id "$SOURCE_CHAIN_ID" \
+  --source-consensus-rpc "$SOURCE_CONSENSUS_RPC_URL" \
+  --private-key "$DESTINATION_PRIVATE_KEY"
+```
+
+Add `--commit-execution-header` for execution-header mode.
+
+The Docker workflow builds pull requests without publishing.
+Pushes and manual runs publish Linux AMD64 images to `ghcr.io/<owner>/sp1-helios`.
+Tags use `operator-<short-sha>`, `operator-<git-tag>`, and `operator-latest` for `main`.
+Use a commit tag or image digest for deployments.
+
+For ECS, set the container command to `["operator", "--rpc-url", "...", ...]`.
+Supply the Prover Network settings through the task environment or secrets.
+Docker sends SIGINT when it stops this image, which matches the operator's shutdown handler.
+
 ### 1. Default mode
 
 This mode commits only finalized light-client state and the execution state root.
