@@ -1,0 +1,13 @@
+**
+!Cargo.toml
+!Cargo.lock
+!primitives/
+!primitives/**
+!program/
+!program/**
+!script/
+!script/**
+!elf/
+!elf/**
+**/target
+**/.env*

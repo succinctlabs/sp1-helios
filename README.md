@@ -44,3 +44,13 @@ cargo run -p sp1-helios-script --bin operator -- \
   --private-key "$DESTINATION_PRIVATE_KEY" \
   --commit-execution-header
 ```
+
+### Docker
+
+The CI publishes Linux AMD64 images as `ghcr.io/succinctlabs/sp1-helios:operator-<short-sha>`.
+To build locally and view the operator flags:
+
+```sh
+docker build --platform linux/amd64 -t sp1-helios:operator .
+docker run --rm sp1-helios:operator operator --help
+```
