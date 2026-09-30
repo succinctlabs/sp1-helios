@@ -1,8 +1,6 @@
 use alloy_primitives::B256;
 use helios_consensus_core::{
-    calc_sync_period,
-    consensus_spec::MainnetConsensusSpec,
-    types::{BeaconBlock, Update},
+    calc_sync_period, consensus_spec::MainnetConsensusSpec, types::Update,
 };
 use helios_ethereum::rpc::ConsensusRpc;
 use helios_ethereum::{
@@ -14,8 +12,8 @@ use helios_ethereum::{
 use anyhow::{anyhow, Result};
 use std::sync::Arc;
 use tokio::sync::{mpsc::channel, watch};
-use tree_hash::TreeHash;
 
+pub mod execution;
 pub mod handle;
 pub mod operator;
 
@@ -24,7 +22,7 @@ pub const MAX_REQUEST_LIGHT_CLIENT_UPDATES: u8 = 128;
 /// Fetch updates for client
 pub async fn get_updates(
     client: &Inner<MainnetConsensusSpec, HttpRpc>,
-) -> Vec<Update<MainnetConsensusSpec>> {
+) -> Result<Vec<Update<MainnetConsensusSpec>>> {
     let period =
         calc_sync_period::<MainnetConsensusSpec>(client.store.finalized_header.beacon().slot);
 
@@ -32,7 +30,7 @@ pub async fn get_updates(
         .rpc
         .get_updates(period, MAX_REQUEST_LIGHT_CLIENT_UPDATES)
         .await
-        .unwrap();
+        .map_err(|e| anyhow!("error fetching committee updates: {e}"))?;
 
     updates.retain(|update| {
         let signature_period = calc_sync_period::<MainnetConsensusSpec>(*update.signature_slot());
@@ -43,7 +41,7 @@ pub async fn get_updates(
         )
     });
     updates.sort_by_key(|update| *update.signature_slot());
-    updates
+    Ok(updates)
 }
 
 fn update_period_in_requested_window(signature_period: u64, start_period: u64, count: u8) -> bool {
@@ -99,15 +97,7 @@ pub async fn get_client(
     );
 
     let root = match slot {
-        Some(slot) => {
-            let block: BeaconBlock<MainnetConsensusSpec> = client
-                .rpc
-                .get_block(slot)
-                .await
-                .map_err(|e| anyhow!("error getting block: {}", e.to_string()))?;
-
-            block.tree_hash_root()
-        }
+        Some(slot) => get_checkpoint_root(consensus_rpc, slot).await?,
         None => get_latest_checkpoint(chain_id).await?,
     };
 
@@ -117,6 +107,26 @@ pub async fn get_client(
         .map_err(|e| anyhow!("error bootstrapping client: {}", e.to_string()))?;
 
     Ok(client)
+}
+
+/// Fetch a beacon block root without decoding fork-specific block bodies.
+pub async fn get_checkpoint_root(consensus_rpc: &str, slot: u64) -> Result<B256> {
+    let response: serde_json::Value = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(30))
+        .build()?
+        .get(format!(
+            "{}/eth/v1/beacon/blocks/{slot}/root",
+            consensus_rpc.trim_end_matches('/')
+        ))
+        .send()
+        .await?
+        .error_for_status()?
+        .json()
+        .await?;
+    let root = response["data"]["root"]
+        .as_str()
+        .ok_or_else(|| anyhow!("Beacon API response has no block root"))?;
+    Ok(root.parse()?)
 }
 
 #[cfg(test)]

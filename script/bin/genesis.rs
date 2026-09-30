@@ -4,7 +4,10 @@ use anyhow::Result;
 /// Generate genesis parameters for light client contract
 use clap::Parser;
 use helios_consensus_core::consensus_spec::{ConsensusSpec, MainnetConsensusSpec};
+use helios_consensus_core::types::LightClientHeader;
 use serde::{Deserialize, Serialize};
+use sp1_helios_primitives::execution::verified_execution_fields;
+use sp1_helios_script::execution::ExecutionRpc;
 use sp1_helios_script::get_client;
 use sp1_sdk::{HashableKey, Prover, ProverClient, ProvingKey};
 use std::{
@@ -62,6 +65,10 @@ pub struct GenesisArgs {
     /// The RPC URL of the source chain.
     #[arg(long)]
     pub source_consensus_rpc: String,
+
+    /// The execution RPC URL of the source chain.
+    #[arg(long)]
+    pub source_execution_rpc: String,
 
     /// The Etherscan API key to use for the deployer account.
     #[arg(long)]
@@ -155,11 +162,26 @@ pub async fn main() {
         .tree_hash_root();
     let genesis_time = helios_client.config.chain.genesis_time;
     let genesis_root = helios_client.config.chain.genesis_root;
-    let execution = helios_client
-        .store
-        .finalized_header
-        .execution()
-        .expect("Execution payload doesn't exist.");
+    let execution_rpc = ExecutionRpc::new(&args.source_execution_rpc)
+        .expect("Failed to configure source execution RPC");
+    execution_rpc
+        .check_chain_id(args.source_chain_id)
+        .await
+        .expect("Source execution RPC is on the wrong chain");
+    let execution_header = match &helios_client.store.finalized_header {
+        LightClientHeader::Gloas(header) => Some(
+            execution_rpc
+                .header_by_hash(header.execution_block_hash)
+                .await
+                .expect("Failed to fetch finalized execution header"),
+        ),
+        _ => None,
+    };
+    let execution = verified_execution_fields(
+        &helios_client.store.finalized_header,
+        execution_header.as_ref(),
+    )
+    .expect("Execution header failed to verify");
 
     // Get the workspace root with cargo metadata to make the paths.
     let workspace_root = PathBuf::from(
@@ -180,10 +202,10 @@ pub async fn main() {
     };
 
     let genesis_config = GenesisConfig {
-        execution_state_root: format!("0x{:x}", *execution.state_root()),
-        execution_block_number: *execution.block_number(),
-        execution_block_hash: format!("0x{:x}", *execution.block_hash()),
-        execution_receipts_root: format!("0x{:x}", *execution.receipts_root()),
+        execution_state_root: format!("0x{:x}", execution.state_root),
+        execution_block_number: execution.block_number,
+        execution_block_hash: format!("0x{:x}", execution.block_hash),
+        execution_receipts_root: format!("0x{:x}", execution.receipts_root),
         genesis_time,
         genesis_validators_root: format!("0x{genesis_root:x}"),
         execution_header_vkey: execution_header_pk.verifying_key().bytes32(),

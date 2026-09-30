@@ -32,6 +32,7 @@ serde = { workspace = true }
 serde_cbor = { workspace = true }
 clap = { workspace = true }
 alloy-primitives = { workspace = true }
+alloy-consensus = { workspace = true }
 alloy-trie = { workspace = true }
 alloy = { workspace = true }
 anyhow = { workspace = true }

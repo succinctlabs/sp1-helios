@@ -17,6 +17,9 @@ pub struct ProofInputs {
     pub genesis_root: B256,
     pub forks: Forks,
     pub contract_storage: Vec<ContractStorage>,
+    /// Full execution header when the finalized light-client header commits only its hash.
+    #[serde(default)]
+    pub execution_header: Option<alloy_consensus::Header>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

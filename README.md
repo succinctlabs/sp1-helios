@@ -24,6 +24,7 @@ cargo run -p sp1-helios-script --bin operator -- \
   --contract-address "$SP1_HELIOS" \
   --source-chain-id "$SOURCE_CHAIN_ID" \
   --source-consensus-rpc "$SOURCE_CONSENSUS_RPC_URL" \
+  --source-execution-rpc "$SOURCE_EXECUTION_RPC_URL" \
   --private-key "$DESTINATION_PRIVATE_KEY"
 ```
 
@@ -41,11 +42,14 @@ cargo run -p sp1-helios-script --bin operator -- \
   --contract-address "$SP1_HELIOS" \
   --source-chain-id "$SOURCE_CHAIN_ID" \
   --source-consensus-rpc "$SOURCE_CONSENSUS_RPC_URL" \
+  --source-execution-rpc "$SOURCE_EXECUTION_RPC_URL" \
   --private-key "$DESTINATION_PRIVATE_KEY" \
   --commit-execution-header
 ```
 
 ### Docker
+
+See the [deployment guide](book/deployment.md) for source RPC requirements and program key updates.
 
 The CI publishes Linux AMD64 images as `ghcr.io/succinctlabs/sp1-helios:operator-<short-sha>`.
 To build locally and view the operator flags:

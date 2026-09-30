@@ -25,12 +25,23 @@ There are a few options for setting up a consensus RPC with "light sync" endpoin
 
 The RPC you just set up will be used as the `SOURCE_CONSENSUS_RPC_URL` in the next step.
 
+Provide a source execution RPC as `--source-execution-rpc` for genesis and operator commands.
+It must serve full block headers with `eth_getBlockByHash` and `eth_getBlockByNumber`.
+Storage requests also need `eth_getProof` for the selected source block.
+The source execution RPC must use the same chain as the consensus RPC.
+The destination RPC serves the chain where the SP1 Helios smart contract is deployed.
+
+Gloas light-client headers commit an execution block hash.
+The operator supplies the full header for that hash, and the SP1 program checks its RLP hash before using execution fields.
+This hash identifies the parent execution block from the signed payload bid.
+Its execution block can lag the beacon slot when payloads are skipped.
+
 ### 2. Deploy Contract
 
 Deploy the SP1 Helios contract, note, this requires [Foundry](https://getfoundry.sh/), and a [PLONK verifier gateway](https://docs.succinct.xyz/docs/sp1/verification/contract-addresses):
 
 ```bash
-cargo run --bin genesis -- [--private-key] [--ledger] [--etherscan-api-key] <--sp1-verifier-address> <--guardian-address> <--source-consensus-rpc> <--source-chain-id> 
+cargo run --bin genesis -- [--private-key] [--ledger] [--etherscan-api-key] <--sp1-verifier-address> <--guardian-address> <--source-consensus-rpc> <--source-execution-rpc> <--source-chain-id>
 ```
 
 When the script completes, take note of the light client contract address printed to the terminal.
@@ -40,11 +51,14 @@ When the script completes, take note of the light client contract address printe
 To run the operator, which generates proofs and keeps the light client updated with chain state:
 
 ```bash
-cargo run --release --bin operator -- <--rpc-url> <--contract-address> <--source-chain-id> <--source-consensus-rpc> <--private-key>
+cargo run --release --bin operator -- <--rpc-url> <--contract-address> <--source-chain-id> <--source-consensus-rpc> <--source-execution-rpc> <--private-key>
 ```
 
 The operator requests proofs through the Succinct Prover Network. Configure the requester key, fulfillment strategy, and proof mode in `.env`; see `.env.example` for the supported values.
 
+Rebuild the program ELFs when changing the Helios dependency or SP1 program source.
+Run `cargo run --bin vkey` to derive the keys from the rebuilt programs.
+Coordinate the smart contract's program key changes with the operator's program update.
 
 If successful, you should see logs indicating that the consensus state is being updated:
 

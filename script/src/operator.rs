@@ -1,3 +1,4 @@
+use crate::execution::{fill_execution_header, ExecutionRpc};
 use crate::handle::ContractKeys;
 use crate::handle::{OperatorHandle, StorageProofRequest};
 use crate::{get_client, get_updates};
@@ -11,9 +12,7 @@ use helios_ethereum::rpc::http_rpc::HttpRpc;
 use helios_ethereum::rpc::ConsensusRpc;
 use sp1_helios_primitives::types::{
     ContractStorage, ExecutionHeaderProofOutputs, ProofInputs, ProofOutputs, SP1Helios,
-    StorageSlotWithProof,
 };
-use sp1_helios_primitives::verify_storage_slot_proofs;
 use sp1_sdk::{
     network::{signer::NetworkSigner, FulfillmentStrategy, NetworkMode},
     HashableKey, NetworkProver, ProveRequest, Prover, ProverClient, ProvingKey, SP1ProofMode,
@@ -61,6 +60,7 @@ pub struct SP1HeliosOperator<P> {
     storage_slots_to_fetch: Arc<Mutex<HashMap<Address, HashSet<B256>>>>,
     source_chain_id: u64,
     source_consensus_rpc: String,
+    source_execution_rpc: ExecutionRpc,
     execution_commitment: ExecutionCommitment,
     fulfillment_strategy: FulfillmentStrategy,
     proof_mode: SP1ProofMode,
@@ -122,8 +122,12 @@ where
         let mut stdin = SP1Stdin::new();
 
         // Setup client.
-        let updates = get_updates(&client).await;
-        let finality_update = client.rpc.get_finality_update().await.unwrap();
+        let updates = get_updates(&client).await?;
+        let finality_update = client
+            .rpc
+            .get_finality_update()
+            .await
+            .map_err(|e| anyhow::anyhow!("Failed to fetch finality update: {e}"))?;
 
         // Check if contract is up to date
         let latest_block = finality_update.finalized_header().beacon().slot;
@@ -140,29 +144,23 @@ where
             latest_block, head
         );
 
-        let latest_execution_block_number = client
-            .store
-            .finalized_header
-            .execution()
-            .expect("Failed to get (finalized) execution header from store")
-            .block_number();
-
-        // Fetch the contract storage, if any.
-        let contract_storage = self
-            .get_storage_slots(*latest_execution_block_number)
-            .await?;
-
         // Create program inputs
         let expected_current_slot = client.expected_current_slot();
-        let inputs = ProofInputs {
+        let mut inputs = ProofInputs {
             updates,
             finality_update,
             expected_current_slot,
             store: client.store.clone(),
             genesis_root: client.config.chain.genesis_root,
             forks: client.config.forks.clone(),
-            contract_storage,
+            contract_storage: vec![],
+            execution_header: None,
         };
+        let (latest_block, execution) =
+            fill_execution_header(&mut inputs, &self.source_execution_rpc).await?;
+        inputs.contract_storage = self
+            .get_storage_slots(execution.state_root, execution.block_number)
+            .await?;
         let encoded_proof_inputs = serde_cbor::to_vec(&inputs)?;
         stdin.write_slice(&encoded_proof_inputs);
 
@@ -241,19 +239,19 @@ where
         Ok(())
     }
 
-    async fn get_storage_slots(&self, block_number: u64) -> Result<Vec<ContractStorage>> {
+    async fn get_storage_slots(
+        &self,
+        state_root: B256,
+        block_number: u64,
+    ) -> Result<Vec<ContractStorage>> {
         let storage_slots_to_fetch = self.storage_slots_to_fetch.lock().await;
         if storage_slots_to_fetch.is_empty() {
             return Ok(vec![]);
         }
 
-        let Some(block) = self.provider.get_block(block_number.into()).await? else {
-            anyhow::bail!("Failed to get block {block_number} from provider, this was expected to valid since the store claimed to have this block finalized.");
-        };
-
         let futs = storage_slots_to_fetch.iter().map(|(contract, keys)| {
-            self.get_storage_slot_proof_for_contract(
-                block.header.state_root,
+            self.source_execution_rpc.storage_proof(
+                state_root,
                 block_number,
                 *contract,
                 keys.iter().copied().collect(),
@@ -261,46 +259,6 @@ where
         });
 
         futures::future::try_join_all(futs).await
-    }
-
-    async fn get_storage_slot_proof_for_contract(
-        &self,
-        state_root: B256,
-        block_number: u64,
-        contract_address: Address,
-        keys: Vec<B256>,
-    ) -> Result<ContractStorage> {
-        let proof = self
-            .provider
-            .get_proof(contract_address, keys)
-            .number(block_number)
-            .await?;
-
-        let contract_storage = ContractStorage {
-            address: proof.address,
-            value: alloy_trie::TrieAccount {
-                nonce: proof.nonce,
-                balance: proof.balance,
-                storage_root: proof.storage_hash,
-                code_hash: proof.code_hash,
-            },
-            mpt_proof: proof.account_proof,
-            storage_slots: proof
-                .storage_proof
-                .into_iter()
-                .map(|p| StorageSlotWithProof {
-                    key: p.key.as_b256(),
-                    value: p.value,
-                    mpt_proof: p.proof,
-                })
-                .collect(),
-        };
-
-        verify_storage_slot_proofs(state_root, &contract_storage).context(format!(
-            "Preflight storage slot proofs failed to verify for contract {contract_address:?}"
-        ))?;
-
-        Ok(contract_storage)
     }
 
     /// Check if the vkeys of the light client and storage slot programs are correct and match the ones in the contract.
@@ -338,10 +296,16 @@ where
         provider: P,
         contract_address: Address,
         consensus_rpc: String,
+        execution_rpc: String,
         chain_id: u64,
         execution_commitment: ExecutionCommitment,
         prover_settings: ProverSettings,
-    ) -> Self {
+    ) -> Result<Self> {
+        let source_execution_rpc = ExecutionRpc::new(&execution_rpc)?;
+        source_execution_rpc
+            .check_chain_id(chain_id)
+            .await
+            .context("Failed to validate source execution chain ID")?;
         let client = ProverClient::builder()
             .network_for(network_mode_for(prover_settings.fulfillment_strategy))
             .signer(prover_settings.network_signer)
@@ -352,12 +316,12 @@ where
         let update_pk = client
             .setup(execution_commitment.elf().into())
             .await
-            .expect("Failed to setup update program");
+            .context("Failed to setup update program")?;
         tracing::info!("Setting up storage slots program...");
         let storage_slots_pk = client
             .setup(STORAGE_ELF.into())
             .await
-            .expect("Failed to setup storage slots program");
+            .context("Failed to setup storage slots program")?;
 
         let this = Self {
             client: Arc::new(client),
@@ -368,6 +332,7 @@ where
             storage_slots_to_fetch: Arc::new(Mutex::new(HashMap::new())),
             source_chain_id: chain_id,
             source_consensus_rpc: consensus_rpc,
+            source_execution_rpc,
             execution_commitment,
             fulfillment_strategy: prover_settings.fulfillment_strategy,
             proof_mode: prover_settings.proof_mode,
@@ -375,9 +340,9 @@ where
 
         this.check_vkeys()
             .await
-            .expect("Failed to create operator: vkeys mismatch");
+            .context("Failed to create operator: vkeys mismatch")?;
 
-        this
+        Ok(this)
     }
 
     /// Run a single iteration of the operator, possibly posting a new update on chain.
@@ -424,13 +389,14 @@ where
         block_number: u64,
         contract_keys: Vec<ContractKeys>,
     ) -> Result<SP1ProofWithPublicValues> {
-        let Some(block) = self.provider.get_block(block_number.into()).await? else {
-            anyhow::bail!("Failed to get block {block_number} from provider, this was expected to valid since the store claimed to have this block finalized.");
-        };
+        let header = self
+            .source_execution_rpc
+            .header_by_number(block_number)
+            .await?;
 
         let proofs = contract_keys.into_iter().map(|keys| {
-            self.get_storage_slot_proof_for_contract(
-                block.header.state_root,
+            self.source_execution_rpc.storage_proof(
+                header.state_root,
                 block_number,
                 keys.address,
                 keys.storage_slots,
@@ -441,7 +407,7 @@ where
 
         let mut stdin = SP1Stdin::new();
         stdin.write(&proofs);
-        stdin.write(&block.header.state_root);
+        stdin.write(&header.state_root);
 
         let proof = self
             .client

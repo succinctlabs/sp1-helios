@@ -36,6 +36,10 @@ pub struct OperatorArgs {
     #[arg(long)]
     pub source_consensus_rpc: String,
 
+    /// The execution RPC URL of the source chain, including eth_getProof support.
+    #[arg(long)]
+    pub source_execution_rpc: String,
+
     #[arg(long)]
     pub private_key: String,
 
@@ -115,11 +119,12 @@ async fn main() -> Result<()> {
         provider,
         args.contract_address,
         args.source_consensus_rpc,
+        args.source_execution_rpc,
         args.source_chain_id,
         execution_commitment,
         prover_settings,
     )
-    .await;
+    .await?;
 
     // Run the operator indefinitely, spawns a background task
     tracing::info!("Running operator");
