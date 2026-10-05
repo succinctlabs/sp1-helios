@@ -16,9 +16,9 @@ sp1-helios-program = { path = "program" }
 sp1-helios-primitives = { path = "primitives" }
 
 # helios
-helios = { git = "https://github.com/a16z/helios", rev = "d72cd4ea03c1ed8dbabaa80707a13017f1076fec" }
-helios-consensus-core = { git = "https://github.com/a16z/helios", rev = "d72cd4ea03c1ed8dbabaa80707a13017f1076fec" }
-helios-ethereum = { git = "https://github.com/a16z/helios", rev = "d72cd4ea03c1ed8dbabaa80707a13017f1076fec" }
+helios = { git = "https://github.com/a16z/helios", rev = "68e3d07c7ca7a731334004e461a87b695b451e16" }
+helios-consensus-core = { git = "https://github.com/a16z/helios", rev = "68e3d07c7ca7a731334004e461a87b695b451e16" }
+helios-ethereum = { git = "https://github.com/a16z/helios", rev = "68e3d07c7ca7a731334004e461a87b695b451e16" }
 
 # general
 dotenv = "0.15.0"

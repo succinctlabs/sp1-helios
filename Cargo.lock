@@ -4271,8 +4271,8 @@ checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 
 [[package]]
 name = "helios-common"
-version = "0.11.1"
-source = "git+https://github.com/a16z/helios?rev=d72cd4ea03c1ed8dbabaa80707a13017f1076fec#d72cd4ea03c1ed8dbabaa80707a13017f1076fec"
+version = "0.12.0"
+source = "git+https://github.com/a16z/helios?rev=68e3d07c7ca7a731334004e461a87b695b451e16#68e3d07c7ca7a731334004e461a87b695b451e16"
 dependencies = [
  "alloy 2.1.0",
  "async-trait",
@@ -4287,8 +4287,8 @@ dependencies = [
 
 [[package]]
 name = "helios-consensus-core"
-version = "0.11.1"
-source = "git+https://github.com/a16z/helios?rev=d72cd4ea03c1ed8dbabaa80707a13017f1076fec#d72cd4ea03c1ed8dbabaa80707a13017f1076fec"
+version = "0.12.0"
+source = "git+https://github.com/a16z/helios?rev=68e3d07c7ca7a731334004e461a87b695b451e16#68e3d07c7ca7a731334004e461a87b695b451e16"
 dependencies = [
  "alloy 2.1.0",
  "alloy-rlp",
@@ -4311,8 +4311,8 @@ dependencies = [
 
 [[package]]
 name = "helios-core"
-version = "0.11.1"
-source = "git+https://github.com/a16z/helios?rev=d72cd4ea03c1ed8dbabaa80707a13017f1076fec#d72cd4ea03c1ed8dbabaa80707a13017f1076fec"
+version = "0.12.0"
+source = "git+https://github.com/a16z/helios?rev=68e3d07c7ca7a731334004e461a87b695b451e16#68e3d07c7ca7a731334004e461a87b695b451e16"
 dependencies = [
  "alloy 2.1.0",
  "alloy-trie",
@@ -4342,8 +4342,8 @@ dependencies = [
 
 [[package]]
 name = "helios-ethereum"
-version = "0.11.1"
-source = "git+https://github.com/a16z/helios?rev=d72cd4ea03c1ed8dbabaa80707a13017f1076fec#d72cd4ea03c1ed8dbabaa80707a13017f1076fec"
+version = "0.12.0"
+source = "git+https://github.com/a16z/helios?rev=68e3d07c7ca7a731334004e461a87b695b451e16#68e3d07c7ca7a731334004e461a87b695b451e16"
 dependencies = [
  "alloy 2.1.0",
  "alloy-trie",
@@ -4380,8 +4380,8 @@ dependencies = [
 
 [[package]]
 name = "helios-revm-utils"
-version = "0.11.1"
-source = "git+https://github.com/a16z/helios?rev=d72cd4ea03c1ed8dbabaa80707a13017f1076fec#d72cd4ea03c1ed8dbabaa80707a13017f1076fec"
+version = "0.12.0"
+source = "git+https://github.com/a16z/helios?rev=68e3d07c7ca7a731334004e461a87b695b451e16#68e3d07c7ca7a731334004e461a87b695b451e16"
 dependencies = [
  "alloy 2.1.0",
  "eyre",
@@ -4395,8 +4395,8 @@ dependencies = [
 
 [[package]]
 name = "helios-verifiable-api-client"
-version = "0.11.1"
-source = "git+https://github.com/a16z/helios?rev=d72cd4ea03c1ed8dbabaa80707a13017f1076fec#d72cd4ea03c1ed8dbabaa80707a13017f1076fec"
+version = "0.12.0"
+source = "git+https://github.com/a16z/helios?rev=68e3d07c7ca7a731334004e461a87b695b451e16#68e3d07c7ca7a731334004e461a87b695b451e16"
 dependencies = [
  "alloy 2.1.0",
  "async-trait",
@@ -4414,8 +4414,8 @@ dependencies = [
 
 [[package]]
 name = "helios-verifiable-api-types"
-version = "0.11.1"
-source = "git+https://github.com/a16z/helios?rev=d72cd4ea03c1ed8dbabaa80707a13017f1076fec#d72cd4ea03c1ed8dbabaa80707a13017f1076fec"
+version = "0.12.0"
+source = "git+https://github.com/a16z/helios?rev=68e3d07c7ca7a731334004e461a87b695b451e16#68e3d07c7ca7a731334004e461a87b695b451e16"
 dependencies = [
  "alloy 2.1.0",
  "helios-common",
@@ -4708,7 +4708,7 @@ dependencies = [
  "libc",
  "percent-encoding",
  "pin-project-lite",
- "socket2 0.5.10",
+ "socket2 0.6.0",
  "system-configuration",
  "tokio",
  "tower-service",
@@ -6613,7 +6613,7 @@ dependencies = [
  "quinn-udp",
  "rustc-hash 2.1.1",
  "rustls",
- "socket2 0.5.10",
+ "socket2 0.6.0",
  "thiserror 2.0.16",
  "tokio",
  "tracing",
@@ -6651,7 +6651,7 @@ dependencies = [
  "cfg_aliases",
  "libc",
  "once_cell",
- "socket2 0.5.10",
+ "socket2 0.6.0",
  "tracing",
  "windows-sys 0.60.2",
 ]
@@ -10520,7 +10520,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.48.0",
+ "windows-sys 0.61.0",
 ]
 
 [[package]]
