@@ -63,10 +63,15 @@ jobs:
       - name: Install protobuf compiler
         run: sudo apt-get update && sudo apt-get install -y protobuf-compiler
 
-      # Execute the committed ELFs and check execution-header authentication.
+      - name: Install Foundry for local storage-proof chains
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: v1.5.1
+
+      # Execute the committed ELFs and collect real storage proofs on isolated local chains.
       - name: Run unit and executor tests
         run: |
           cargo test --release -p sp1-helios-primitives -p sp1-helios-script --lib
-          cargo test --release -p sp1-helios-script --test execute
+          cargo test --release -p sp1-helios-script --test execute --test storage_collection
         env:
           SP1_SKIP_PROGRAM_BUILD: "true"
