@@ -133,9 +133,9 @@ contract RealProofTest {
         bool executionMode
     ) internal {
         if (executionMode) {
-            helios.updateExecutionHeader(proof, output);
+            helios.updateExecutionHeader{gas: 1_000_000}(proof, output);
         } else {
-            helios.update(
+            helios.update{gas: 1_000_000}(
                 proof,
                 output.newHead,
                 output.newHeader,
