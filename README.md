@@ -79,7 +79,7 @@ These tests execute the programs without generating proofs.
 Generate a real local PLONK proof with the CPU prover:
 
 ```sh
-SP1_SKIP_PROGRAM_BUILD=true cargo run --locked --release \
+RUST_LOG=info SP1_SKIP_PROGRAM_BUILD=true cargo run --locked --release \
   -p sp1-helios-script --bin validate_fixture -- \
   --input script/tests/fixtures/gloas_transition.cbor \
   --mode light-client --prove \
@@ -90,6 +90,7 @@ Use `--mode execution-header` for the other update program.
 Remove `--prove` to execute only.
 CUDA proving requires the `cuda` Cargo feature and the `--cuda` flag.
 The local prover does not submit requests to the Prover Network.
+Set `SP1_PLONK_CIRCUIT_PATH` to a writable directory if the default circuit cache is read-only.
 
 Verify the generated proof through the real SP1 verifier and SP1 Helios contract:
 
