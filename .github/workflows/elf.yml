@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       # Match the toolchain that produced the checked-in ELFs.
-      SP1_VERSION: "6.3.1"
+      SP1_VERSION: "6.8.1"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

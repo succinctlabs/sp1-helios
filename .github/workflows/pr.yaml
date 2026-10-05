@@ -72,6 +72,6 @@ jobs:
       - name: Run unit and executor tests
         run: |
           cargo test --release -p sp1-helios-primitives -p sp1-helios-script --lib
-          cargo test --release -p sp1-helios-script --test execute --test storage_collection
+          cargo test --release -p sp1-helios-script --test execute --test storage_collection --test gloas
         env:
           SP1_SKIP_PROGRAM_BUILD: "true"

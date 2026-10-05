@@ -4,6 +4,10 @@ out = "out"
 libs = ["lib"]
 fs_permissions = [{ access = "read", path = "genesis.json" }]
 
+[profile.proof]
+test = "validation"
+fs_permissions = [{ access = "read", path = "validation/proofs" }]
+
 # See more config options https://github.com/foundry-rs/foundry/tree/master/crates/config
 # https://book.getfoundry.sh/reference/config/formatter#line_length
 [fmt]

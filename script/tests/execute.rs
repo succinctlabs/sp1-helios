@@ -27,10 +27,12 @@ async fn execute_elf(elf: &'static [u8], cbor_inputs: &[u8]) -> Vec<u8> {
     stdin.write_slice(cbor_inputs);
 
     let client = ProverClient::builder().cpu().build().await;
-    let (public_values, _report) = client
+    let (public_values, report) = client
         .execute(Elf::Static(elf), stdin)
         .await
         .expect("execution failed");
+
+    assert_eq!(report.exit_code, 0, "guest exited unsuccessfully");
 
     public_values.to_vec()
 }

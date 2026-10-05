@@ -1,0 +1,19 @@
+{
+  "consensusRpc": "https://beacon.plataberget.ethpandaops.io/nimbus",
+  "executionRpc": "https://rpc.plataberget.ethpandaops.io/?use-upstream=*geth*",
+  "chainId": 7091047534,
+  "gloasForkSlot": 49152,
+  "capturedAt": "2026-10-05",
+  "storageContract": "0x000F3df6D732807Ef1319fB7B8bB8522d0Beac02",
+  "storageKey": "0x0000000000000000000000000000000000000000000000000000000000000000",
+  "fixtures": [
+    {
+      "file": "gloas_current.cbor",
+      "sha256": "eb94cee1512b488d759a3ed6a23a7a18e7903eb010ce73d0d1ac1bf90713417e"
+    },
+    {
+      "file": "gloas_transition.cbor",
+      "sha256": "e620bde3689195d8e759e8c99ca37d9ac44950bb9a1177ffccdf22310b99e4bb"
+    }
+  ]
+}
