@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.22;
 
+import {Vm} from "forge-std/Vm.sol";
 import {SP1Verifier} from "@sp1-contracts/v6.1.0/SP1VerifierPlonk.sol";
 import {
     SP1Helios,
@@ -9,27 +10,9 @@ import {
     ExecutionHeaderProofOutputs
 } from "../src/SP1Helios.sol";
 
-interface ProofVm {
-    function envString(string calldata key) external returns (string memory);
-    function readFile(string calldata path) external view returns (string memory);
-    function parseJsonBytes(string calldata json, string calldata key)
-        external
-        pure
-        returns (bytes memory);
-    function parseJsonBytes32(string calldata json, string calldata key)
-        external
-        pure
-        returns (bytes32);
-    function parseJsonString(string calldata json, string calldata key)
-        external
-        pure
-        returns (string memory);
-    function expectRevert() external;
-}
-
 /// @notice Validate a locally generated proof against the real verifier and Helios state.
 contract RealProofTest {
-    ProofVm internal constant vm = ProofVm(address(uint160(uint256(keccak256("hevm cheat code")))));
+    Vm internal constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
     function test_RealProofUpdatesStateAndRejectsTampering() public {
         string memory json = vm.readFile(vm.envString("SP1_HELIOS_PROOF_PATH"));

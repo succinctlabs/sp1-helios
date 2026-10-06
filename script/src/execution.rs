@@ -2,6 +2,7 @@
 
 use std::time::Duration;
 
+use alloy::rpc::client::RpcClient;
 use alloy::rpc::types::EIP1186AccountProofResponse;
 use alloy_consensus::Header;
 use alloy_primitives::{Address, B256};
@@ -20,43 +21,31 @@ use sp1_helios_primitives::{
 
 /// Read-only execution RPC for the source chain.
 pub struct ExecutionRpc {
-    url: reqwest::Url,
-    client: reqwest::Client,
+    client: RpcClient,
 }
 
 impl ExecutionRpc {
     /// Construct a source RPC client with bounded requests.
     pub fn new(url: &str) -> Result<Self> {
+        let url = url.parse().context("Invalid source execution RPC URL")?;
+        let client = reqwest::Client::builder()
+            .user_agent("sp1-helios")
+            .timeout(Duration::from_secs(30))
+            .build()?;
         Ok(Self {
-            url: url.parse().context("Invalid source execution RPC URL")?,
-            client: reqwest::Client::builder()
-                .user_agent("sp1-helios")
-                .timeout(Duration::from_secs(30))
-                .build()?,
+            client: RpcClient::new_http_with_client(client, url),
         })
     }
 
-    async fn request<T: DeserializeOwned>(&self, method: &str, params: Value) -> Result<T> {
-        let response: Value = self
-            .client
-            .post(self.url.clone())
-            .json(&json!({ "jsonrpc": "2.0", "id": 1, "method": method, "params": params }))
-            .send()
-            .await?
-            .error_for_status()?
-            .json()
-            .await?;
-        if let Some(error) = response.get("error") {
-            anyhow::bail!("Source execution RPC {method} failed: {error}");
-        }
-        let result = response
-            .get("result")
-            .context("RPC response has no result")?;
-        ensure!(
-            !result.is_null(),
-            "Source execution RPC {method} returned no data"
-        );
-        serde_json::from_value(result.clone()).with_context(|| format!("Invalid {method} response"))
+    async fn request<T>(&self, method: &str, params: Value) -> Result<T>
+    where
+        T: DeserializeOwned + std::fmt::Debug + Send + Sync + Unpin + 'static,
+    {
+        self.client
+            .request::<_, Option<T>>(method.to_owned(), params)
+            .await
+            .with_context(|| format!("Source execution RPC {method} failed"))?
+            .with_context(|| format!("Source execution RPC {method} returned no data"))
     }
 
     /// Reject a source endpoint configured for another chain.

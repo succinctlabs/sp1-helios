@@ -9,6 +9,7 @@ use std::process::{Child, Command, Stdio};
 use std::time::Duration;
 
 use alloy::primitives::{address, B256, U256};
+use alloy::rpc::client::RpcClient;
 use alloy::sol_types::SolValue;
 use anyhow::{ensure, Context, Result};
 use serde_json::{json, Value};
@@ -29,7 +30,7 @@ const KEY: B256 = B256::ZERO;
 struct LocalChain {
     child: Child,
     url: String,
-    client: reqwest::Client,
+    client: RpcClient,
 }
 
 impl Drop for LocalChain {
@@ -59,12 +60,14 @@ impl LocalChain {
             .stderr(Stdio::inherit())
             .spawn()
             .context("Install Foundry to run the local-chain storage regressions")?;
+        let url = format!("http://127.0.0.1:{port}");
+        let client = reqwest::Client::builder()
+            .timeout(Duration::from_secs(2))
+            .build()?;
         let mut chain = Self {
             child,
-            url: format!("http://127.0.0.1:{port}"),
-            client: reqwest::Client::builder()
-                .timeout(Duration::from_secs(2))
-                .build()?,
+            client: RpcClient::new_http_with_client(client, url.parse()?),
+            url,
         };
         for _ in 0..100 {
             if chain.rpc("eth_chainId", json!([])).await.is_ok() {
@@ -80,20 +83,10 @@ impl LocalChain {
     }
 
     async fn rpc(&self, method: &str, params: Value) -> Result<Value> {
-        let response: Value = self
-            .client
-            .post(&self.url)
-            .json(&json!({"jsonrpc":"2.0", "id":1, "method":method, "params":params}))
-            .send()
-            .await?
-            .error_for_status()?
-            .json()
-            .await?;
-        ensure!(response.get("error").is_none(), "{method}: {response}");
-        response
-            .get("result")
-            .cloned()
-            .context("Missing RPC result")
+        self.client
+            .request(method.to_owned(), params)
+            .await
+            .with_context(|| format!("{method} failed"))
     }
 
     async fn set_and_mine(&self, value: u64) -> Result<u64> {
