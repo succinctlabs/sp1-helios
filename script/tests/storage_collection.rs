@@ -1,14 +1,14 @@
-//! Reproduce wrong-chain and stale-block collection using real local Ethereum trie proofs.
+//! Verify update input collection and reject wrong-chain and stale-block storage proofs.
 //!
-//! Anvil supplies non-empty proofs on two chains. The legacy collection methods retain their
-//! original bodies; the corrected source RPC and committed storage ELF are exercised directly.
+//! Recorded Gloas RPC responses exercise the operator's input collector. Anvil supplies real
+//! proofs on two chains for source RPC and committed storage ELF rejection checks.
 
+use std::collections::{HashMap, HashSet};
 use std::net::TcpListener;
 use std::process::{Child, Command, Stdio};
 use std::time::Duration;
 
 use alloy::primitives::{address, B256, U256};
-use alloy::providers::ProviderBuilder;
 use alloy::sol_types::SolValue;
 use anyhow::{ensure, Context, Result};
 use serde_json::{json, Value};
@@ -17,10 +17,10 @@ use sp1_helios_primitives::{
     verify_storage_slot_proofs,
 };
 use sp1_helios_script::execution::{fill_execution_header, ExecutionRpc};
+use sp1_helios_script::operator::collect_update_inputs;
 use sp1_sdk::{Elf, Prover, ProverClient, SP1Stdin};
-
-#[path = "support/legacy_storage_collector.rs"]
-mod legacy;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::sync::Mutex;
 
 const STORAGE_ELF: &[u8] = include_bytes!("../../elf/storage");
 const ADDRESS: alloy::primitives::Address = address!("0000000000000000000000000000000000001000");
@@ -142,6 +142,112 @@ fn storage_stdin(proofs: &[ContractStorage], root: B256) -> SP1Stdin {
     stdin
 }
 
+// Replay exact requests so stale block selection fails even when the proof itself is valid.
+async fn replay_rpc(
+    responses: Vec<(Value, Value)>,
+) -> Result<(ExecutionRpc, tokio::task::JoinHandle<Result<()>>)> {
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
+    let rpc = ExecutionRpc::new(&format!("http://{}", listener.local_addr()?))?;
+    let task = tokio::spawn(async move {
+        tokio::time::timeout(Duration::from_secs(5), async move {
+            for (expected, result) in responses {
+                let (mut stream, _) = listener.accept().await?;
+                let mut bytes = Vec::new();
+                let (body_start, length) = loop {
+                    ensure!(stream.read_buf(&mut bytes).await? > 0, "RPC request truncated");
+                    if let Some(end) = bytes.windows(4).position(|p| p == b"\r\n\r\n") {
+                        let headers = std::str::from_utf8(&bytes[..end])?;
+                        let length: usize = headers
+                            .lines()
+                            .filter_map(|line| line.split_once(':'))
+                            .find(|(name, _)| name.eq_ignore_ascii_case("content-length"))
+                            .context("Missing Content-Length")?
+                            .1
+                            .trim()
+                            .parse()?;
+                        break (end + 4, length);
+                    }
+                };
+                while bytes.len() < body_start + length {
+                    ensure!(stream.read_buf(&mut bytes).await? > 0, "RPC body truncated");
+                }
+                let request: Value = serde_json::from_slice(&bytes[body_start..body_start + length])?;
+                let actual = json!({"method": request["method"], "params": request["params"]});
+                let body = if actual == expected {
+                    json!({"jsonrpc": "2.0", "id": request["id"], "result": result})
+                } else {
+                    json!({"jsonrpc": "2.0", "id": request["id"], "error": {
+                        "code": -32602, "message": format!("Expected {expected}, got {actual}")
+                    }})
+                }
+                .to_string();
+                stream.write_all(format!(
+                    "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len()
+                ).as_bytes()).await?;
+                ensure!(actual == expected, "Expected {expected}, got {actual}");
+            }
+            Ok(())
+        })
+        .await?
+    });
+    Ok((rpc, task))
+}
+
+#[tokio::test]
+async fn operator_collects_storage_for_the_finalized_gloas_block() -> Result<()> {
+    for fixture in [
+        include_bytes!("fixtures/gloas_current.cbor").as_slice(),
+        include_bytes!("fixtures/gloas_transition.cbor").as_slice(),
+    ] {
+        let mut inputs: ProofInputs = serde_cbor::from_slice(fixture)?;
+        let starting_store = serde_cbor::to_vec(&inputs.store)?;
+        let target_slot = inputs.finality_update.finalized_header().beacon().slot;
+        let header = inputs
+            .execution_header
+            .take()
+            .context("Missing fixture header")?;
+        let storage = inputs
+            .contract_storage
+            .pop()
+            .context("Missing fixture storage")?;
+        assert!(inputs.contract_storage.is_empty());
+        assert_eq!(storage.storage_slots.len(), 1);
+        let key = storage.storage_slots[0].key;
+        let keys = Mutex::new(HashMap::from([(storage.address, HashSet::from([key]))]));
+        let (rpc, replay) = replay_rpc(vec![
+            (
+                json!({"method": "eth_getBlockByHash", "params": [header.hash_slow(), false]}),
+                serde_json::to_value(&header)?,
+            ),
+            (
+                json!({"method": "eth_getProof", "params": [storage.address, [key], format!("0x{:x}", header.number)]}),
+                json!({
+                    "address": storage.address,
+                    "nonce": format!("0x{:x}", storage.value.nonce),
+                    "balance": storage.value.balance,
+                    "storageHash": storage.value.storage_root,
+                    "codeHash": storage.value.code_hash,
+                    "accountProof": storage.mpt_proof,
+                    "storageProof": [{"key": key, "value": storage.storage_slots[0].value, "proof": storage.storage_slots[0].mpt_proof}]
+                }),
+            ),
+        ]).await?;
+
+        let collected = collect_update_inputs(&mut inputs, &rpc, &keys).await;
+        let replayed = replay.await?;
+        assert_eq!(collected?, target_slot);
+        replayed?;
+        assert_eq!(serde_cbor::to_vec(&inputs.store)?, starting_store);
+        assert_eq!(inputs.execution_header, Some(header.clone()));
+        assert_eq!(
+            serde_cbor::to_vec(&inputs.contract_storage)?,
+            serde_cbor::to_vec(&vec![storage])?
+        );
+        verify_storage_slot_proofs(header.state_root, &inputs.contract_storage[0])?;
+    }
+    Ok(())
+}
+
 #[tokio::test]
 async fn collection_regressions_reject_wrong_chain_and_stale_block() -> Result<()> {
     let source = LocalChain::start(31337).await?;
@@ -160,7 +266,7 @@ async fn collection_regressions_reject_wrong_chain_and_stale_block() -> Result<(
     assert_ne!(starting_header.state_root, target_header.state_root);
 
     let destination_header = destination_rpc.header_by_number(destination_block).await?;
-    destination_rpc
+    let wrong_chain = destination_rpc
         .storage_proof(
             destination_header.state_root,
             destination_block,
@@ -169,7 +275,7 @@ async fn collection_regressions_reject_wrong_chain_and_stale_block() -> Result<(
         )
         .await
         .context("Positive control: destination proof must match its own root")?;
-    source_rpc
+    let stale = source_rpc
         .storage_proof(
             starting_header.state_root,
             starting_block,
@@ -190,20 +296,10 @@ async fn collection_regressions_reject_wrong_chain_and_stale_block() -> Result<(
         B256::from(U256::from(20).to_be_bytes::<32>())
     );
 
-    let old_destination_provider = ProviderBuilder::new().connect_http(destination.url.parse()?);
-    let wrong_chain = legacy::LegacyCollector::new(old_destination_provider, ADDRESS, KEY)
-        .collect(starting_block)
-        .await?;
-    assert_eq!(wrong_chain[0].storage_slots[0].value, U256::from(999));
-    assert!(verify_storage_slot_proofs(target_header.state_root, &wrong_chain[0]).is_err());
-
-    // Use the source provider to isolate stale-block selection from wrong-chain selection.
-    let old_source_provider = ProviderBuilder::new().connect_http(source.url.parse()?);
-    let stale = legacy::LegacyCollector::new(old_source_provider, ADDRESS, KEY)
-        .collect(starting_block)
-        .await?;
-    assert_eq!(stale[0].storage_slots[0].value, U256::from(10));
-    assert!(verify_storage_slot_proofs(target_header.state_root, &stale[0]).is_err());
+    assert_eq!(wrong_chain.storage_slots[0].value, U256::from(999));
+    assert!(verify_storage_slot_proofs(target_header.state_root, &wrong_chain).is_err());
+    assert_eq!(stale.storage_slots[0].value, U256::from(10));
+    assert!(verify_storage_slot_proofs(target_header.state_root, &stale).is_err());
 
     // The corrected fetch fails early if either an old block or another chain is selected.
     assert!(source_rpc
@@ -234,7 +330,10 @@ async fn collection_regressions_reject_wrong_chain_and_stale_block() -> Result<(
     assert_eq!(outputs.storageSlots.len(), 1);
     assert_eq!(outputs.storageSlots[0].value, slots[0].value);
 
-    for (label, invalid) in [("wrong chain", wrong_chain), ("stale block", stale)] {
+    for (label, invalid) in [
+        ("wrong chain", vec![wrong_chain]),
+        ("stale block", vec![stale]),
+    ] {
         let (values, report) = client
             .execute(
                 Elf::Static(STORAGE_ELF),
@@ -256,9 +355,7 @@ async fn collection_regressions_reject_wrong_chain_and_stale_block() -> Result<(
             report.exit_code
         );
     }
-    println!(
-        "target value 20 accepted; legacy destination value 999 and starting value 10 rejected"
-    );
+    println!("target value 20 accepted; destination value 999 and starting value 10 rejected");
     Ok(())
 }
 

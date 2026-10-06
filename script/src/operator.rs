@@ -11,7 +11,7 @@ use helios_ethereum::consensus::Inner;
 use helios_ethereum::rpc::http_rpc::HttpRpc;
 use helios_ethereum::rpc::ConsensusRpc;
 use sp1_helios_primitives::types::{
-    ContractStorage, ExecutionHeaderProofOutputs, ProofInputs, ProofOutputs, SP1Helios,
+    ExecutionHeaderProofOutputs, ProofInputs, ProofOutputs, SP1Helios,
 };
 use sp1_sdk::{
     network::{signer::NetworkSigner, FulfillmentStrategy, NetworkMode},
@@ -101,6 +101,28 @@ pub fn parse_proof_mode(value: &str) -> Result<SP1ProofMode> {
     }
 }
 
+/// Collect update witnesses from the source block finalized by the input sequence.
+///
+/// Preserve the starting store and reject storage proofs that do not match the finalized root.
+pub async fn collect_update_inputs(
+    inputs: &mut ProofInputs,
+    source_execution_rpc: &ExecutionRpc,
+    storage_slots_to_fetch: &Mutex<HashMap<Address, HashSet<B256>>>,
+) -> Result<u64> {
+    let (slot, execution) = fill_execution_header(inputs, source_execution_rpc).await?;
+    let storage_slots_to_fetch = storage_slots_to_fetch.lock().await;
+    let proofs = storage_slots_to_fetch.iter().map(|(contract, keys)| {
+        source_execution_rpc.storage_proof(
+            execution.state_root,
+            execution.block_number,
+            *contract,
+            keys.iter().copied().collect(),
+        )
+    });
+    inputs.contract_storage = futures::future::try_join_all(proofs).await?;
+    Ok(slot)
+}
+
 impl<P> SP1HeliosOperator<P>
 where
     P: Provider + WalletProvider,
@@ -156,11 +178,12 @@ where
             contract_storage: vec![],
             execution_header: None,
         };
-        let (latest_block, execution) =
-            fill_execution_header(&mut inputs, &self.source_execution_rpc).await?;
-        inputs.contract_storage = self
-            .get_storage_slots(execution.state_root, execution.block_number)
-            .await?;
+        let latest_block = collect_update_inputs(
+            &mut inputs,
+            &self.source_execution_rpc,
+            &self.storage_slots_to_fetch,
+        )
+        .await?;
         let encoded_proof_inputs = serde_cbor::to_vec(&inputs)?;
         stdin.write_slice(&encoded_proof_inputs);
 
@@ -237,28 +260,6 @@ where
         );
 
         Ok(())
-    }
-
-    async fn get_storage_slots(
-        &self,
-        state_root: B256,
-        block_number: u64,
-    ) -> Result<Vec<ContractStorage>> {
-        let storage_slots_to_fetch = self.storage_slots_to_fetch.lock().await;
-        if storage_slots_to_fetch.is_empty() {
-            return Ok(vec![]);
-        }
-
-        let futs = storage_slots_to_fetch.iter().map(|(contract, keys)| {
-            self.source_execution_rpc.storage_proof(
-                state_root,
-                block_number,
-                *contract,
-                keys.iter().copied().collect(),
-            )
-        });
-
-        futures::future::try_join_all(futs).await
     }
 
     /// Check if the vkeys of the light client and storage slot programs are correct and match the ones in the contract.
