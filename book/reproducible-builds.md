@@ -2,44 +2,51 @@
 
 ## Overview
 
-When deploying SP1 Helios in production, it's important to ensure that the program used when generating proofs is reproducible.
+Verify the program ELFs before you use them to generate proofs.
+Run these commands from the repository root of the release you want to verify.
 
 ## Prerequisites
 
-You first need to install the [cargo prove](https://docs.succinct.xyz/getting-started/install.html#option-1-prebuilt-binaries-recommended) toolchain.
+Install the [SP1 toolchain](https://docs.succinct.xyz/getting-started/install.html#option-1-prebuilt-binaries-recommended).
 
-Ensure that you have the latest version of the toolchain by running:
+Use the SP1 version that built the checked-in ELFs:
 
 ```bash
-sp1up
+sp1up --version 6.8.1
 ```
 
-Confirm that you have the toolchain installed by running:
+Check the installed version:
 
 ```bash
 cargo prove --version
 ```
 
-## Verify the SP1 Helios binary
+## Rebuild the program ELFs
 
-To build the SP1 Helios binary, first ensure that Docker is running.
+Check that Docker is running:
 
 ```bash
 docker ps
 ```
 
-Then build the binaries:
+Build all three programs with the pinned Docker image and lockfile:
 
 ```bash
 cd program
-
-# Builds the SP1 Helios binary using the corresponding Docker tag, output directory and ELF name.
-cargo prove build --docker --tag v4.1.7 --elf-name sp1-helios-elf --output-directory ../elf
+cargo prove build --docker --tag v6.8.1 --locked --output-directory ../elf
+cd ..
+git diff --exit-code -- elf/
 ```
 
-Now, verify the binaries by confirming the output of `vkey` matches the vkeys on the contract. The `vkey` program outputs the verification key
-based on the ELF in `/elf`.
+The diff check succeeds when the rebuilt ELFs match the checked-in files.
+
+## Verify the program keys
+
+Derive the verification keys from the rebuilt ELFs:
 
 ```bash
-cargo run --bin vkey --release
+SP1_SKIP_PROGRAM_BUILD=true cargo run --locked --release -p sp1-helios-script --bin vkey
 ```
+
+Compare each key with the corresponding key configured in the SP1 Helios smart contract.
+See the [deployment guide](deployment.md) for program key updates.
