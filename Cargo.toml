@@ -3,6 +3,7 @@ members = ["primitives", "script", "program"]
 resolver = "2"
 
 [workspace.package]
+version = "1.3.0"
 license = "MIT"
 edition = "2021"
 authors = ["xavierdmello", "ratankaliani"]
