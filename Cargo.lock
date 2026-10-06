@@ -4316,7 +4316,7 @@ checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 [[package]]
 name = "helios-common"
 version = "0.12.0"
-source = "git+https://github.com/a16z/helios?tag=0.12.0-rc.1#68e3d07c7ca7a731334004e461a87b695b451e16"
+source = "git+https://github.com/a16z/helios?tag=0.12.0#2af9b41887e069144ee56cd710f3ddca195473f8"
 dependencies = [
  "alloy 2.1.0",
  "async-trait",
@@ -4332,7 +4332,7 @@ dependencies = [
 [[package]]
 name = "helios-consensus-core"
 version = "0.12.0"
-source = "git+https://github.com/a16z/helios?tag=0.12.0-rc.1#68e3d07c7ca7a731334004e461a87b695b451e16"
+source = "git+https://github.com/a16z/helios?tag=0.12.0#2af9b41887e069144ee56cd710f3ddca195473f8"
 dependencies = [
  "alloy 2.1.0",
  "alloy-rlp",
@@ -4356,7 +4356,7 @@ dependencies = [
 [[package]]
 name = "helios-core"
 version = "0.12.0"
-source = "git+https://github.com/a16z/helios?tag=0.12.0-rc.1#68e3d07c7ca7a731334004e461a87b695b451e16"
+source = "git+https://github.com/a16z/helios?tag=0.12.0#2af9b41887e069144ee56cd710f3ddca195473f8"
 dependencies = [
  "alloy 2.1.0",
  "alloy-trie",
@@ -4387,7 +4387,7 @@ dependencies = [
 [[package]]
 name = "helios-ethereum"
 version = "0.12.0"
-source = "git+https://github.com/a16z/helios?tag=0.12.0-rc.1#68e3d07c7ca7a731334004e461a87b695b451e16"
+source = "git+https://github.com/a16z/helios?tag=0.12.0#2af9b41887e069144ee56cd710f3ddca195473f8"
 dependencies = [
  "alloy 2.1.0",
  "alloy-trie",
@@ -4425,7 +4425,7 @@ dependencies = [
 [[package]]
 name = "helios-revm-utils"
 version = "0.12.0"
-source = "git+https://github.com/a16z/helios?tag=0.12.0-rc.1#68e3d07c7ca7a731334004e461a87b695b451e16"
+source = "git+https://github.com/a16z/helios?tag=0.12.0#2af9b41887e069144ee56cd710f3ddca195473f8"
 dependencies = [
  "alloy 2.1.0",
  "eyre",
@@ -4440,7 +4440,7 @@ dependencies = [
 [[package]]
 name = "helios-verifiable-api-client"
 version = "0.12.0"
-source = "git+https://github.com/a16z/helios?tag=0.12.0-rc.1#68e3d07c7ca7a731334004e461a87b695b451e16"
+source = "git+https://github.com/a16z/helios?tag=0.12.0#2af9b41887e069144ee56cd710f3ddca195473f8"
 dependencies = [
  "alloy 2.1.0",
  "async-trait",
@@ -4459,7 +4459,7 @@ dependencies = [
 [[package]]
 name = "helios-verifiable-api-types"
 version = "0.12.0"
-source = "git+https://github.com/a16z/helios?tag=0.12.0-rc.1#68e3d07c7ca7a731334004e461a87b695b451e16"
+source = "git+https://github.com/a16z/helios?tag=0.12.0#2af9b41887e069144ee56cd710f3ddca195473f8"
 dependencies = [
  "alloy 2.1.0",
  "helios-common",
@@ -6608,7 +6608,7 @@ version = "0.13.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "be769465445e8c1474e9c5dac2018218498557af32d9ed057325ec9a41ae81bf"
 dependencies = [
- "heck 0.5.0",
+ "heck 0.4.1",
  "itertools 0.14.0",
  "log",
  "multimap",
