@@ -4,6 +4,7 @@ use alloy_rlp::Encodable;
 use alloy_trie::{proof, Nibbles};
 use anyhow::Result;
 
+pub mod execution;
 pub mod types;
 
 /// Verify the storage slot proofs for a given contract against the execution state root.

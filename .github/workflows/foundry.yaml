@@ -35,17 +35,18 @@ jobs:
       - name: Run Forge fmt
         working-directory: contracts/
         run: |
-          forge fmt --check src/ test/ script/
+          forge fmt --check src/ test/ script/ validation/
         id: fmt
 
       - name: Run Forge build
         working-directory: contracts/
         run: |
           forge build --sizes
+          FOUNDRY_PROFILE=proof forge build --sizes
         id: build
 
-      # - name: Run Forge tests
-      #   working-directory: contracts/
-      #   run: |
-      #     forge test -vvv
-      #   id: test
+      - name: Run Forge tests
+        working-directory: contracts/
+        run: |
+          forge test -vvv
+        id: test

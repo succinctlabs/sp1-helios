@@ -7,6 +7,7 @@ use helios_consensus_core::{
     apply_finality_update, apply_update, verify_finality_update, verify_update,
 };
 use sp1_helios_primitives::{
+    execution::verified_execution_fields,
     types::{ProofInputs, ProofOutputs},
     verify_storage_slot_proofs,
 };
@@ -32,6 +33,7 @@ pub fn main() {
         genesis_root,
         forks,
         contract_storage,
+        execution_header,
     } = serde_cbor::from_slice(&encoded_inputs).unwrap();
 
     // SECURITY: the entire `store` is deserialized from prover-controlled input, so any field that
@@ -99,23 +101,21 @@ pub fn main() {
         None => B256::ZERO,
     };
     let head = store.finalized_header.beacon().slot;
-    let execution = store
-        .finalized_header
-        .execution()
-        .expect("Execution payload doesn't exist.");
+    let execution = verified_execution_fields(&store.finalized_header, execution_header.as_ref())
+        .expect("Execution header failed to verify.");
 
     let storage_slots = contract_storage
         .iter()
         .flat_map(|contract_storage| {
-            verify_storage_slot_proofs(*execution.state_root(), contract_storage)
+            verify_storage_slot_proofs(execution.state_root, contract_storage)
                 .expect("Storage slot proofs failed to verify.")
         })
         .collect();
 
     let proof_outputs = ProofOutputs {
-        executionStateRoot: *execution.state_root(),
+        executionStateRoot: execution.state_root,
         newHeader: header,
-        executionBlockNumber: U256::from(*execution.block_number()),
+        executionBlockNumber: U256::from(execution.block_number),
         nextSyncCommitteeHash: next_sync_committee_hash,
         newHead: U256::from(head),
         prevHeader: prev_header,

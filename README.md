@@ -24,6 +24,7 @@ cargo run -p sp1-helios-script --bin operator -- \
   --contract-address "$SP1_HELIOS" \
   --source-chain-id "$SOURCE_CHAIN_ID" \
   --source-consensus-rpc "$SOURCE_CONSENSUS_RPC_URL" \
+  --source-execution-rpc "$SOURCE_EXECUTION_RPC_URL" \
   --private-key "$DESTINATION_PRIVATE_KEY"
 ```
 
@@ -41,11 +42,14 @@ cargo run -p sp1-helios-script --bin operator -- \
   --contract-address "$SP1_HELIOS" \
   --source-chain-id "$SOURCE_CHAIN_ID" \
   --source-consensus-rpc "$SOURCE_CONSENSUS_RPC_URL" \
+  --source-execution-rpc "$SOURCE_EXECUTION_RPC_URL" \
   --private-key "$DESTINATION_PRIVATE_KEY" \
   --commit-execution-header
 ```
 
 ### Docker
+
+See the [deployment guide](book/deployment.md) for source RPC requirements and program key updates.
 
 The CI publishes Linux AMD64 images as `ghcr.io/succinctlabs/sp1-helios:operator-<short-sha>`.
 To build locally and view the operator flags:
@@ -54,3 +58,49 @@ To build locally and view the operator flags:
 docker build --platform linux/amd64 -t sp1-helios:operator .
 docker run --rm sp1-helios:operator operator --help
 ```
+
+## Validation
+
+The recorded Plataberget fixtures contain signed Gloas updates, execution headers, and source storage proofs.
+`gloas_transition.cbor` starts at slot 49120 and advances to slot 56416 across the Gloas fork and a committee change.
+The historical finality update retains the signature and proof branches from the last recorded committee update.
+`gloas_current.cbor` advances from slot 379968 to slot 380480 after Gloas.
+
+Run the unit and guest execution tests with the committed ELFs:
+
+```sh
+SP1_SKIP_PROGRAM_BUILD=true cargo test --locked --release \
+  -p sp1-helios-primitives -p sp1-helios-script \
+  --lib --test execute --test storage_collection --test gloas
+```
+
+The storage tests require Anvil.
+These tests execute the programs without generating proofs.
+Generate a real local PLONK proof with the CPU prover:
+
+```sh
+RUST_LOG=info SP1_SKIP_PROGRAM_BUILD=true cargo run --locked --release \
+  -p sp1-helios-script --bin validate_fixture -- \
+  --input script/tests/fixtures/gloas_transition.cbor \
+  --mode light-client --prove \
+  --output contracts/validation/proofs/transition-light-client.json
+```
+
+Use `--mode execution-header` for the other update program.
+Remove `--prove` to execute only.
+CUDA proving requires the `cuda` Cargo feature and the `--cuda` flag.
+The local prover does not submit requests to the Prover Network.
+Set `SP1_PLONK_CIRCUIT_PATH` to a writable directory if the default circuit cache is read-only.
+
+Verify the generated proof through the real SP1 verifier and SP1 Helios contract:
+
+```sh
+cd contracts
+FOUNDRY_PROFILE=proof \
+  SP1_HELIOS_PROOF_PATH=validation/proofs/transition-light-client.json \
+  forge test --match-contract RealProofTest -vv
+```
+
+This test checks stored outputs and rejects changed proofs, public values, wrong program keys, and replayed updates.
+Default Foundry tests use a mock verifier.
+Real proof validation requires the separate `proof` profile and a generated proof file.

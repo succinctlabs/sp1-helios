@@ -21,6 +21,13 @@ path = "./bin/vkey.rs"
 name = "gen_fixture"
 path = "./bin/gen_fixture.rs"
 
+[[bin]]
+name = "validate_fixture"
+path = "./bin/validate_fixture.rs"
+
+[features]
+cuda = ["sp1-sdk/cuda"]
+
 [dependencies]
 dotenv = { workspace = true }
 sp1-sdk = { workspace = true }
@@ -32,6 +39,7 @@ serde = { workspace = true }
 serde_cbor = { workspace = true }
 clap = { workspace = true }
 alloy-primitives = { workspace = true }
+alloy-consensus = { workspace = true }
 alloy-trie = { workspace = true }
 alloy = { workspace = true }
 anyhow = { workspace = true }
