@@ -12,7 +12,7 @@ Install the [SP1 toolchain](https://docs.succinct.xyz/getting-started/install.ht
 Use the SP1 version that built the checked-in ELFs:
 
 ```bash
-sp1up --version 6.8.1
+sp1up --version 6.10.0
 ```
 
 Check the installed version:
@@ -33,7 +33,7 @@ Build all three programs with the pinned Docker image and lockfile:
 
 ```bash
 cd program
-cargo prove build --docker --tag v6.8.1 --locked --output-directory ../elf
+cargo prove build --docker --tag v6.10.0 --locked --output-directory ../elf
 cd ..
 git diff --exit-code -- elf/
 ```

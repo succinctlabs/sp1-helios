@@ -123,7 +123,7 @@ async fn validate<P: Prover>(client: &P, args: &Args) -> Result<()> {
         "publicValues": hex::encode_prefixed(&values),
         "proof": "0x",
         "sp1Version": client.version(),
-        "sdkVersion": "6.8.1",
+        "sdkVersion": "6.10.0",
         "cycles": report.total_instruction_count(),
     });
     if args.prove {
